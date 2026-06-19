@@ -497,7 +497,7 @@ function exMeta(name) {
   return {group: '', color: '#71717a', icon: '⚙️', key: 'machine'};
 }
 
-function exTileColor(name) { return exMeta(name).color; }
+function exTileColor(name) { return muscleGroupColor(exGroup(name)); }
 function exGroup(name) { return exMeta(name).group; }
 
 function muscleGroupColor(groupName) {

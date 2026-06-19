@@ -804,10 +804,9 @@ function renderWorkout() {
       '<div class="sec-badge">Сегодня</div>' +
       '<div class="sec-title" style="margin-bottom:16px">Тренировка</div>';
     if (ws.length === 0) {
-      {
-        h += '<div class="empty"><div class="empty-ico">🏋️</div>' +
-          '<div class="empty-msg">Нет активной тренировки</div>' +
-          '<button class="btn btn-acc btn-full" onclick="startWorkout()" style="border-radius:14px;height:52px;font-size:16px">Начать тренировку</button></div>';
+      h += '<div class="empty"><div class="empty-ico">🏋️</div>' +
+        '<div class="empty-msg">Нет активной тренировки</div>' +
+        '<button class="btn btn-acc btn-full" onclick="startWorkout()" style="border-radius:14px;height:52px;font-size:16px">Начать тренировку</button></div>';
     } else {
       ws.forEach(function(w) {
         var dur = w.endTime ? fmtTime(Math.floor((w.endTime-w.startTime)/1000)) : '';

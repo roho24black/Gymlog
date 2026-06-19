@@ -1083,11 +1083,13 @@ function calCell(num, ds, today, curMonth) {
   if (ds===today) cls += ' today';
   if (ds===SEL_DATE) cls += ' sel';
   if (hasGym||hasPool||isRest) cls += ' has-w';
+  var dots = getDayDots(ds);
   var dot = '';
-  if (hasGym&&hasPool) dot = '<div class="cal-dot" style="background:linear-gradient(90deg,var(--acc) 50%,var(--blu) 50%)"></div>';
-  else if (hasGym) dot = '<div class="cal-dot gym"></div>';
-  else if (hasPool) dot = '<div class="cal-dot pool"></div>';
-  else if (isRest) dot = '<div class="cal-dot rest"></div>';
+  if (dots.length) {
+    dot = '<div style="display:flex;gap:2px;align-items:center;justify-content:center">' +
+      dots.map(function(c){ return '<div style="width:6px;height:6px;border-radius:50%;background:'+c+'"></div>'; }).join('') +
+      '</div>';
+  }
   return '<div class="'+cls+'" onclick="calSelect(\''+ds+'\')"><span>'+num+'</span>'+dot+'</div>';
 }
 function calShift(dir) {

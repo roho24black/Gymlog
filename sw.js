@@ -1,9 +1,10 @@
-const CACHE = 'gymlog-v1';
-const ASSETS = ['manifest.json', 'icon.png'];
+const CACHE = 'gymlog-v3';
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
+    caches.open(CACHE).then(c =>
+      fetch('./').then(r => c.put('./', r)).catch(() => {})
+    )
   );
   self.skipWaiting();
 });
@@ -19,10 +20,9 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '/';
+  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
 
   if (isHTML) {
-    // HTML: сначала сеть (свежая версия), при офлайне — кэш
     e.respondWith(
       fetch(e.request)
         .then(res => {
@@ -30,12 +30,19 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
           return res;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() =>
+          caches.match(e.request)
+            .then(r => r || caches.match('./'))
+        )
     );
   } else {
-    // Иконка, манифест: сначала кэш, потом сеть
     e.respondWith(
-      caches.match(e.request).then(r => r || fetch(e.request))
+      caches.match(e.request).then(r => r ||
+        fetch(e.request).then(res => {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          return res;
+        })
+      )
     );
   }
 });

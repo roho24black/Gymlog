@@ -281,29 +281,36 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 .loc-tog-btn.on-pool{background:rgba(56,189,248,0.15);color:var(--blu)}
 
 /* ── EXERCISE DB MODAL ── */
-.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:300;display:none;
   align-items:flex-end;justify-content:center}
-.modal-ov.vis{display:flex}
-.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:560px;
-  max-height:88vh;display:flex;flex-direction:column;
-  padding-bottom:max(20px,calc(env(safe-area-inset-bottom)+4px))}
-.modal-hd{display:flex;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--brd);gap:12px;flex-shrink:0}
+.modal-ov.vis{display:flex;animation:overlayIn .2s ease}
+.modal-ov.vis .modal{animation:sheetUp .32s cubic-bezier(.32,.72,0,1)}
+.modal{background:#1c1c1e;border-radius:22px 22px 0 0;width:100%;max-width:560px;
+  max-height:90vh;display:flex;flex-direction:column;
+  padding-bottom:max(24px,calc(env(safe-area-inset-bottom)+8px))}
+.modal-hd{display:flex;align-items:center;padding:18px 20px 14px;border-bottom:1px solid var(--brd);gap:12px;flex-shrink:0}
 .modal-title{font-size:17px;font-weight:800;flex:1}
-.modal-x{background:var(--card2);border:1px solid var(--brd2);color:var(--sub);font-size:16px;
-  width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;border:none}
-.modal-body{flex:1;overflow-y:auto;padding:12px 20px}
-.db-search{background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px 14px;
-  color:var(--txt);font-size:15px;font-family:inherit;width:100%;margin-bottom:10px;outline:none}
-.db-search:focus{border-color:var(--acc)}
-.db-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.db-chip{padding:6px 12px;border-radius:100px;font-size:12px;font-weight:600;background:var(--card2);
-  border:1px solid var(--brd2);color:var(--sub);cursor:pointer}
-.db-chip.on{background:rgba(34,197,94,0.12);border-color:var(--acc);color:var(--acc)}
-.db-sec-hd{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;padding:10px 0 6px}
-.db-item{background:var(--card2);border:1px solid var(--brd);border-radius:8px;padding:10px 14px;
-  margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:border-color .15s}
-.db-item:active{border-color:var(--acc)}
-.db-item-name{font-size:14px;font-weight:600;flex:1}
+.modal-x{background:rgba(255,255,255,0.1);color:var(--sub);font-size:15px;
+  width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;border:none;font-weight:700;transition:opacity .12s}
+.modal-x:active{opacity:.6}
+.modal-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 20px;overscroll-behavior:contain}
+.db-search{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;
+  padding:12px 16px;color:var(--txt);font-size:16px;font-family:inherit;width:100%;margin-bottom:12px;outline:none;
+  -webkit-appearance:none}
+.db-search:focus{border-color:var(--acc);background:rgba(255,255,255,0.09)}
+.db-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.db-chip{padding:7px 13px;border-radius:100px;font-size:12.5px;font-weight:600;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:var(--sub);
+  cursor:pointer;min-height:34px;transition:opacity .12s;-webkit-user-select:none;user-select:none}
+.db-chip:active{opacity:.6}
+.db-chip.on{background:rgba(34,197,94,0.15);border-color:var(--acc);color:var(--acc)}
+.db-sec-hd{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.6px;text-transform:uppercase;padding:12px 0 7px}
+.db-item{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:12px;
+  padding:13px 14px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;
+  min-height:52px;transition:background .12s;-webkit-user-select:none;user-select:none}
+.db-item:active{background:rgba(255,255,255,0.1)}
+.db-item-name{font-size:14.5px;font-weight:600;flex:1}
 .db-item-grp{font-size:11px;color:var(--sub)}
 
 /* ── PROGRESS ── */

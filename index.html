@@ -86,7 +86,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 .ex-list{padding:4px 14px;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:9px;
   padding-bottom:180px}
 .ex-card{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:11px 12px 8px}
-.ex-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px;cursor:pointer}
+.ex-card-hd{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .ex-tile{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
   font-size:15px;font-weight:700;color:#fff;flex-shrink:0;text-transform:uppercase}
 .ex-info{flex:1;min-width:0}
@@ -862,7 +862,6 @@ function addExToWorkout(name) {
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   var ex = makeEx(name);
   wkt.exercises.push(ex);
-  OPEN_EX[wkt.exercises.length-1] = true;
   saveST(); dbClose(); renderWorkout();
   setTimeout(function(){
     var pg = document.getElementById('pg-workout');

@@ -837,6 +837,7 @@ function renderWorkout() {
   exs.forEach(function(ex, ei) {
     var doneSets = ex.sets.filter(function(s){return s.done;}).length;
     var cardio = isCardio(ex.name);
+    var stat   = isStatic(ex.name);
     var color = exTileColor(ex.name);
     var group = exGroup(ex.name);
     var exVol = 0;
@@ -853,7 +854,7 @@ function renderWorkout() {
       '</div>';
 
     h += '<div class="ex-body open">';
-    if (!cardio) {
+    if (!cardio && !stat) {
       var st = getExStats(ex.name);
       if (st) {
         h += '<div class="ex-hist">' +
@@ -862,16 +863,24 @@ function renderWorkout() {
           '</div>';
       }
       h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
+    } else if (stat) {
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr 30px"><div>№</div><div>Удержание</div><div></div></div>';
     }
     ex.sets.forEach(function(s, si) {
-      h += '<div class="set-row'+(s.done?' done':'')+'">';
-      h += '<div class="set-n">'+(si+1)+'</div>';
-      if (cardio) {
-        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';
-        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>';
+      if (stat) {
+        h += '<div class="set-row'+(s.done?' done':'')+'" style="grid-template-columns:26px 1fr 30px">';
+        h += '<div class="set-n">'+(si+1)+'</div>';
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'secs\')">'+(s.secs||60)+'<span class="set-cell-unit">сек</span></div>';
       } else {
-        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>';
-        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>';
+        h += '<div class="set-row'+(s.done?' done':'')+'">';
+        h += '<div class="set-n">'+(si+1)+'</div>';
+        if (cardio) {
+          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';
+          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>';
+        } else {
+          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>';
+          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>';
+        }
       }
       h += '<div class="set-circle'+(s.done?' done':'')+'" onclick="toggleSetDone('+ei+','+si+')">✓</div>';
       h += '</div>';
@@ -884,7 +893,7 @@ function renderWorkout() {
     for (var si = 0; si < ex.sets.length; si++) if (!ex.sets[si].done){ nextSet = si; break; }
     if (nextSet !== -1) {
       var s = ex.sets[nextSet];
-      var target = cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
+      var target = stat ? ((s.secs||60)+' сек') : cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
       h += '<button class="rec-btn" onclick="recordSet('+ei+','+nextSet+')">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' +
         'Записать подход · '+target+'</button>';

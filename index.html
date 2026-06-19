@@ -654,7 +654,6 @@ function startWorkout(fromTpl) {
   WKT_START = Date.now();
   CUR_DATE = date;
   OPEN_EX = {};
-  if (wkt.exercises.length > 0) OPEN_EX[0] = true;
   if (WKT_TIMER_ID) clearInterval(WKT_TIMER_ID);
   WKT_TIMER_ID = setInterval(tickWktTimer, 1000);
   goTab('workout');
@@ -834,10 +833,6 @@ function recordSet(ei, si) {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   wkt.exercises[ei].sets[si].done = true;
-  // Auto-open next exercise
-  var exs = wkt.exercises;
-  var allDone = exs[ei].sets.every(function(s){return s.done;});
-  if (allDone && ei+1 < exs.length) OPEN_EX[ei+1] = true;
   saveST(); startRest(90); updateVolBar(); renderWorkout();
 }
 

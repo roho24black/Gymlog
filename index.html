@@ -762,7 +762,6 @@ function renderWorkout() {
   h += '<div class="ex-list">';
   var exs = wkt.exercises || [];
   exs.forEach(function(ex, ei) {
-    var isOpen = !!OPEN_EX[ei];
     var doneSets = ex.sets.filter(function(s){return s.done;}).length;
     var cardio = isCardio(ex.name);
     var color = exTileColor(ex.name);
@@ -771,49 +770,47 @@ function renderWorkout() {
     ex.sets.forEach(function(s){ if(s.done) exVol += (s.w||0)*(s.r||1); });
 
     h += '<div class="ex-card">';
-    h += '<div class="ex-card-hd" onclick="toggleEx('+ei+')">' +
+    h += '<div class="ex-card-hd">' +
       '<div class="ex-tile" style="background:'+color+';opacity:0.85">'+letterOf(ex.name)+'</div>' +
       '<div class="ex-info">' +
         '<div class="ex-name">'+esc(ex.name)+'</div>' +
         '<div class="ex-sub">'+(group||'Упражнение')+' · '+doneSets+'/'+ex.sets.length+' подх.</div>' +
       '</div>' +
-      (exVol > 0 ? '<div class="ex-vol">'+exVol+' кг</div>' : '<div style="color:var(--sub);font-size:18px">'+(isOpen?'▲':'▼')+'</div>') +
+      (exVol > 0 ? '<div class="ex-vol">'+exVol+' кг</div>' : '') +
       '</div>';
 
-    if (isOpen) {
-      h += '<div class="ex-body open">';
-      if (!cardio) {
-        h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
-      }
-      ex.sets.forEach(function(s, si) {
-        h += '<div class="set-row">';
-        h += '<div class="set-n">'+(si+1)+'</div>';
-        if (cardio) {
-          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';
-          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>';
-        } else {
-          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>';
-          h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>';
-        }
-        h += '<div class="set-circle'+(s.done?' done':'')+'" onclick="toggleSetDone('+ei+','+si+')">✓</div>';
-        h += '</div>';
-      });
-      h += '<div class="add-row">' +
-        '<button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
-        (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') +
-        '</div>';
-      var nextSet = -1;
-      for (var si = 0; si < ex.sets.length; si++) if (!ex.sets[si].done){ nextSet = si; break; }
-      if (nextSet !== -1) {
-        var s = ex.sets[nextSet];
-        var target = cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
-        h += '<button class="rec-btn" onclick="recordSet('+ei+','+nextSet+')">' +
-          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' +
-          'Записать подход · '+target+'</button>';
-      }
-      h += '<button class="rm-ex-btn" onclick="removeEx('+ei+')">Удалить упражнение</button>';
-      h += '</div>';
+    h += '<div class="ex-body open">';
+    if (!cardio) {
+      h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
     }
+    ex.sets.forEach(function(s, si) {
+      h += '<div class="set-row">';
+      h += '<div class="set-n">'+(si+1)+'</div>';
+      if (cardio) {
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>';
+      } else {
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>';
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>';
+      }
+      h += '<div class="set-circle'+(s.done?' done':'')+'" onclick="toggleSetDone('+ei+','+si+')">✓</div>';
+      h += '</div>';
+    });
+    h += '<div class="add-row">' +
+      '<button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
+      (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') +
+      '</div>';
+    var nextSet = -1;
+    for (var si = 0; si < ex.sets.length; si++) if (!ex.sets[si].done){ nextSet = si; break; }
+    if (nextSet !== -1) {
+      var s = ex.sets[nextSet];
+      var target = cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
+      h += '<button class="rec-btn" onclick="recordSet('+ei+','+nextSet+')">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' +
+        'Записать подход · '+target+'</button>';
+    }
+    h += '<button class="rm-ex-btn" onclick="removeEx('+ei+')">Удалить упражнение</button>';
+    h += '</div>';
     h += '</div>';
   });
 

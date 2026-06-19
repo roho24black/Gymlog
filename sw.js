@@ -1,47 +1,59 @@
-const CACHE = 'gymlog-v3';
+const CACHE = 'gymlog-v5';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c =>
-      fetch('./').then(r => c.put('./', r)).catch(() => {})
-    )
-  );
   self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE).then(c => {
+      const scope = self.registration.scope;
+      return fetch(scope, {cache: 'reload'})
+        .then(r => { if (r.ok) return c.put(scope, r); })
+        .catch(() => {});
+    })
+  );
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
+  if (e.request.method !== 'GET') return;
 
-  if (isHTML) {
+  const url = new URL(e.request.url);
+  if (url.origin !== location.origin) return;
+
+  const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
+
+  if (isPage) {
+    // Stale-while-revalidate: сразу из кэша + обновляем в фоне
     e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
+      caches.open(CACHE).then(c =>
+        c.match(e.request).then(cached => {
+          const networkFetch = fetch(e.request)
+            .then(r => {
+              if (r.ok) c.put(e.request, r.clone());
+              return r;
+            })
+            .catch(() => cached || c.match(self.registration.scope));
+          // Если есть кэш — отдаём сразу, обновляем фоном
+          return cached ? (networkFetch.catch(() => {}), cached) : networkFetch;
         })
-        .catch(() =>
-          caches.match(e.request)
-            .then(r => r || caches.match('./'))
-        )
+      )
     );
   } else {
+    // Иконка, манифест — сначала кэш
     e.respondWith(
       caches.match(e.request).then(r => r ||
         fetch(e.request).then(res => {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
           return res;
-        })
+        }).catch(() => new Response('', {status: 408}))
       )
     );
   }

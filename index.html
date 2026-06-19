@@ -1202,7 +1202,7 @@ function renderTemplates() {
       var color = tplColor(tpl.name);
       h += '<div class="tpl-card" style="cursor:default">' +
         '<div class="tpl-tile" style="background:'+color+'">'+letterOf(tpl.name)+'</div>' +
-        '<div style="flex:1;min-width:0" onclick="useTpl(null,ti)">' +
+        '<div style="flex:1;min-width:0" onclick="useTpl(null,'+ti+')">' +
           '<div class="tpl-name">'+esc(tpl.name)+'</div>' +
           '<div class="tpl-meta">'+(tpl.exs||[]).length+' упражнений</div>' +
           tplExPreview(tpl.exs) +
@@ -1219,7 +1219,7 @@ function renderTemplates() {
   h += '<div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Готовые программы</div>';
   BUILT_IN.forEach(function(tpl){
     var color = tplColor(tpl.name);
-    h += '<div class="tpl-card" onclick="useTpl(tpl.id)">' +
+    h += '<div class="tpl-card" onclick="useTpl(\''+tpl.id+'\')">' +
       '<div class="tpl-tile" style="background:'+color+'">'+letterOf(tpl.name)+'</div>' +
       '<div style="flex:1;min-width:0">' +
         '<div class="tpl-name">'+esc(tpl.name)+'</div>' +

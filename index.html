@@ -499,6 +499,42 @@ function exMeta(name) {
 function exTileColor(name) { return exMeta(name).color; }
 function exGroup(name) { return exMeta(name).group; }
 
+function muscleGroupColor(groupName) {
+  var map = {
+    'Ноги':     '#f59e0b',
+    'Грудь':    '#22c55e',
+    'Спина':    '#38bdf8',
+    'Плечи':    '#a78bfa',
+    'Руки':     '#fb923c',
+    'Стили':    '#06b6d4',
+    'Тренажёры':'#71717a',
+    'Кардио':   '#8b5cf6'
+  };
+  return map[groupName] || '#22c55e';
+}
+
+function getDayDots(dateStr) {
+  var day = ST.w[dateStr];
+  if (!day) return [];
+  if (day.type === 'rest' && (!day.workouts || !day.workouts.length)) return ['#71717a'];
+  var colors = [];
+  var seen = {};
+  (day.workouts || []).forEach(function(w) {
+    if (w.loc === 'pool') {
+      if (!seen['Стили']) { seen['Стили'] = true; colors.push('#06b6d4'); }
+    }
+    (w.exercises || []).forEach(function(ex) {
+      var grp = exGroup(ex.name);
+      if (grp && !seen[grp]) {
+        seen[grp] = true;
+        colors.push(muscleGroupColor(grp));
+      }
+    });
+  });
+  if (!colors.length && day.type === 'rest') return ['#71717a'];
+  return colors.slice(0, 3);
+}
+
 // ═══════════════════════ BUILT-IN TEMPLATES ═══════════════════════
 var BUILT_IN = [
   {id:'push', name:'Жимовой день', loc:'gym', exs:['Жим штанги лёжа','Жим гантелей лёжа','Жим в тренажёре (плечи)','Сведение рук в кроссовере','Разгибание рук на блоке']},

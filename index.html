@@ -748,9 +748,31 @@ function renderWorkout() {
       '<div class="sec-badge">Сегодня</div>' +
       '<div class="sec-title" style="margin-bottom:16px">Тренировка</div>';
     if (ws.length === 0) {
-      h += '<div class="empty"><div class="empty-ico">🏋️</div>' +
-        '<div class="empty-msg">Нет активной тренировки</div>' +
-        '<button class="btn btn-acc btn-full" onclick="startWorkout()" style="border-radius:14px;height:48px;font-size:15px">Начать тренировку</button></div>';
+      var allTpls = ST.templates.map(function(t,i){ return {t:t,isCustom:true,idx:i}; })
+        .concat(BUILT_IN.map(function(t){ return {t:t,isCustom:false}; }));
+      if (allTpls.length) {
+        h += '<div class="sec-badge" style="margin-bottom:10px">Быстрый старт</div>';
+        allTpls.forEach(function(item) {
+          var tpl = item.t;
+          var color = tplColor(tpl.name);
+          var preview = (tpl.exs||[]).slice(0,2).map(function(e){ return typeof e==='string'?e:e.name; }).join(', ');
+          if ((tpl.exs||[]).length > 2) preview += ' +'+((tpl.exs||[]).length-2);
+          var fn = item.isCustom ? 'useTpl(null,'+item.idx+')' : 'useTpl(\''+tpl.id+'\')';
+          h += '<div class="wkt-tpl-card" onclick="'+fn+'">' +
+            '<div class="ex-tile" style="background:'+color+';width:36px;height:36px;font-size:15px;border-radius:10px;flex-shrink:0">'+letterOf(tpl.name)+'</div>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:14px;font-weight:700">'+esc(tpl.name)+'</div>' +
+              '<div style="font-size:12px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(preview)+'</div>' +
+            '</div>' +
+            '<span class="tpl-badge '+(tpl.loc||'gym')+'">'+((tpl.loc||'gym')==='pool'?'🌊':'🏋️')+'</span>' +
+            '</div>';
+        });
+        h += '<button class="btn btn-full" style="margin-top:4px;height:42px;font-size:13px;color:var(--sub);border-radius:12px;border:1px solid var(--brd);background:none;font-family:inherit;cursor:pointer" onclick="startWorkout()">Пустая тренировка</button>';
+      } else {
+        h += '<div class="empty"><div class="empty-ico">🏋️</div>' +
+          '<div class="empty-msg">Нет активной тренировки</div>' +
+          '<button class="btn btn-acc btn-full" onclick="startWorkout()" style="border-radius:14px;height:48px;font-size:15px">Начать тренировку</button></div>';
+      }
     } else {
       ws.forEach(function(w) {
         var dur = w.endTime ? fmtTime(Math.floor((w.endTime-w.startTime)/1000)) : '';

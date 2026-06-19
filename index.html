@@ -638,6 +638,31 @@ function ensureDay(date) {
   if (!ST.w[date]) ST.w[date] = {type:'day', workouts:[]};
   if (!ST.w[date].workouts) ST.w[date].workouts = [];
 }
+
+function getExStats(name) {
+  var today = todayStr();
+  var pr = 0, lastW = 0, lastR = 0, lastDate = null;
+  Object.keys(ST.w).sort().forEach(function(ds) {
+    if (ds === today) return;
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(wkt) {
+      (wkt.exercises || []).forEach(function(ex) {
+        if (ex.name !== name) return;
+        var done = (ex.sets || []).filter(function(s){ return s.done && (s.w||0) > 0; });
+        if (!done.length) return;
+        var mx = Math.max.apply(null, done.map(function(s){ return s.w||0; }));
+        if (mx > pr) pr = mx;
+        if (!lastDate || ds > lastDate) {
+          lastDate = ds;
+          var last = done[done.length-1];
+          lastW = last.w||0; lastR = last.r||0;
+        }
+      });
+    });
+  });
+  return lastDate ? {lastW:lastW, lastR:lastR, pr:pr} : null;
+}
 function makeEx(name) {
   var cardio = isCardio(name);
   var sets = [];

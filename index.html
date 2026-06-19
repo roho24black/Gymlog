@@ -1376,7 +1376,9 @@ function updateEditorLoc() {
 }
 function editorAddEx(name) {
   if (!EDITOR_TPL) return;
-  EDITOR_TPL.exs.push({name:name,sets:3,reps:12,weight:0});
+  var stat = isStatic(name);
+  var card = isCardio(name);
+  EDITOR_TPL.exs.push(stat ? {name:name,sets:3,reps:60} : card ? {name:name,sets:1,reps:20} : {name:name,sets:3,reps:12,weight:0});
   dbClose(); renderEditorExs();
 }
 function editorRemoveEx(i) { EDITOR_TPL.exs.splice(i,1); renderEditorExs(); }
@@ -1395,6 +1397,7 @@ function renderEditorExs() {
     var color = exTileColor(ex.name);
     var group = exGroup(ex.name);
     var isC = isCardio(ex.name);
+    var isS = isStatic(ex.name);
     h += '<div class="editor-ex-card">' +
       '<div class="editor-ex-hd">' +
         '<div class="ex-tile" style="background:'+color+';opacity:0.85;width:34px;height:34px;font-size:14px">'+letterOf(ex.name)+'</div>' +
@@ -1404,7 +1407,10 @@ function renderEditorExs() {
         '</button>' +
       '</div>' +
       '<div class="editor-steppers">';
-    if (!isC) {
+    if (isS) {
+      h += stepperBox(i,'sets',ex.sets||3,'Подходы');
+      h += stepperBox(i,'reps',ex.reps||60,'Секунды',5);
+    } else if (!isC) {
       h += stepperBox(i,'sets',ex.sets||3,'Подходы');
       h += stepperBox(i,'reps',ex.reps||12,'Повторы');
       h += stepperBox(i,'weight',ex.weight||0,'Вес кг',2.5);

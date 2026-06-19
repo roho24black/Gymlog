@@ -2,7 +2,7 @@
   "name": "GYM Log",
   "short_name": "GYM Log",
   "description": "Планировщик тренировок",
-  "start_url": "gym planner.html",
+  "start_url": "/Gymlog/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#080810",

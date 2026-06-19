@@ -19,7 +19,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  const isHTML = url.pathname.endsWith('.html') || url.pathname === '/';
+  const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '/';
 
   if (isHTML) {
     // HTML: сначала сеть (свежая версия), при офлайне — кэш

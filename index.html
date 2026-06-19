@@ -784,7 +784,7 @@ function renderWorkout() {
       h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
     }
     ex.sets.forEach(function(s, si) {
-      h += '<div class="set-row">';
+      h += '<div class="set-row'+(s.done?' done':'')+'">';
       h += '<div class="set-n">'+(si+1)+'</div>';
       if (cardio) {
         h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';

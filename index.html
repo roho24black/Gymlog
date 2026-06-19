@@ -1095,12 +1095,18 @@ function renderCalDetail() {
   var day = ST.w[SEL_DATE];
   var h = '<div class="cal-detail"><div class="cal-det-title">📅 '+dateLabel(SEL_DATE)+'</div>';
   if (!day||(!day.workouts&&day.type!=='rest')) {
-    h += '<div style="color:var(--sub);font-size:14px">Нет записей</div>';
+    h += '<div style="color:var(--sub);font-size:14px;margin-bottom:4px">Нет записей</div>';
   } else if (day.type==='rest') {
-    h += '<div style="color:var(--sub);font-size:14px">День отдыха 💤</div>';
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">' +
+      '<div style="color:var(--sub);font-size:14px;flex:1">День отдыха 💤</div>' +
+      '<button onclick="clearRest(\''+SEL_DATE+'\')" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:1px solid rgba(244,63,94,0.25)">Убрать</button>' +
+      '</div>';
   } else {
-    day.workouts.forEach(function(w){
-      h += '<div style="font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px">'+(w.loc==='pool'?'🌊':'🏋️')+' '+esc(w.name)+'</div>';
+    day.workouts.forEach(function(w, wi){
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--sub);flex:1">'+(w.loc==='pool'?'🌊':'🏋️')+' '+esc(w.name)+'</div>' +
+        '<button onclick="removeCalWorkout(\''+SEL_DATE+'\','+wi+')" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:1px solid rgba(244,63,94,0.25)">Удалить</button>' +
+        '</div>';
       (w.exercises||[]).forEach(function(ex){
         var done = ex.sets.filter(function(s){return s.done;}).length;
         var maxW = 0; ex.sets.forEach(function(s){ if((s.w||0)>maxW) maxW=s.w||0; });
@@ -1117,6 +1123,16 @@ function renderCalDetail() {
 }
 function markRest(ds) {
   if (!ST.w[ds]) ST.w[ds]={type:'rest',workouts:[]}; else ST.w[ds].type='rest';
+  saveST(); renderCalDetail(); renderCal();
+}
+function clearRest(ds) {
+  if (ST.w[ds]) { delete ST.w[ds].type; if (!(ST.w[ds].workouts||[]).length) delete ST.w[ds]; }
+  saveST(); renderCalDetail(); renderCal();
+}
+function removeCalWorkout(ds, wi) {
+  if (!ST.w[ds]||!ST.w[ds].workouts) return;
+  ST.w[ds].workouts.splice(wi, 1);
+  if (!ST.w[ds].workouts.length && ST.w[ds].type!=='rest') delete ST.w[ds];
   saveST(); renderCalDetail(); renderCal();
 }
 function startOnDate(ds) {

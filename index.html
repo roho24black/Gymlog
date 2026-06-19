@@ -844,6 +844,13 @@ function renderWorkout() {
 
     h += '<div class="ex-body open">';
     if (!cardio) {
+      var st = getExStats(ex.name);
+      if (st) {
+        h += '<div class="ex-hist">' +
+          '<span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
+          (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') +
+          '</div>';
+      }
       h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
     }
     ex.sets.forEach(function(s, si) {

@@ -1011,30 +1011,49 @@ function dbClose(e) {
     document.getElementById('db-modal').classList.remove('vis');
 }
 function renderDbChips() {
-  document.getElementById('db-chips').innerHTML = DB_SECTIONS.map(function(sec){
-    return '<button class="db-chip'+(DB_FILTER===sec.key?' on':'')+'" onclick="dbFilter(\''+sec.key+'\')">'+sec.icon+' '+sec.label+'</button>';
+  document.getElementById('db-chips').innerHTML = DB_MUSCLE_FILTERS.map(function(f){
+    return '<button class="db-chip'+(DB_FILTER===f.key?' on':'')+'" onclick="dbFilter(\''+f.key+'\')">'+f.icon+' '+f.label+'</button>';
   }).join('');
 }
 function dbFilter(key) { DB_FILTER = DB_FILTER===key?null:key; renderDbChips(); dbRender(); }
+
+function dbExsForGroup(groupKey) {
+  // Map UI filter key → actual DB group name
+  var dbGroup = groupKey;
+  if (groupKey==='Кардио') dbGroup = 'Тренажёры';
+  if (groupKey==='Плавание') dbGroup = 'Стили';
+  var results = [];
+  DB_SECTIONS.forEach(function(sec){
+    var exs = sec.groups[dbGroup];
+    if (exs) exs.forEach(function(name){ results.push({name:name, icon:sec.icon}); });
+  });
+  return results;
+}
+
 function dbRender() {
   var q = (document.getElementById('db-search').value||'').toLowerCase().trim();
-  var list = document.getElementById('db-list'); var html = '';
-  DB_SECTIONS.forEach(function(sec){
-    if (DB_FILTER && DB_FILTER!==sec.key) return;
-    var secHtml = '';
-    Object.keys(sec.groups).forEach(function(group){
-      var exs = sec.groups[group].filter(function(name){ return !q||name.toLowerCase().indexOf(q)!==-1; });
+  var list = document.getElementById('db-list');
+  var html = '';
+
+  function renderEx(ex) {
+    return '<div class="db-item" onclick="DB_CB(\''+ex.name.replace(/'/g,"\\'")+'\')">'+
+      '<div class="db-item-name">'+esc(ex.name)+'</div>'+
+      '<span style="font-size:16px">'+ex.icon+'</span></div>';
+  }
+
+  if (DB_FILTER) {
+    var exs = dbExsForGroup(DB_FILTER).filter(function(e){ return !q||e.name.toLowerCase().indexOf(q)!==-1; });
+    html = exs.length ? exs.map(renderEx).join('') : '<div class="empty" style="padding:20px">Ничего не найдено</div>';
+  } else {
+    DB_MUSCLE_FILTERS.forEach(function(f){
+      var exs = dbExsForGroup(f.key).filter(function(e){ return !q||e.name.toLowerCase().indexOf(q)!==-1; });
       if (!exs.length) return;
-      secHtml += '<div class="db-sec-hd">'+group+'</div>';
-      exs.forEach(function(name){
-        secHtml += '<div class="db-item" onclick="DB_CB(\''+name.replace(/'/g,"\\'")+'\')">' +
-          '<div class="db-item-name">'+esc(name)+'</div>' +
-          '<span style="font-size:16px">'+sec.icon+'</span></div>';
-      });
+      html += '<div class="db-sec-hd">'+f.icon+' '+f.label+'</div>';
+      html += exs.map(renderEx).join('');
     });
-    if (secHtml) html += '<div class="db-sec-hd">'+sec.icon+' '+sec.label+'</div>'+secHtml;
-  });
-  list.innerHTML = html || '<div class="empty" style="padding:20px">Ничего не найдено</div>';
+    if (!html) html = '<div class="empty" style="padding:20px">Ничего не найдено</div>';
+  }
+  list.innerHTML = html;
 }
 
 // ═══════════════════════ CALENDAR ═══════════════════════

@@ -1089,7 +1089,7 @@ function makeEx(name) {
   var sets = [];
   var n = (cardio||swim) ? 1 : 3;
   for (var i = 0; i < n; i++)
-    sets.push(swim ? {dist:100, secs:120, done:false} : cardio ? {w:0,r:0,dist:3,mins:20,done:false} : stat ? {secs:60,done:false} : {w:0,r:12,done:false});
+    sets.push(swim ? {dist:100, done:false} : cardio ? {w:0,r:0,dist:3,mins:20,done:false} : stat ? {secs:60,done:false} : {w:0,r:12,done:false});
   return {id:name, name:name, sets:sets, note:''};
 }
 

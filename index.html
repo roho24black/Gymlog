@@ -344,24 +344,26 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 .rec-btn{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--brd2);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-user-select:none;user-select:none;transition:opacity .12s}
 .rec-btn:active{opacity:.7}
 
-/* ── PLAN ── */
-.plan-card{background:var(--card);border:1px solid rgba(167,139,250,0.32);border-radius:var(--r);padding:14px;margin-bottom:10px}
-.plan-card-badge{font-size:10px;font-weight:700;color:var(--pur);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.plan-card-exs{font-size:12.5px;color:var(--sub);line-height:1.8;margin:7px 0 10px}
-.plan-card-acts{display:flex;gap:7px}
-.plan-btn-edit{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--brd2);border-radius:10px;padding:9px;color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .12s;-webkit-user-select:none;user-select:none}
-.plan-btn-start{flex:2;background:rgba(167,139,250,0.13);border:1px solid rgba(167,139,250,0.35);border-radius:10px;padding:9px;color:var(--pur);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .12s;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-user-select:none;user-select:none}
-.plan-btn-edit:active,.plan-btn-start:active{opacity:.65}
-.plan-view-hd{padding:14px 14px 8px;max-width:560px;margin:0 auto}
-.plan-view-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.plan-name-inp{background:none;border:none;color:var(--txt);font-size:19px;font-weight:800;font-family:inherit;width:100%;outline:none;-webkit-appearance:none;letter-spacing:-.4px;padding:0;display:block;margin:4px 0 10px}
+/* ── PLAN CARD ── */
+.plan-card{background:var(--card);border:1px solid rgba(167,139,250,0.28);border-radius:var(--r);padding:0;margin-bottom:10px;overflow:hidden}
+.plan-card-top{padding:14px 14px 10px;position:relative}
+.plan-card-badge{font-size:9px;font-weight:800;color:var(--pur);text-transform:uppercase;letter-spacing:.9px;margin-bottom:6px;display:flex;align-items:center;gap:4px;opacity:.75}
+.plan-card-exs{font-size:12.5px;color:var(--sub);line-height:1.75;margin:6px 0 0}
+.plan-edit-ico{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--dim);font-size:15px;cursor:pointer;padding:4px;-webkit-user-select:none;user-select:none}
+.plan-btn-start{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:13px;background:rgba(167,139,250,0.1);border:none;border-top:1px solid rgba(167,139,250,0.2);color:var(--pur);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-user-select:none;user-select:none;transition:opacity .12s}
+.plan-btn-start:active{opacity:.65}
+
+/* ── PLAN EDITOR ── */
+.plan-ed-hd{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;background:var(--bg);border-bottom:1px solid var(--brd2);position:sticky;top:0;z-index:10}
+.plan-name-inp{background:none;border:none;color:var(--txt);font-size:17px;font-weight:800;font-family:inherit;flex:1;outline:none;-webkit-appearance:none;letter-spacing:-.3px;padding:0;min-width:0}
 .plan-name-inp::placeholder{color:var(--dim)}
-.plan-loc-row{display:flex;background:var(--card2);border:1px solid var(--brd2);border-radius:8px;overflow:hidden;margin-bottom:6px}
-.plan-loc-btn{flex:1;padding:7px 10px;font-size:11.5px;font-weight:700;font-family:inherit;border:none;background:none;color:var(--sub);cursor:pointer;transition:all .15s}
+.plan-loc-row{display:flex;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;overflow:hidden;margin:10px 14px 4px}
+.plan-loc-btn{flex:1;padding:9px 10px;font-size:12px;font-weight:700;font-family:inherit;border:none;background:none;color:var(--sub);cursor:pointer;transition:all .15s;-webkit-user-select:none;user-select:none}
 .plan-loc-btn.on-gym{background:rgba(34,197,94,0.15);color:var(--acc)}
 .plan-loc-btn.on-pool{background:rgba(56,189,248,0.12);color:var(--blu)}
-.plan-start-big{height:50px;border-radius:14px;font-size:15px;font-weight:700;border:1.5px solid rgba(167,139,250,0.4);color:var(--pur);background:rgba(167,139,250,0.1);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit;width:100%;-webkit-user-select:none;user-select:none;transition:opacity .12s;margin-top:4px}
-.plan-start-big:active{opacity:.7}
+.plan-launch-bar{position:sticky;bottom:0;left:0;right:0;padding:10px 14px calc(env(safe-area-inset-bottom) + 80px);background:linear-gradient(to top,var(--bg) 70%,transparent);pointer-events:none}
+.plan-launch-bar button{pointer-events:auto;width:100%;height:52px;border-radius:16px;font-size:16px;font-weight:800;border:none;background:var(--pur);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit;-webkit-user-select:none;user-select:none;transition:opacity .12s;box-shadow:0 4px 20px rgba(139,92,246,0.35)}
+.plan-launch-bar button:active{opacity:.8}
 .btn-plan{border-color:rgba(167,139,250,0.3);color:var(--pur)}
 
 /* ── RECOVERY CARD ── */

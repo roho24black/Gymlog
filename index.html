@@ -1695,7 +1695,7 @@ function renderWorkout() {
     for (var si = 0; si < ex.sets.length; si++) if (!ex.sets[si].done){ nextSet = si; break; }
     if (nextSet !== -1) {
       var s = ex.sets[nextSet];
-      var target = stat ? ((s.secs||60)+' сек') : cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
+      var target = stat ? ((s.secs||60)+' сек') : swim ? ((s.dist||0)+' м · '+fmtTime(s.secs||0)) : cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
       h += '<button class="rec-btn" onclick="recordSet('+ei+','+nextSet+')">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' +
         'Записать подход · '+target+'</button>';

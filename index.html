@@ -2354,6 +2354,9 @@ function renderEditorExs() {
     if (isS) {
       h += stepperBox(i,'sets',ex.sets||3,'Подходы');
       h += stepperBox(i,'reps',ex.reps||60,'Секунды',5);
+    } else if (isSw) {
+      h += stepperBox(i,'sets',ex.sets||1,'Подходы');
+      h += stepperBox(i,'reps',ex.reps||100,'Метры',25);
     } else if (!isC) {
       h += stepperBox(i,'sets',ex.sets||3,'Подходы');
       h += stepperBox(i,'reps',ex.reps||12,'Повторы');

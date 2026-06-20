@@ -84,6 +84,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 /* ── WORKOUT HEAD ── */
 .wkt-head{padding:8px 14px 10px;max-width:560px;margin:0 auto}
 .wkt-name{font-size:21px;font-weight:700;letter-spacing:-0.4px;line-height:1.1}
+.wkt-name-inp{font-size:21px;font-weight:700;letter-spacing:-0.4px;line-height:1.1;color:var(--txt);background:none;border:none;font-family:inherit;outline:none;-webkit-appearance:none;padding:0 0 2px;width:100%;min-width:0;border-bottom:1px dashed transparent;transition:border-color .15s}
+.wkt-name-inp:focus{border-bottom-color:var(--brd2)}
+.wkt-name-inp::placeholder{color:var(--dim)}
 .wkt-timer-row{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums}
 .wkt-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc);flex-shrink:0}
 .wkt-actions{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}

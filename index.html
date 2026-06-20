@@ -1298,36 +1298,50 @@ function setWktLoc(loc) {
 
 function renderWorkout() {
   var pg = document.getElementById('pg-workout');
+
+  // ── PLAN EDITOR MODE ──
+  if (PLAN_WKT && !ACTIVE_WKT) {
+    var pw = getWkt(PLAN_WKT.date, PLAN_WKT.wid);
+    if (!pw) { PLAN_WKT = null; renderTopbar(); renderWorkout(); return; }
+    pg.innerHTML = renderPlanView(pw);
+    return;
+  }
+
   if (!ACTIVE_WKT) {
     var ws = getWorkouts(todayStr());
+    var plans  = ws.filter(function(w){ return w.planned; });
+    var donews = ws.filter(function(w){ return !w.planned; });
+
     var h = '<div class="inner">' +
       '<div class="sec-badge">Сегодня</div>' +
-      '<div class="sec-title" style="margin-bottom:16px">Тренировка</div>';
-    // Карточка восстановления (если активна)
+      '<div class="sec-title" style="margin-bottom:14px">Тренировка</div>';
+
     h += renderRecoveryCard();
-
     var rcvActive = ST.recovery && Date.now() < getRecoveryEnd();
-
-    // Рекомендации (только если нет активного восстановления)
     if (!rcvActive) h += buildRecBlock();
 
-    if (ws.length === 0) {
-      h += '<button class="btn btn-acc btn-full" onclick="startWorkout()" style="border-radius:14px;height:52px;font-size:16px">Начать тренировку</button>';
-      if (!rcvActive) {
-        h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="margin-top:8px;border-radius:14px;height:44px">🔋 Рассчитать восстановление</button>';
-      }
+    // Планы на сегодня
+    plans.forEach(function(w){ h += planCard(w, todayStr()); });
+
+    if (donews.length === 0) {
+      h += '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+        '<button class="btn btn-acc" style="flex:2;border-radius:14px;height:50px;font-size:15px" onclick="startWorkout()">Начать тренировку</button>' +
+        '<button class="btn btn-plan" style="flex:1;border-radius:14px;height:50px;font-size:13px;font-weight:700" onclick="createPlan()">📋 План</button>' +
+        '</div>';
+      if (!rcvActive) h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="border-radius:14px;height:42px">🔋 Рассчитать восстановление</button>';
     } else {
-      ws.forEach(function(w) {
+      donews.forEach(function(w) {
         var dur = w.endTime ? fmtTime(Math.floor((w.endTime-w.startTime)/1000)) : '';
         h += '<div class="wkt-idle-card">' +
           '<div style="font-size:28px">'+(w.loc==='pool'?'🌊':'🏋️')+'</div>' +
           '<div style="flex:1"><div style="font-size:15px;font-weight:700">'+esc(w.name)+'</div>' +
           '<div style="font-size:12px;color:var(--mut);margin-top:2px">'+(w.exercises||[]).length+' упр.'+(dur?' · '+dur:'')+'</div></div></div>';
       });
-      h += '<button class="btn btn-acc btn-full" style="margin-top:8px;border-radius:14px;height:44px" onclick="startWorkout()">+ Ещё тренировка</button>';
-      if (!rcvActive) {
-        h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="margin-top:8px;border-radius:14px;height:44px">🔋 Запустить период восстановления</button>';
-      }
+      h += '<div style="display:flex;gap:8px;margin-top:8px">' +
+        '<button class="btn btn-acc" style="flex:2;border-radius:14px;height:44px" onclick="startWorkout()">+ Ещё тренировка</button>' +
+        '<button class="btn btn-plan" style="flex:1;border-radius:14px;height:44px;font-size:13px;font-weight:700" onclick="createPlan()">📋 План</button>' +
+        '</div>';
+      if (!rcvActive) h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="margin-top:8px;border-radius:14px;height:42px">🔋 Запустить период восстановления</button>';
     }
     h += '</div>';
     pg.innerHTML = h;

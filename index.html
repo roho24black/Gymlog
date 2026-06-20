@@ -1477,7 +1477,7 @@ function startWorkout(fromTpl) {
         var swm  = isSwim(ex.name);
         ex.sets = [];
         for (var i = 0; i < e.sets; i++)
-          ex.sets.push(stat ? {secs:e.reps||60,done:false} : swm ? {dist:e.reps||100, secs:120, done:false} : card ? {w:0,r:0,dist:3,mins:e.reps||20,done:false} : {w:e.weight||0,r:e.reps||12,done:false});
+          ex.sets.push(stat ? {secs:e.reps||60,done:false} : swm ? {dist:e.reps||100, done:false} : card ? {w:0,r:0,dist:3,mins:e.reps||20,done:false} : {w:e.weight||0,r:e.reps||12,done:false});
       }
       wkt.exercises.push(ex);
     });

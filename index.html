@@ -1455,7 +1455,7 @@ function renderWorkout() {
     if (donews.length === 0) {
       h += '<div style="display:flex;gap:8px;margin-bottom:8px">' +
         '<button class="btn btn-acc" style="flex:2;border-radius:14px;height:50px;font-size:15px" onclick="startWorkout()">Начать тренировку</button>' +
-        '<button class="btn btn-plan" style="flex:1;border-radius:14px;height:50px;font-size:13px;font-weight:700" onclick="createPlan()">📋 План</button>' +
+        '<button class="btn btn-plan" style="flex:1;border-radius:14px;height:50px;font-size:13px;font-weight:700" onclick="showPlanDateSheet()">📋 План</button>' +
         '</div>';
       if (!rcvActive) h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="border-radius:14px;height:42px">🔋 Рассчитать восстановление</button>';
     } else {
@@ -1470,7 +1470,7 @@ function renderWorkout() {
       });
       h += '<div style="display:flex;gap:8px;margin-top:8px">' +
         '<button class="btn btn-acc" style="flex:2;border-radius:14px;height:44px" onclick="startWorkout()">+ Ещё тренировка</button>' +
-        '<button class="btn btn-plan" style="flex:1;border-radius:14px;height:44px;font-size:13px;font-weight:700" onclick="createPlan()">📋 План</button>' +
+        '<button class="btn btn-plan" style="flex:1;border-radius:14px;height:44px;font-size:13px;font-weight:700" onclick="showPlanDateSheet()">📋 План</button>' +
         '</div>';
       if (!rcvActive) h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="margin-top:8px;border-radius:14px;height:42px">🔋 Запустить период восстановления</button>';
     }

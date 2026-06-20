@@ -759,6 +759,182 @@ function getExStats(name) {
   });
   return lastDate ? {lastW:lastW, lastR:lastR, pr:pr} : null;
 }
+// ═══════════════════════ RECOVERY ═══════════════════════
+var RCV_TIMER_ID = null;
+var BASE_RCV_H = {'Ноги':72,'Спина':64,'Грудь':56,'Плечи':44,'Руки':36,'Статика':28,'Кардио':22,'Стили':18,'Тренажёры':40};
+
+function calcRecovery(exercises) {
+  // Aggregate done sets per muscle group
+  var groups = {};
+  exercises.forEach(function(ex) {
+    var g = exGroup(ex.name);
+    if (!g) return;
+    if (!groups[g]) groups[g] = {doneSets:0, totalReps:0, setCount:0, maxW:0};
+    (ex.sets||[]).forEach(function(s) {
+      if (!s.done) return;
+      groups[g].doneSets++;
+      if (s.r)  { groups[g].totalReps += s.r; groups[g].setCount++; }
+      if (s.w && s.w > groups[g].maxW) groups[g].maxW = s.w;
+    });
+  });
+
+  var result = {};
+  Object.keys(groups).forEach(function(g) {
+    var d = groups[g];
+    if (!d.doneSets) return;
+    var base = BASE_RCV_H[g] || 48;
+
+    // Volume modifier: лёгкий объём ×0.8 → экстремальный ×1.6
+    var volMod;
+    if      (d.doneSets <= 3)  volMod = 0.80;
+    else if (d.doneSets <= 6)  volMod = 1.00;
+    else if (d.doneSets <= 10) volMod = 1.20;
+    else if (d.doneSets <= 15) volMod = 1.40;
+    else                       volMod = 1.60;
+
+    // Intensity modifier: низкие повторения → высокая нагрузка на ЦНС
+    var avgReps = d.setCount > 0 ? d.totalReps / d.setCount : 10;
+    var intMod;
+    if      (avgReps <= 3)  intMod = 1.40; // максимальная сила, высокая ЦНС нагрузка
+    else if (avgReps <= 5)  intMod = 1.25; // сила
+    else if (avgReps <= 8)  intMod = 1.15; // сила-гипертрофия
+    else if (avgReps <= 12) intMod = 1.00; // гипертрофия
+    else if (avgReps <= 20) intMod = 0.90; // гипертрофия-выносливость
+    else                    intMod = 0.78; // выносливость
+
+    var h = Math.round(base * volMod * intMod);
+    result[g] = Math.max(18, Math.min(96, h));
+  });
+  return result; // {groupName: hours}
+}
+
+function getRecoveryEnd() {
+  if (!ST.recovery || !ST.recovery.groups) return 0;
+  var max = 0;
+  Object.keys(ST.recovery.groups).forEach(function(g){ if (ST.recovery.groups[g] > max) max = ST.recovery.groups[g]; });
+  return max;
+}
+
+function startRecovery() {
+  // Собираем упражнения из тренировок: сначала сегодня, потом вчера, потом 2 дня назад
+  var allEx = [], label = '';
+  var sources = [todayStr(), dateOffset(-1), dateOffset(-2)];
+  for (var i = 0; i < sources.length; i++) {
+    var wkts = getWorkouts(sources[i]);
+    if (wkts.length) {
+      wkts.forEach(function(w) {
+        label = label || w.name;
+        (w.exercises||[]).forEach(function(ex){ allEx.push(ex); });
+      });
+      break;
+    }
+  }
+  if (!allEx.length) { alert('Нет данных тренировок для расчёта'); return; }
+
+  var groupHours = calcRecovery(allEx);
+  if (!Object.keys(groupHours).length) { alert('Нет выполненных подходов'); return; }
+
+  var now = Date.now();
+  var groups = {};
+  Object.keys(groupHours).forEach(function(g){ groups[g] = now + groupHours[g] * 3600000; });
+
+  ST.recovery = { startMs: now, groups: groups, label: label };
+  saveST();
+  startRecoveryTimer();
+  renderWorkout();
+}
+
+function clearRecovery() {
+  ST.recovery = null; saveST();
+  if (RCV_TIMER_ID) { clearInterval(RCV_TIMER_ID); RCV_TIMER_ID = null; }
+  renderWorkout();
+}
+
+function startRecoveryTimer() {
+  if (RCV_TIMER_ID) return;
+  RCV_TIMER_ID = setInterval(function() {
+    if (!ST.recovery) { clearInterval(RCV_TIMER_ID); RCV_TIMER_ID = null; return; }
+    if (CUR_TAB === 'workout' && !ACTIVE_WKT) {
+      // Обновляем только счётчики без полного ре-рендера
+      var end = getRecoveryEnd();
+      var rem = Math.max(0, end - Date.now());
+      var el = document.getElementById('rcv-time-val');
+      if (el) el.textContent = fmtRem(rem);
+      var bar = document.getElementById('rcv-bar-fill');
+      if (bar && ST.recovery) {
+        var pct = Math.min(100, Math.round((Date.now()-ST.recovery.startMs)/(end-ST.recovery.startMs)*100));
+        bar.style.width = pct + '%';
+      }
+      if (rem === 0) renderWorkout(); // перерисовать при завершении
+    }
+  }, 60000);
+}
+
+function fmtRem(ms) {
+  if (ms <= 0) return '0 мин';
+  var h = Math.floor(ms / 3600000);
+  var m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? h + ' ч ' + m + ' мин' : m + ' мин';
+}
+
+function renderRecoveryCard() {
+  if (!ST.recovery || !ST.recovery.groups) return '';
+  var now = Date.now();
+  var end = getRecoveryEnd();
+
+  // Восстановление завершено
+  if (now >= end) {
+    return '<div class="rcv-done">' +
+      '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+      '<div style="flex:1"><div style="font-size:14px;font-weight:700">Восстановление завершено</div>' +
+      '<div style="font-size:12px;color:var(--sub);margin-top:2px">Все мышечные группы готовы к нагрузке</div></div>' +
+      '<button onclick="clearRecovery()" class="rcv-close">✕</button>' +
+      '</div>';
+  }
+
+  var totalDur = end - ST.recovery.startMs;
+  var elapsed  = now - ST.recovery.startMs;
+  var pct = Math.min(100, Math.round(elapsed / totalDur * 100));
+  var rem = end - now;
+
+  var h = '<div class="rcv-card">' +
+    '<div class="rcv-hd">' +
+      '<div class="rcv-badge">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+        'Период восстановления' +
+      '</div>' +
+      '<button onclick="clearRecovery()" class="rcv-close">✕</button>' +
+    '</div>' +
+    '<div class="rcv-time" id="rcv-time-val">'+fmtRem(rem)+'</div>' +
+    '<div class="rcv-time-sub">до полного восстановления</div>' +
+    '<div class="rcv-bar-wrap"><div class="rcv-bar-fill" id="rcv-bar-fill" style="width:'+pct+'%"></div></div>' +
+    '<div class="rcv-groups">';
+
+  // Сортируем группы по убыванию оставшегося времени
+  var sorted = Object.keys(ST.recovery.groups).sort(function(a,b){ return ST.recovery.groups[b]-ST.recovery.groups[a]; });
+  sorted.forEach(function(g) {
+    var gEnd = ST.recovery.groups[g];
+    var done = now >= gEnd;
+    var gRem = Math.max(0, gEnd - now);
+    var gDur = gEnd - ST.recovery.startMs;
+    var gPct = done ? 100 : Math.min(100, Math.round((now-ST.recovery.startMs)/gDur*100));
+    var color = muscleGroupColor(g);
+    var hours = BASE_RCV_H[g] || 48;
+
+    h += '<div class="rcv-grp">' +
+      '<div class="rcv-grp-lbl" style="color:'+color+'">'+g+'</div>' +
+      '<div class="rcv-grp-bar"><div class="rcv-grp-fill" style="width:'+gPct+'%;background:'+color+'"></div></div>' +
+      '<div class="rcv-grp-rem">'+(done
+        ? '<span style="color:var(--acc);font-weight:700">✓ Готов</span>'
+        : fmtRem(gRem)
+      )+'</div>' +
+    '</div>';
+  });
+
+  h += '</div></div>';
+  return h;
+}
+
 function dateOffset(days) {
   var d = new Date(); d.setDate(d.getDate() + days);
   return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());

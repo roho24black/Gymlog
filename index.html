@@ -646,7 +646,6 @@ function goTab(tab) {
   if (tab === 'calendar') renderCal();
   if (tab === 'templates') renderTemplates();
   if (tab === 'progress') renderProgress();
-  if (tab === 'profile') renderProfile();
 }
 
 // ═══════════════════════ TOPBAR ═══════════════════════
@@ -1518,24 +1517,6 @@ function renderProgChart(name, allEx) {
 }
 
 // ═══════════════════════ PROFILE ═══════════════════════
-function renderProfile() {
-  var c = ST.cfg;
-  document.getElementById('pf-body').innerHTML =
-    '<div class="sec-badge">Настройки</div><div class="sec-title" style="margin-bottom:16px">Профиль</div>' +
-    '<div class="pf-sec">' +
-    '<div class="pf-row"><span class="pf-lbl">Имя</span><input class="pf-inp" value="'+esc(c.name||'')+'" onchange="saveCfg(\'name\',this.value)"></div>' +
-    '<div class="pf-row"><span class="pf-lbl">Возраст</span><input class="pf-inp" type="number" value="'+(c.age||'')+'" onchange="saveCfg(\'age\',+this.value)"></div>' +
-    '<div class="pf-row"><span class="pf-lbl">Вес (кг)</span><input class="pf-inp" type="number" value="'+(c.weight||'')+'" onchange="saveCfg(\'weight\',+this.value)"></div>' +
-    '<div class="pf-row"><span class="pf-lbl">Рост (см)</span><input class="pf-inp" type="number" value="'+(c.height||'')+'" onchange="saveCfg(\'height\',+this.value)"></div>' +
-    '</div>' +
-    '<button class="btn btn-full" style="color:var(--red);border-color:rgba(244,63,94,0.3)" onclick="clearData()">Очистить все данные тренировок</button>';
-}
-function saveCfg(k,v){ ST.cfg[k]=v; saveST(); }
-function clearData() {
-  if (confirm('Удалить все данные тренировок? Это нельзя отменить.')) {
-    ST.w={}; saveST(); renderWorkout();
-  }
-}
 
 // ═══════════════════════ INIT ═══════════════════════
 loadST();

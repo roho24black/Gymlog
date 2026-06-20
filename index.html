@@ -1092,33 +1092,59 @@ function fmtPlanDate(ds) {
 function showPlanDateSheet(fromTpl) {
   closePlanDateSheet();
   window.__pdsTpl = fromTpl || null;
+  window.__pdsIdx = 0;
+
+  var days = [];
+  for (var i = 0; i < 60; i++) days.push(dateOffset(i));
+
+  var drumItems = days.map(function(ds, idx) {
+    return '<div class="drum-item" style="font-size:17px;font-weight:600;letter-spacing:-0.2px" data-ds="'+ds+'" data-idx="'+idx+'">'+fmtPlanDate(ds)+'</div>';
+  }).join('');
+
   var overlay = document.createElement('div');
   overlay.id = 'plan-date-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9100;display:flex;align-items:flex-end;justify-content:center';
 
-  var btns = '';
-  for (var i = 0; i <= 6; i++) {
-    var ds = dateOffset(i);
-    var label = fmtPlanDate(ds);
-    btns += '<button onclick="closePlanDateSheet();createPlan(window.__pdsTpl,\''+ds+'\')" style="display:block;width:100%;text-align:left;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--brd2);color:var(--txt);font-size:16px;font-weight:'+(i===0?'700':'400')+';font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">'+label+'</button>';
-  }
-
   overlay.innerHTML =
     '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box">' +
-      '<div style="padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd2)">' +
+      '<div style="padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between">' +
         '<div style="font-size:17px;font-weight:800;color:var(--txt)">Выбери дату</div>' +
         '<button onclick="closePlanDateSheet()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:6px;line-height:1;-webkit-user-select:none;user-select:none">✕</button>' +
       '</div>' +
-      '<div style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch">' + btns + '</div>' +
-      '<div style="padding:14px 16px calc(env(safe-area-inset-bottom)+14px);border-top:1px solid var(--brd2)">' +
-        '<label style="font-size:13px;color:var(--mut);display:block;margin-bottom:8px;font-weight:600">Другая дата</label>' +
-        '<input type="date" id="plan-date-inp" min="'+todayStr()+'" style="width:100%;box-sizing:border-box;padding:12px 14px;background:var(--card2);border:1.5px solid var(--brd2);border-radius:12px;color:var(--txt);font-size:16px;font-family:inherit;outline:none" onchange="var v=this.value;if(v){setTimeout(function(){closePlanDateSheet();createPlan(window.__pdsTpl,v);},100)}">' +
+      '<div class="drum-wrap" style="margin:0 16px">' +
+        '<div class="drum-mask"></div>' +
+        '<div class="drum-center" style="border-color:rgba(167,139,250,0.5);background:rgba(167,139,250,0.07)"></div>' +
+        '<div class="drum" id="plan-date-drum">'+drumItems+'</div>' +
+      '</div>' +
+      '<div style="padding:12px 16px calc(env(safe-area-inset-bottom)+12px)">' +
+        '<button onclick="planDateConfirm()" style="width:100%;height:50px;border-radius:14px;background:var(--pur);color:#fff;font-size:16px;font-weight:700;border:none;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">Выбрать дату</button>' +
       '</div>' +
     '</div>';
 
   overlay.addEventListener('click', function(e){ if (e.target === overlay) closePlanDateSheet(); });
   document.body.appendChild(overlay);
-  // focus the date input after a short delay so iOS sheet animation settles
+
+  // Track scroll to update selected index
+  var drum = document.getElementById('plan-date-drum');
+  drum.addEventListener('scroll', function() {
+    window.__pdsIdx = Math.round(drum.scrollTop / 48);
+  }, {passive: true});
+}
+
+function planDateConfirm() {
+  var drum = document.getElementById('plan-date-drum');
+  if (drum) {
+    var idx = Math.round(drum.scrollTop / 48);
+    var item = drum.children[idx];
+    if (item) {
+      var ds = item.getAttribute('data-ds');
+      closePlanDateSheet();
+      createPlan(window.__pdsTpl, ds);
+      return;
+    }
+  }
+  closePlanDateSheet();
+  createPlan(window.__pdsTpl, todayStr());
 }
 
 function closePlanDateSheet() {

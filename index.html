@@ -1092,6 +1092,15 @@ function deletePlan(date, wid) {
   renderTopbar(); renderWorkout();
 }
 
+function deleteWorkout(date, wid) {
+  if (!confirm('Удалить запись тренировки?')) return;
+  if (!ST.w[date]) return;
+  ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
+  if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
+  saveST();
+  renderWorkout();
+}
+
 function launchPlan(date, wid) {
   var wkt = getWkt(date, wid);
   if (!wkt) return;

@@ -1327,6 +1327,7 @@ function togglePlanEx(ei) {
 function planExSummary(ex) {
   var s0 = ex.sets && ex.sets[0];
   if (!s0) return ex.sets.length + ' подх.';
+  if (isSwim(ex.name))    return ex.sets.length + ' × ' + (s0.dist||100) + ' м' + (s0.secs ? ' · ' + fmtTime(s0.secs) : '');
   if (isStatic(ex.name))  return ex.sets.length + ' × ' + (s0.secs||60) + ' сек';
   if (isCardio(ex.name))  return ex.sets.length + ' × ' + (s0.mins||20) + ' мин' + (s0.dist ? ' · ' + s0.dist + ' км' : '');
   return ex.sets.length + ' × ' + (s0.r||0) + ' повт' + (s0.w ? ' · ' + s0.w + ' кг' : '');

@@ -1198,40 +1198,66 @@ function togglePlanEx(ei) {
   if (chev) chev.classList.toggle('open');
 }
 
+function planExSummary(ex) {
+  var s0 = ex.sets && ex.sets[0];
+  if (!s0) return ex.sets.length + ' подх.';
+  if (isStatic(ex.name))  return ex.sets.length + ' × ' + (s0.secs||60) + ' сек';
+  if (isCardio(ex.name))  return ex.sets.length + ' × ' + (s0.mins||20) + ' мин' + (s0.dist ? ' · ' + s0.dist + ' км' : '');
+  return ex.sets.length + ' × ' + (s0.r||0) + ' повт' + (s0.w ? ' · ' + s0.w + ' кг' : '');
+}
+
 function renderPlanView(wkt) {
+  var chevSvg = '<svg width="6" height="10" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var backSvg = '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var trashSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
   // Sticky header
   var h = '<div class="plan-ed-hd">' +
-    '<button onclick="closePlan()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:5px;padding:0;flex-shrink:0;-webkit-user-select:none;user-select:none">' +
-      '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Назад</button>' +
+    '<button class="plan-ed-back" onclick="closePlan()">'+backSvg+' Назад</button>' +
     '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название" oninput="setPlanName(this.value)">' +
-    '<button onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')" style="background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;-webkit-user-select:none;user-select:none;line-height:1">✕</button>' +
+    '<button class="plan-ed-del" onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')">'+trashSvg+'</button>' +
   '</div>';
 
-  // Location toggle
+  // Location pills
   h += '<div class="plan-loc-row">' +
     '<button class="plan-loc-btn'+(wkt.loc!=='pool'?' on-gym':'')+'" onclick="setPlanLoc(\'gym\')">🏋️ Зал</button>' +
     '<button class="plan-loc-btn'+(wkt.loc==='pool'?' on-pool':'')+'" onclick="setPlanLoc(\'pool\')">🌊 Бассейн</button>' +
   '</div>';
 
-  // Exercise list
-  h += '<div class="ex-list">';
-  (wkt.exercises||[]).forEach(function(ex, ei) {
+  var exs = wkt.exercises || [];
+
+  // Empty state
+  if (exs.length === 0) {
+    h += '<div style="text-align:center;padding:36px 24px 16px;color:var(--mut)">' +
+      '<div style="font-size:38px;margin-bottom:10px">🏋️</div>' +
+      '<div style="font-size:15px;font-weight:600;margin-bottom:4px">Упражнения не добавлены</div>' +
+      '<div style="font-size:13px;opacity:.7">Добавь из базы или выбери шаблон</div>' +
+    '</div>';
+  }
+
+  // Collapsible exercise rows
+  h += '<div class="plan-ex-wrap">';
+  exs.forEach(function(ex, ei) {
     var cardio = isCardio(ex.name);
     var stat   = isStatic(ex.name);
     var color  = exTileColor(ex.name);
     var group  = exGroup(ex.name);
     var st     = (!cardio && !stat) ? getExStats(ex.name) : null;
+    var summary = planExSummary(ex);
 
-    h += '<div class="ex-card">';
-    h += '<div class="ex-card-hd">' +
-      '<div class="ex-tile" style="background:'+color+';opacity:.85">'+letterOf(ex.name)+'</div>' +
-      '<div class="ex-info"><div class="ex-name">'+esc(ex.name)+'</div>' +
-        '<div class="ex-sub">'+(group||'Упражнение')+' · '+ex.sets.length+' подх.</div></div>' +
-      '</div>';
+    h += '<div class="plan-ex-row">' +
+      '<div class="plan-ex-hd" onclick="togglePlanEx('+ei+')">' +
+        '<div class="plan-ex-tile" style="background:'+color+'">'+letterOf(ex.name)+'</div>' +
+        '<div class="plan-ex-info">' +
+          '<div class="plan-ex-name">'+esc(ex.name)+'</div>' +
+          '<div class="plan-ex-summary">'+summary+'</div>' +
+        '</div>' +
+        '<span class="plan-ex-chev" id="pex-chev-'+ei+'">'+chevSvg+'</span>' +
+      '</div>' +
+      '<div class="plan-ex-body" id="pex-body-'+ei+'">';
 
-    h += '<div class="ex-body open">';
     if (st) {
-      h += '<div class="ex-hist"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
+      h += '<div class="ex-hist" style="margin-bottom:6px"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
         (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') + '</div>';
     }
     if (!cardio && !stat) {
@@ -1265,16 +1291,17 @@ function renderPlanView(wkt) {
     h += '</div></div>';
   });
 
-  h += '<button class="add-ex-btn" onclick="openDbModal()">' +
+  h += '<button class="add-ex-btn" onclick="openDbModal()" style="margin:4px 0 0">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
-    'Упражнение из базы</button>';
+    'Добавить упражнение</button>';
   h += '</div>';
 
   // Sticky launch bar
+  var exCount = exs.length;
   h += '<div class="plan-launch-bar">' +
     '<button onclick="launchPlan(\''+PLAN_WKT.date+'\','+wkt.id+')">' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>' +
-      'Начать тренировку' +
+      'Начать тренировку' + (exCount ? ' · '+exCount+' упр.' : '') +
     '</button>' +
   '</div>';
 

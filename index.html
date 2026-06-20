@@ -741,6 +741,86 @@ function getExStats(name) {
   });
   return lastDate ? {lastW:lastW, lastR:lastR, pr:pr} : null;
 }
+function dateOffset(days) {
+  var d = new Date(); d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function getTplMuscles(tpl) {
+  var seen = [];
+  (tpl.exs||[]).forEach(function(e) {
+    var g = exGroup(typeof e === 'string' ? e : e.name);
+    if (g && seen.indexOf(g) === -1) seen.push(g);
+  });
+  return seen;
+}
+function getRecommendation() {
+  var tired = {}, MAIN = ['Ноги','Грудь','Спина','Плечи','Руки'];
+  for (var i = 1; i <= 2; i++) {
+    var day = ST.w[dateOffset(-i)];
+    if (!day || !day.workouts) continue;
+    day.workouts.forEach(function(w) {
+      (w.exercises||[]).forEach(function(ex) {
+        var g = exGroup(ex.name);
+        if (g && MAIN.indexOf(g) !== -1 && tired[g] === undefined) tired[g] = i;
+      });
+    });
+  }
+  function score(tpl) {
+    var mm = getTplMuscles(tpl).filter(function(g){ return MAIN.indexOf(g) !== -1; });
+    if (!mm.length) return 3; // кардио/статика — всегда ok
+    var s = 0;
+    mm.forEach(function(g) {
+      if (tired[g] === undefined) s += 3;
+      else if (tired[g] === 2)    s += 1;
+      else                         s -= 2; // вчера — устал
+    });
+    return s;
+  }
+  return { tired: tired, rested: MAIN.filter(function(g){ return tired[g] === undefined; }), score: score };
+}
+function buildRecBlock() {
+  var MAIN = ['Ноги','Грудь','Спина','Плечи','Руки'];
+  var hasHistory = false;
+  for (var i = 1; i <= 7; i++) {
+    if (ST.w[dateOffset(-i)] && (ST.w[dateOffset(-i)].workouts||[]).length) { hasHistory = true; break; }
+  }
+  var rec = getRecommendation();
+  var scored = BUILT_IN.concat(ST.templates)
+    .map(function(t){ return {tpl:t, score:rec.score(t)}; })
+    .sort(function(a,b){ return b.score - a.score; }).slice(0, 3);
+
+  var h = '<div class="rec-block"><div class="rec-hd">' +
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.09 12.63c-.18.23.01.54.31.54H11l-1 9.34c-.03.3.33.48.55.28L20 13h-7z"/></svg>' +
+    'Рекомендуется сегодня</div>';
+
+  if (hasHistory) {
+    h += '<div class="rec-chips">';
+    MAIN.forEach(function(g) {
+      h += rec.tired[g] !== undefined
+        ? '<span class="rec-chip rec-tired">'+g+' · отдых</span>'
+        : '<span class="rec-chip rec-rested">'+g+'</span>';
+    });
+    h += '</div>';
+  }
+
+  h += '<div class="rec-row">';
+  scored.forEach(function(item) {
+    var tpl = item.tpl, biIdx = BUILT_IN.indexOf(tpl);
+    var onclick = biIdx !== -1 ? 'useTpl(\''+tpl.id+'\')' : 'useTpl(null,'+ST.templates.indexOf(tpl)+')';
+    var muscles = getTplMuscles(tpl).slice(0, 3);
+    h += '<button class="rec-btn" onclick="'+onclick+'">' +
+      '<div style="width:34px;height:34px;border-radius:10px;background:'+tplColor(tpl.name)+
+      ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">'+letterOf(tpl.name)+'</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)">'+esc(tpl.name)+'</div>' +
+        (muscles.length ? '<div style="font-size:11px;color:var(--sub);margin-top:1px">'+muscles.join(' · ')+'</div>' : '') +
+      '</div>' +
+      '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="var(--dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '</button>';
+  });
+  h += '</div></div>';
+  return h;
+}
 function makeEx(name) {
   var cardio = isCardio(name);
   var stat  = isStatic(name);

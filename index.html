@@ -1357,10 +1357,11 @@ function renderPlanView(wkt) {
 
   // Empty state
   if (exs.length === 0) {
-    h += '<div style="text-align:center;padding:36px 24px 16px;color:var(--mut)">' +
+    h += '<div style="text-align:center;padding:32px 24px 8px;color:var(--mut)">' +
       '<div style="font-size:38px;margin-bottom:10px">🏋️</div>' +
       '<div style="font-size:15px;font-weight:600;margin-bottom:4px">Упражнения не добавлены</div>' +
-      '<div style="font-size:13px;opacity:.7">Добавь из базы или выбери шаблон</div>' +
+      '<div style="font-size:13px;opacity:.7;margin-bottom:18px">Добавь из базы или выбери шаблон</div>' +
+      '<button onclick="showPlanTplPicker()" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:14px;background:'+accentBg+';border:1px solid '+accentBrd+';color:'+accentClr+';font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">📋 Выбрать шаблон</button>' +
     '</div>';
   }
 

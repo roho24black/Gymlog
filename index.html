@@ -1449,8 +1449,25 @@ function renderWorkout() {
     var rcvActive = ST.recovery && Date.now() < getRecoveryEnd();
     if (!rcvActive) h += buildRecBlock();
 
-    // Планы на сегодня
-    plans.forEach(function(w){ h += planCard(w, todayStr()); });
+    // Планы на сегодня и ближайшие 14 дней
+    var allPlans = [];
+    for (var _i = 0; _i <= 14; _i++) {
+      var _ds = dateOffset(_i);
+      var _dp = (ST.w[_ds] && ST.w[_ds].workouts || []).filter(function(w){ return w.planned; });
+      _dp.forEach(function(w){ allPlans.push({w:w, date:_ds}); });
+    }
+    if (allPlans.length > 0) {
+      h += '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Запланировано</div>';
+      var _curDateLabel = '';
+      allPlans.forEach(function(item) {
+        var lbl = fmtPlanDate(item.date);
+        if (lbl !== _curDateLabel) {
+          _curDateLabel = lbl;
+          h += '<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px;margin-top:'+(allPlans.indexOf(item)===0?'0':'10px')+'">'+lbl+'</div>';
+        }
+        h += planCard(item.w, item.date);
+      });
+    }
 
     if (donews.length === 0) {
       h += '<div style="display:flex;gap:8px;margin-bottom:8px">' +

@@ -1257,6 +1257,20 @@ function setPlanName(val) {
   if (wkt) { wkt.name = val; saveST(); }
 }
 
+function setActiveName(val) {
+  if (!ACTIVE_WKT) return;
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  if (wkt) { wkt.name = val; saveST(); }
+}
+
+// Открыть любую тренировку (план/запись) в редакторе из любой вкладки
+function editWorkout(date, wid) {
+  PLAN_WKT = {date:date, wid:wid};
+  OPEN_EX = {};
+  goTab('workout');
+  renderTopbar(); renderWorkout();
+}
+
 function setPlanLoc(loc) {
   if (!PLAN_WKT) return;
   var wkt = getWkt(PLAN_WKT.date, PLAN_WKT.wid);

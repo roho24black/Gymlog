@@ -1046,6 +1046,183 @@ function makeEx(name) {
   return {id:name, name:name, sets:sets, note:''};
 }
 
+// ═══════════════════════ PLAN ═══════════════════════
+function curWktRef() { return ACTIVE_WKT || PLAN_WKT; }
+
+function createPlan(fromTpl) {
+  var date = todayStr();
+  ensureDay(date);
+  var wid = Date.now();
+  var wkt = {id:wid, name: fromTpl ? fromTpl.name : 'Тренировка', loc: fromTpl ? (fromTpl.loc||'gym') : 'gym', planned:true, startTime:null, endTime:null, exercises:[]};
+  if (fromTpl) {
+    (fromTpl.exs||[]).forEach(function(e) {
+      wkt.exercises.push(makeEx(typeof e === 'string' ? e : e.name));
+    });
+  }
+  ST.w[date].workouts.push(wkt);
+  saveST();
+  PLAN_WKT = {date:date, wid:wid};
+  OPEN_EX = {};
+  renderTopbar(); renderWorkout();
+}
+
+function openPlan(date, wid) {
+  PLAN_WKT = {date:date, wid:wid};
+  OPEN_EX = {};
+  renderTopbar(); renderWorkout();
+}
+
+function closePlan() {
+  PLAN_WKT = null;
+  renderTopbar(); renderWorkout();
+}
+
+function deletePlan(date, wid) {
+  if (!confirm('Удалить план тренировки?')) return;
+  if (!ST.w[date]) return;
+  ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
+  if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
+  saveST();
+  if (PLAN_WKT && PLAN_WKT.wid === wid) PLAN_WKT = null;
+  renderTopbar(); renderWorkout();
+}
+
+function launchPlan(date, wid) {
+  var wkt = getWkt(date, wid);
+  if (!wkt) return;
+  delete wkt.planned;
+  wkt.startTime = Date.now();
+  saveST();
+  PLAN_WKT = null;
+  ACTIVE_WKT = {date:date, wid:wid};
+  WKT_START = Date.now();
+  CUR_DATE = date;
+  OPEN_EX = {};
+  if (WKT_TIMER_ID) clearInterval(WKT_TIMER_ID);
+  WKT_TIMER_ID = setInterval(tickWktTimer, 1000);
+  renderTopbar(); renderWorkout();
+}
+
+function setPlanName(val) {
+  if (!PLAN_WKT) return;
+  var wkt = getWkt(PLAN_WKT.date, PLAN_WKT.wid);
+  if (wkt) { wkt.name = val; saveST(); }
+}
+
+function setPlanLoc(loc) {
+  if (!PLAN_WKT) return;
+  var wkt = getWkt(PLAN_WKT.date, PLAN_WKT.wid);
+  if (wkt) { wkt.loc = loc; saveST(); renderWorkout(); }
+}
+
+function planCard(w, date) {
+  var exLines = (w.exercises||[]).slice(0,4).map(function(ex) {
+    var s0 = ex.sets && ex.sets[0];
+    var detail = '';
+    if (s0) {
+      if (isStatic(ex.name))  detail = ex.sets.length + '×' + (s0.secs||60) + ' сек';
+      else if (isCardio(ex.name)) detail = ex.sets.length + '×' + (s0.mins||20) + ' мин';
+      else detail = ex.sets.length + '×' + (s0.r||0) + (s0.w ? ' · ' + s0.w + ' кг' : '');
+    }
+    return esc(ex.name) + (detail ? '<span style="color:var(--dim)"> — ' + detail + '</span>' : '');
+  }).join('<br>');
+  var more = (w.exercises||[]).length > 4 ? '<br><span style="color:var(--dim);font-size:11px">+' + ((w.exercises||[]).length-4) + ' упр.</span>' : '';
+
+  return '<div class="plan-card">' +
+    '<div class="plan-card-badge">' +
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+      'ПЛАН' +
+    '</div>' +
+    '<div style="font-size:15px;font-weight:700;margin-bottom:1px">'+esc(w.name)+'</div>' +
+    '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">'+(w.exercises||[]).length+' упр. · '+(w.loc==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</div>' +
+    ((w.exercises||[]).length > 0 ? '<div class="plan-card-exs">'+exLines+more+'</div>' : '') +
+    '<div class="plan-card-acts">' +
+      '<button class="plan-btn-edit" onclick="openPlan(\''+date+'\','+w.id+')">✏️ Редактировать</button>' +
+      '<button class="plan-btn-start" onclick="launchPlan(\''+date+'\','+w.id+')">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>Начать тренировку</button>' +
+    '</div>' +
+    '</div>';
+}
+
+function renderPlanView(wkt) {
+  var h = '<div class="plan-view-hd">' +
+    '<div class="plan-view-meta">' +
+      '<button onclick="closePlan()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:4px;padding:0;-webkit-user-select:none;user-select:none">' +
+        '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Назад</button>' +
+      '<div style="flex:1"></div>' +
+      '<div class="plan-card-badge" style="margin:0">📋 ПЛАН</div>' +
+      '<button onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:0 0 0 8px;-webkit-user-select:none;user-select:none">✕</button>' +
+    '</div>' +
+    '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название тренировки" oninput="setPlanName(this.value)">' +
+    '<div class="plan-loc-row">' +
+      '<button class="plan-loc-btn'+(wkt.loc!=='pool'?' on-gym':'')+'" onclick="setPlanLoc(\'gym\')">🏋️ Зал</button>' +
+      '<button class="plan-loc-btn'+(wkt.loc==='pool'?' on-pool':'')+'" onclick="setPlanLoc(\'pool\')">🌊 Бассейн</button>' +
+    '</div>' +
+    '</div>';
+
+  h += '<div class="ex-list">';
+  (wkt.exercises||[]).forEach(function(ex, ei) {
+    var cardio = isCardio(ex.name);
+    var stat   = isStatic(ex.name);
+    var color  = exTileColor(ex.name);
+    var group  = exGroup(ex.name);
+    var st     = (!cardio && !stat) ? getExStats(ex.name) : null;
+
+    h += '<div class="ex-card">';
+    h += '<div class="ex-card-hd">' +
+      '<div class="ex-tile" style="background:'+color+';opacity:.85">'+letterOf(ex.name)+'</div>' +
+      '<div class="ex-info"><div class="ex-name">'+esc(ex.name)+'</div>' +
+        '<div class="ex-sub">'+(group||'Упражнение')+' · '+ex.sets.length+' подх.</div></div>' +
+      '</div>';
+
+    h += '<div class="ex-body open">';
+    if (st) {
+      h += '<div class="ex-hist"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
+        (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') + '</div>';
+    }
+    if (!cardio && !stat) {
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1.15fr 0.95fr"><div>№</div><div>Вес</div><div>Повт</div></div>';
+    } else if (stat) {
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr"><div>№</div><div>Удержание</div></div>';
+    }
+    ex.sets.forEach(function(s, si) {
+      if (stat) {
+        h += '<div class="set-row" style="grid-template-columns:26px 1fr">' +
+          '<div class="set-n">'+(si+1)+'</div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'secs\')">'+(s.secs||60)+'<span class="set-cell-unit">сек</span></div>' +
+          '</div>';
+      } else if (cardio) {
+        h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +
+          '<div class="set-n">'+(si+1)+'</div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>' +
+          '</div>';
+      } else {
+        h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +
+          '<div class="set-n">'+(si+1)+'</div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>' +
+          '</div>';
+      }
+    });
+    h += '<div class="add-row"><button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
+      (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') + '</div>';
+    h += '<button class="rm-ex-btn" onclick="removeEx('+ei+')">Удалить упражнение</button>';
+    h += '</div></div>';
+  });
+
+  h += '<button class="add-ex-btn" onclick="openDbModal()">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
+    'Упражнение из базы</button>';
+
+  h += '<button class="plan-start-big" onclick="launchPlan(\''+PLAN_WKT.date+'\','+wkt.id+')">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>' +
+    'Запустить тренировку · включить секундомер</button>';
+
+  h += '</div>';
+  return h;
+}
+
 function startWorkout(fromTpl) {
   var date = todayStr();
   ensureDay(date);

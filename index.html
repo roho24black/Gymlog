@@ -1136,19 +1136,17 @@ function showPlanDateSheet(fromTpl, repeatSrc) {
 }
 
 function planDateConfirm() {
+  var rep = window.__pdsRepeat;
+  var ds = todayStr();
   var drum = document.getElementById('plan-date-drum');
   if (drum) {
     var idx = Math.round(drum.scrollTop / 48);
     var item = drum.children[idx];
-    if (item) {
-      var ds = item.getAttribute('data-ds');
-      closePlanDateSheet();
-      createPlan(window.__pdsTpl, ds);
-      return;
-    }
+    if (item) ds = item.getAttribute('data-ds');
   }
   closePlanDateSheet();
-  createPlan(window.__pdsTpl, todayStr());
+  if (rep) createPlanFromWorkout(rep, ds);
+  else createPlan(window.__pdsTpl, ds);
 }
 
 function closePlanDateSheet() {

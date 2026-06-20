@@ -1527,8 +1527,8 @@ function restStop() {
 
 // ═══════════════════════ BOTTOM SHEET (DRUM PICKER) ═══════════════════════
 function openSheet(ei, si, field) {
-  if (!ACTIVE_WKT) return;
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
   var s = wkt.exercises[ei].sets[si];
   SH_MODE = {ei:ei, si:si, field:field};
   var presets = [], range = [], step = 1, cur = 0, unit = '';
@@ -1605,8 +1605,9 @@ function shClose(e) {
     document.getElementById('sh-overlay').classList.remove('vis'), SH_MODE=null;
 }
 function shConfirm() {
-  if (!SH_MODE || !ACTIVE_WKT) { shClose(); return; }
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ref = curWktRef();
+  if (!SH_MODE || !ref) { shClose(); return; }
+  var wkt = getWkt(ref.date, ref.wid);
   wkt.exercises[SH_MODE.ei].sets[SH_MODE.si][SH_MODE.field] = SH_VAL;
   saveST();
   document.getElementById('sh-overlay').classList.remove('vis');

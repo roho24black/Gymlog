@@ -1447,16 +1447,21 @@ function renderTemplates() {
     h += '<div style="height:16px"></div>';
   }
 
+  var rec = getRecommendation();
   h += '<div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Готовые программы</div>';
   BUILT_IN.forEach(function(tpl){
     var color = tplColor(tpl.name);
+    var recScore = rec.score(tpl);
     h += '<div class="tpl-card" onclick="useTpl(\''+tpl.id+'\')">' +
       '<div class="tpl-tile" style="background:'+color+'">'+letterOf(tpl.name)+'</div>' +
       '<div style="flex:1;min-width:0">' +
         '<div class="tpl-name">'+esc(tpl.name)+'</div>' +
         '<div class="tpl-meta">'+tpl.exs.length+' упражнений</div>' +
         tplExPreview(tpl.exs) +
-        '<span class="tpl-badge '+tpl.loc+'">'+((tpl.loc||'gym')==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</span>' +
+        '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">' +
+          '<span class="tpl-badge '+tpl.loc+'">'+((tpl.loc||'gym')==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</span>' +
+          (recScore > 0 ? '<span class="tpl-badge" style="background:rgba(34,197,94,0.12);color:var(--acc)">⚡ Сегодня</span>' : '') +
+        '</div>' +
       '</div>' +
       '<svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="var(--dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
       '</div>';

@@ -2040,11 +2040,20 @@ function removeCalWorkout(ds, wi) {
 }
 function startOnDate(ds) {
   if (ds===todayStr()) { startWorkout(); goTab('workout'); }
-  else {
-    ensureDay(ds);
-    ST.w[ds].workouts.push({id:Date.now(),name:'Тренировка',loc:'gym',startTime:Date.now(),exercises:[]});
-    saveST(); renderCalDetail(); renderCal();
-  }
+  else { logWorkout(ds); }
+}
+
+// Дозаписать прошлую тренировку: создаём запись с датой того дня и открываем редактор
+function logWorkout(ds) {
+  ensureDay(ds);
+  var wid = Date.now();
+  var t = new Date(ds + 'T12:00:00').getTime();
+  ST.w[ds].workouts.push({id:wid, name:'Тренировка', loc:'gym', startTime:t, endTime:t, exercises:[]});
+  saveST();
+  PLAN_WKT = {date:ds, wid:wid};
+  OPEN_EX = {};
+  goTab('workout');
+  renderTopbar(); renderWorkout();
 }
 
 // ═══════════════════════ TEMPLATES ═══════════════════════

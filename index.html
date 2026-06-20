@@ -1424,7 +1424,7 @@ function renderPlanView(wkt) {
         h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +
           '<div class="set-n">'+(si+1)+'</div>' +
           '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimdist\')">'+(s.dist||0)+'<span class="set-cell-unit">м</span></div>' +
-          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+fmtTime(s.secs||0)+'</div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+(s.secs ? fmtTime(s.secs) : '<span style="color:var(--dim);font-weight:600;font-size:13px">+ время</span>')+'</div>' +
           '</div>';
       } else if (cardio) {
         h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +

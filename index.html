@@ -1460,29 +1460,29 @@ function recordSet(ei, si) {
 }
 
 function addSet(ei) {
-  if (!ACTIVE_WKT) return;
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
   var ex = wkt.exercises[ei];
   var last = ex.sets[ex.sets.length-1];
   ex.sets.push(Object.assign({}, last, {done:false}));
   saveST(); renderWorkout();
 }
 function delSet(ei) {
-  if (!ACTIVE_WKT) return;
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
   var ex = wkt.exercises[ei];
   if (ex.sets.length > 1) { ex.sets.pop(); saveST(); renderWorkout(); }
 }
 function removeEx(ei) {
-  if (!ACTIVE_WKT) return;
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
   wkt.exercises.splice(ei, 1);
   delete OPEN_EX[ei];
   saveST(); renderWorkout();
 }
 function addExToWorkout(name) {
-  if (!ACTIVE_WKT) return;
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
   var ex = makeEx(name);
   wkt.exercises.push(ex);
   saveST(); dbClose(); renderWorkout();

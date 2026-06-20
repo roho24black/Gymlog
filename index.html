@@ -2041,7 +2041,7 @@ function showTplSheet(tpl) {
       '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:4px">'+esc(tpl.name)+'</div>' +
       '<div style="font-size:12px;color:var(--mut);margin-bottom:20px">'+tpl.exs.length+' упражнений · '+((tpl.loc||'gym')==='pool'?'Бассейн':'Зал')+'</div>' +
       '<button onclick="closeTplSheet();startWorkout(window.__pendingTpl)" style="width:100%;height:52px;border-radius:14px;background:var(--pur);color:#fff;font-size:16px;font-weight:700;border:none;margin-bottom:10px">▶ Начать тренировку</button>' +
-      '<button onclick="closeTplSheet();createPlan(window.__pendingTpl)" style="width:100%;height:48px;border-radius:14px;background:rgba(167,139,250,0.1);color:var(--pur);font-size:15px;font-weight:700;border:1px solid rgba(167,139,250,0.3);margin-bottom:10px">📋 Добавить в план</button>' +
+      '<button onclick="closeTplSheet();showPlanDateSheet(window.__pendingTpl)" style="width:100%;height:48px;border-radius:14px;background:rgba(167,139,250,0.1);color:var(--pur);font-size:15px;font-weight:700;border:1px solid rgba(167,139,250,0.3);margin-bottom:10px">📋 Добавить в план</button>' +
       '<button onclick="closeTplSheet()" style="width:100%;height:40px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2)">Отмена</button>' +
     '</div>';
   window.__pendingTpl = tpl;

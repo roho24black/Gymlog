@@ -1253,12 +1253,18 @@ function planExSummary(ex) {
 }
 
 function renderPlanView(wkt) {
+  var isPool = wkt.loc === 'pool';
+  var accentClr  = isPool ? 'var(--blu)'                    : 'var(--pur)';
+  var accentBg   = isPool ? 'rgba(56,189,248,0.12)'         : 'rgba(167,139,250,0.12)';
+  var accentBrd  = isPool ? 'rgba(56,189,248,0.35)'         : 'rgba(167,139,250,0.3)';
+  var hdBorder   = isPool ? '1px solid rgba(56,189,248,0.3)': '1px solid var(--brd2)';
+
   var chevSvg = '<svg width="6" height="10" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var backSvg = '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var trashSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 
   // Sticky header
-  var h = '<div class="plan-ed-hd">' +
+  var h = '<div class="plan-ed-hd" style="border-bottom:'+hdBorder+'">' +
     '<button class="plan-ed-back" onclick="closePlan()">'+backSvg+' Назад</button>' +
     '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название" oninput="setPlanName(this.value)">' +
     '<button class="plan-ed-del" onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')">'+trashSvg+'</button>' +

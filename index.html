@@ -1153,21 +1153,21 @@ function planCard(w, date) {
 }
 
 function renderPlanView(wkt) {
-  var h = '<div class="plan-view-hd">' +
-    '<div class="plan-view-meta">' +
-      '<button onclick="closePlan()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:4px;padding:0;-webkit-user-select:none;user-select:none">' +
-        '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Назад</button>' +
-      '<div style="flex:1"></div>' +
-      '<div class="plan-card-badge" style="margin:0">📋 ПЛАН</div>' +
-      '<button onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:0 0 0 8px;-webkit-user-select:none;user-select:none">✕</button>' +
-    '</div>' +
-    '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название тренировки" oninput="setPlanName(this.value)">' +
-    '<div class="plan-loc-row">' +
-      '<button class="plan-loc-btn'+(wkt.loc!=='pool'?' on-gym':'')+'" onclick="setPlanLoc(\'gym\')">🏋️ Зал</button>' +
-      '<button class="plan-loc-btn'+(wkt.loc==='pool'?' on-pool':'')+'" onclick="setPlanLoc(\'pool\')">🌊 Бассейн</button>' +
-    '</div>' +
-    '</div>';
+  // Sticky header
+  var h = '<div class="plan-ed-hd">' +
+    '<button onclick="closePlan()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:5px;padding:0;flex-shrink:0;-webkit-user-select:none;user-select:none">' +
+      '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Назад</button>' +
+    '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название" oninput="setPlanName(this.value)">' +
+    '<button onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')" style="background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;-webkit-user-select:none;user-select:none;line-height:1">✕</button>' +
+  '</div>';
 
+  // Location toggle
+  h += '<div class="plan-loc-row">' +
+    '<button class="plan-loc-btn'+(wkt.loc!=='pool'?' on-gym':'')+'" onclick="setPlanLoc(\'gym\')">🏋️ Зал</button>' +
+    '<button class="plan-loc-btn'+(wkt.loc==='pool'?' on-pool':'')+'" onclick="setPlanLoc(\'pool\')">🌊 Бассейн</button>' +
+  '</div>';
+
+  // Exercise list
   h += '<div class="ex-list">';
   (wkt.exercises||[]).forEach(function(ex, ei) {
     var cardio = isCardio(ex.name);
@@ -1222,12 +1222,16 @@ function renderPlanView(wkt) {
   h += '<button class="add-ex-btn" onclick="openDbModal()">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
     'Упражнение из базы</button>';
-
-  h += '<button class="plan-start-big" onclick="launchPlan(\''+PLAN_WKT.date+'\','+wkt.id+')">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>' +
-    'Запустить тренировку · включить секундомер</button>';
-
   h += '</div>';
+
+  // Sticky launch bar
+  h += '<div class="plan-launch-bar">' +
+    '<button onclick="launchPlan(\''+PLAN_WKT.date+'\','+wkt.id+')">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>' +
+      'Начать тренировку' +
+    '</button>' +
+  '</div>';
+
   return h;
 }
 

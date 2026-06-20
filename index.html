@@ -1649,7 +1649,7 @@ function renderWorkout() {
       '</div>';
 
     h += '<div class="ex-body open">';
-    if (!cardio && !stat) {
+    if (!cardio && !swim && !stat) {
       var st = getExStats(ex.name);
       if (st) {
         h += '<div class="ex-hist">' +
@@ -1660,12 +1660,19 @@ function renderWorkout() {
       h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
     } else if (stat) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr 30px"><div>№</div><div>Удержание</div><div></div></div>';
+    } else if (swim) {
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1.15fr 0.95fr 30px"><div>№</div><div>Метраж</div><div>Время</div><div></div></div>';
     }
     ex.sets.forEach(function(s, si) {
       if (stat) {
         h += '<div class="set-row'+(s.done?' done':'')+'" style="grid-template-columns:26px 1fr 30px">';
         h += '<div class="set-n">'+(si+1)+'</div>';
         h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'secs\')">'+(s.secs||60)+'<span class="set-cell-unit">сек</span></div>';
+      } else if (swim) {
+        h += '<div class="set-row'+(s.done?' done':'')+'" style="grid-template-columns:26px 1.15fr 0.95fr 30px">';
+        h += '<div class="set-n">'+(si+1)+'</div>';
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimdist\')">'+(s.dist||0)+'<span class="set-cell-unit">м</span></div>';
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+fmtTime(s.secs||0)+'</div>';
       } else {
         h += '<div class="set-row'+(s.done?' done':'')+'">';
         h += '<div class="set-n">'+(si+1)+'</div>';

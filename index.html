@@ -1373,10 +1373,11 @@ function renderPlanView(wkt) {
   h += '<div class="plan-ex-wrap">';
   exs.forEach(function(ex, ei) {
     var cardio = isCardio(ex.name);
+    var swim   = isSwim(ex.name);
     var stat   = isStatic(ex.name);
     var color  = exTileColor(ex.name);
     var group  = exGroup(ex.name);
-    var st     = (!cardio && !stat) ? getExStats(ex.name) : null;
+    var st     = (!cardio && !swim && !stat) ? getExStats(ex.name) : null;
     var summary = planExSummary(ex);
 
     h += '<div class="plan-ex-row">' +

@@ -1683,8 +1683,10 @@ function renderWorkout() {
     h += '</div>';
   });
 
-  h += '<button class="add-ex-btn" onclick="openDbModal()">' +
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
+  var addClr = wkt.loc==='pool' ? 'var(--blu)' : 'var(--acc)';
+  var addBrd = wkt.loc==='pool' ? 'rgba(56,189,248,0.4)' : 'rgba(34,197,94,0.4)';
+  h += '<button class="add-ex-btn" onclick="openDbModal()" style="border-color:'+addBrd+';color:'+addClr+'">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="'+addClr+'" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
     'Упражнение из базы</button>';
   h += '</div>';
   pg.innerHTML = h;

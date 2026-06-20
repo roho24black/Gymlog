@@ -2228,13 +2228,26 @@ function tplPickRow(onclick, name, count, loc) {
 function showPlanTplPicker() {
   if (!PLAN_WKT) return;
   closePlanTplPicker();
+  var cw = getWkt(PLAN_WKT.date, PLAN_WKT.wid);
+  var poolMode = !!(cw && cw.loc === 'pool');
+  var hdr = function(t){ return '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 8px">'+t+'</div>'; };
   var items = '';
-  if ((ST.templates||[]).length) {
-    items += '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:2px 0 8px">Мои шаблоны</div>';
-    ST.templates.forEach(function(t, i){ items += tplPickRow('applyTplToPlan('+i+',false)', t.name, (t.exs||[]).length, t.loc); });
-  }
-  items += '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 8px">Готовые программы</div>';
-  BUILT_IN.forEach(function(t, i){ items += tplPickRow('applyTplToPlan('+i+',true)', t.name, (t.exs||[]).length, t.loc); });
+
+  var myRows = '';
+  (ST.templates||[]).forEach(function(t, i){
+    if (poolMode !== ((t.loc||'gym')==='pool')) return;
+    myRows += tplPickRow('applyTplToPlan('+i+',false)', t.name, (t.exs||[]).length, t.loc);
+  });
+  if (myRows) items += hdr('Мои шаблоны') + myRows;
+
+  var biRows = '';
+  BUILT_IN.forEach(function(t, i){
+    if (poolMode !== ((t.loc||'gym')==='pool')) return;
+    biRows += tplPickRow('applyTplToPlan('+i+',true)', t.name, (t.exs||[]).length, t.loc);
+  });
+  if (biRows) items += hdr('Готовые программы') + biRows;
+
+  if (!items) items = '<div style="text-align:center;color:var(--mut);padding:28px 12px;font-size:14px">Нет шаблонов для '+(poolMode?'бассейна':'зала')+'</div>';
 
   var overlay = document.createElement('div');
   overlay.id = 'plan-tpl-overlay';

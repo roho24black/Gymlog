@@ -344,6 +344,24 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 .rec-btn{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--brd2);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:inherit;text-align:left;width:100%;-webkit-user-select:none;user-select:none;transition:opacity .12s}
 .rec-btn:active{opacity:.7}
 
+/* ── RECOVERY CARD ── */
+.rcv-card{background:var(--card);border:1px solid rgba(56,189,248,0.28);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.rcv-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rcv-badge{font-size:10.5px;font-weight:700;color:var(--blu);text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:5px;flex:1}
+.rcv-close{background:rgba(255,255,255,0.07);border:none;color:var(--mut);font-size:13px;cursor:pointer;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.rcv-time{font-size:26px;font-weight:900;color:var(--blu);font-variant-numeric:tabular-nums;letter-spacing:-1px;margin-bottom:4px;line-height:1}
+.rcv-time-sub{font-size:11.5px;color:var(--sub);margin-bottom:10px}
+.rcv-bar-wrap{height:5px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden;margin-bottom:14px}
+.rcv-bar-fill{height:100%;background:linear-gradient(90deg,var(--blu),#818cf8);border-radius:100px}
+.rcv-groups{display:flex;flex-direction:column;gap:8px}
+.rcv-grp{display:grid;grid-template-columns:70px 1fr 56px;align-items:center;gap:8px}
+.rcv-grp-lbl{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcv-grp-bar{height:4px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden}
+.rcv-grp-fill{height:100%;border-radius:100px}
+.rcv-grp-rem{font-size:11px;color:var(--sub);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rcv-done{background:rgba(34,197,94,0.08);border:1px solid var(--acc-brd);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.btn-rcv{border-color:rgba(56,189,248,0.32);color:var(--blu)}
+
 /* ── MISC ── */
 .empty{text-align:center;padding:48px 20px;color:var(--sub)}
 .empty-ico{font-size:52px;margin-bottom:12px}

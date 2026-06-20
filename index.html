@@ -1631,6 +1631,7 @@ function renderWorkout() {
   exs.forEach(function(ex, ei) {
     var doneSets = ex.sets.filter(function(s){return s.done;}).length;
     var cardio = isCardio(ex.name);
+    var swim   = isSwim(ex.name);
     var stat   = isStatic(ex.name);
     var color = exTileColor(ex.name);
     var group = exGroup(ex.name);

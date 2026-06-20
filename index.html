@@ -1155,35 +1155,47 @@ function setPlanLoc(loc) {
 }
 
 function planCard(w, date) {
-  var exLines = (w.exercises||[]).slice(0,4).map(function(ex) {
-    var s0 = ex.sets && ex.sets[0];
-    var detail = '';
-    if (s0) {
-      if (isStatic(ex.name))  detail = ex.sets.length + '×' + (s0.secs||60) + ' сек';
-      else if (isCardio(ex.name)) detail = ex.sets.length + '×' + (s0.mins||20) + ' мин';
-      else detail = ex.sets.length + '×' + (s0.r||0) + (s0.w ? ' · ' + s0.w + ' кг' : '');
-    }
-    return '<span style="color:var(--txt)">'+esc(ex.name)+'</span>'+(detail ? '<span style="color:var(--dim)"> '+detail+'</span>' : '');
-  }).join('<br>');
-  var more = (w.exercises||[]).length > 4 ? '<br><span style="color:var(--dim);font-size:11px">ещё +' + ((w.exercises||[]).length-4) + '</span>' : '';
-  var isEmpty = (w.exercises||[]).length === 0;
+  var exs = w.exercises || [];
+  var groups = [];
+  exs.forEach(function(ex) {
+    var g = exGroup(ex.name);
+    if (g && groups.indexOf(g) === -1) groups.push(g);
+  });
+  var chips = groups.slice(0,5).map(function(g){ return '<span class="plan-chip">'+g+'</span>'; }).join('');
+
+  var editSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var trashSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+  var playSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>';
 
   return '<div class="plan-card">' +
-    '<div class="plan-card-top">' +
-      '<button class="plan-edit-ico" onclick="openPlan(\''+date+'\','+w.id+')" title="Редактировать">✏️</button>' +
-      '<div class="plan-card-badge">' +
-        '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
-        'Запланировано' +
+    '<div class="plan-card-accent"></div>' +
+    '<div class="plan-card-body">' +
+      '<div class="plan-card-toprow">' +
+        '<div class="plan-card-badge">' +
+          '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+          'Запланировано' +
+        '</div>' +
+        '<div class="plan-card-icons">' +
+          '<button class="plan-ico-btn" onclick="openPlan(\''+date+'\','+w.id+')">'+editSvg+'</button>' +
+          '<button class="plan-ico-btn" onclick="deletePlan(\''+date+'\','+w.id+')">'+trashSvg+'</button>' +
+        '</div>' +
       '</div>' +
-      '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:2px">'+esc(w.name)+'</div>' +
-      '<div style="font-size:12px;color:var(--dim);margin-bottom:'+(isEmpty?'0':'8px')+'">'+(w.exercises||[]).length+' упр. · '+(w.loc==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</div>' +
-      (!isEmpty ? '<div class="plan-card-exs">'+exLines+more+'</div>' : '') +
+      '<div class="plan-card-name">'+esc(w.name)+'</div>' +
+      '<div class="plan-card-meta">'+exs.length+' упр. · '+(w.loc==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</div>' +
+      (chips ? '<div class="plan-chips">'+chips+'</div>' : '') +
     '</div>' +
     '<button class="plan-btn-start" onclick="launchPlan(\''+date+'\','+w.id+')">' +
-      '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>' +
-      'Начать тренировку' +
+      playSvg+'Начать тренировку' +
     '</button>' +
-    '</div>';
+  '</div>';
+}
+
+function togglePlanEx(ei) {
+  var body = document.getElementById('pex-body-'+ei);
+  var chev = document.getElementById('pex-chev-'+ei);
+  if (!body) return;
+  body.classList.toggle('open');
+  if (chev) chev.classList.toggle('open');
 }
 
 function renderPlanView(wkt) {

@@ -1089,9 +1089,10 @@ function fmtPlanDate(ds) {
   return DAYS_RU[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS_RU[d.getMonth()];
 }
 
-function showPlanDateSheet(fromTpl) {
+function showPlanDateSheet(fromTpl, repeatSrc) {
   closePlanDateSheet();
   window.__pdsTpl = fromTpl || null;
+  window.__pdsRepeat = repeatSrc || null;
   window.__pdsIdx = 0;
 
   var days = [];
@@ -1101,14 +1102,17 @@ function showPlanDateSheet(fromTpl) {
     return '<div class="drum-item" style="font-size:17px;font-weight:600;letter-spacing:-0.2px" data-ds="'+ds+'" data-idx="'+idx+'">'+fmtPlanDate(ds)+'</div>';
   }).join('');
 
+  var title = repeatSrc ? '🔁 Повторить на дату' : 'Выбери дату';
+  var sub = repeatSrc ? '<div style="font-size:13px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(repeatSrc.name)+' · '+(repeatSrc.exercises||[]).length+' упр.</div>' : '';
+
   var overlay = document.createElement('div');
   overlay.id = 'plan-date-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9100;display:flex;align-items:flex-end;justify-content:center';
 
   overlay.innerHTML =
     '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box">' +
-      '<div style="padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between">' +
-        '<div style="font-size:17px;font-weight:800;color:var(--txt)">Выбери дату</div>' +
+      '<div style="padding:16px 16px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
+        '<div style="min-width:0"><div style="font-size:17px;font-weight:800;color:var(--txt)">'+title+'</div>'+sub+'</div>' +
         '<button onclick="closePlanDateSheet()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:6px;line-height:1;-webkit-user-select:none;user-select:none">✕</button>' +
       '</div>' +
       '<div class="drum-wrap" style="margin:0 16px">' +

@@ -1171,6 +1171,37 @@ function createPlan(fromTpl, date) {
   renderTopbar(); renderWorkout();
 }
 
+// Повтор тренировки: копируем упражнения с весами/повторами как ориентир
+function repeatWorkout(date, wid) {
+  var src = getWkt(date, wid);
+  if (!src || !(src.exercises||[]).length) return;
+  showPlanDateSheet(null, src);
+}
+
+function createPlanFromWorkout(src, date) {
+  date = date || todayStr();
+  ensureDay(date);
+  var wid = Date.now();
+  var wkt = {id:wid, name:src.name||'Тренировка', loc:src.loc||'gym', planned:true, startTime:null, endTime:null, exercises:[]};
+  (src.exercises||[]).forEach(function(ex) {
+    var ne = {id:ex.name, name:ex.name, note:ex.note||'', sets:[]};
+    (ex.sets||[]).forEach(function(s) {
+      var ns = {};
+      for (var k in s) if (s.hasOwnProperty(k)) ns[k] = s[k];
+      ns.done = false;
+      ne.sets.push(ns);
+    });
+    if (!ne.sets.length) ne = makeEx(ex.name);
+    wkt.exercises.push(ne);
+  });
+  ST.w[date].workouts.push(wkt);
+  saveST();
+  PLAN_WKT = {date:date, wid:wid};
+  OPEN_EX = {};
+  goTab('workout');
+  renderTopbar(); renderWorkout();
+}
+
 function openPlan(date, wid) {
   PLAN_WKT = {date:date, wid:wid};
   OPEN_EX = {};

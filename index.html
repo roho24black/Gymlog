@@ -1576,7 +1576,7 @@ function renderWorkout() {
     '<div class="wkt-actions">' +
     '<div style="min-width:0">' +
     '<div class="sec-badge">Активная тренировка</div>' +
-    '<div class="wkt-name">'+esc(wkt.name)+'</div>' +
+    '<input class="wkt-name-inp" value="'+esc(wkt.name)+'" placeholder="Название" oninput="setActiveName(this.value)" onfocus="this.select()">' +
     '<div class="wkt-timer-row"><div class="wkt-dot"></div><span id="wkt-timer-disp">'+elapsed+'</span>' +
     '<span style="margin-left:6px;color:var(--dim)">· '+(wkt.loc==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</span></div>' +
     '</div>' +

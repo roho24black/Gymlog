@@ -1395,16 +1395,24 @@ function renderPlanView(wkt) {
       h += '<div class="ex-hist" style="margin-bottom:6px"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
         (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') + '</div>';
     }
-    if (!cardio && !stat) {
+    if (!cardio && !swim && !stat) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1.15fr 0.95fr"><div>№</div><div>Вес</div><div>Повт</div></div>';
     } else if (stat) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr"><div>№</div><div>Удержание</div></div>';
+    } else if (swim) {
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1.15fr 0.95fr"><div>№</div><div>Метраж</div><div>Время</div></div>';
     }
     ex.sets.forEach(function(s, si) {
       if (stat) {
         h += '<div class="set-row" style="grid-template-columns:26px 1fr">' +
           '<div class="set-n">'+(si+1)+'</div>' +
           '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'secs\')">'+(s.secs||60)+'<span class="set-cell-unit">сек</span></div>' +
+          '</div>';
+      } else if (swim) {
+        h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +
+          '<div class="set-n">'+(si+1)+'</div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimdist\')">'+(s.dist||0)+'<span class="set-cell-unit">м</span></div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+fmtTime(s.secs||0)+'</div>' +
           '</div>';
       } else if (cardio) {
         h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +

@@ -737,8 +737,7 @@ function renderTopbar() {
       r.innerHTML = '<span class="wkt-timer" id="wkt-elapsed">0:00</span>' +
         '<button class="btn btn-red btn-sm" onclick="finishWorkout()">Завершить</button>';
     } else if (PLAN_WKT) {
-      var pw = getWkt(PLAN_WKT.date, PLAN_WKT.wid);
-      r.innerHTML = pw ? '<button class="btn btn-sm btn-plan" onclick="launchPlan(\''+PLAN_WKT.date+'\','+pw.id+')">▶ Начать</button>' : '';
+      r.innerHTML = '';
     } else {
       r.innerHTML = '<button class="btn btn-acc btn-sm" onclick="startWorkout()">+ Тренировка</button>';
     }

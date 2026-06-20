@@ -1892,7 +1892,10 @@ function shConfirm() {
   var ref = curWktRef();
   if (!SH_MODE || !ref) { shClose(); return; }
   var wkt = getWkt(ref.date, ref.wid);
-  wkt.exercises[SH_MODE.ei].sets[SH_MODE.si][SH_MODE.field] = SH_VAL;
+  var key = SH_MODE.field;
+  if (key === 'swimtime') key = 'secs';
+  else if (key === 'swimdist') key = 'dist';
+  wkt.exercises[SH_MODE.ei].sets[SH_MODE.si][key] = SH_VAL;
   saveST();
   document.getElementById('sh-overlay').classList.remove('vis');
   SH_MODE = null;

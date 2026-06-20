@@ -1977,9 +1977,14 @@ function renderCalDetail() {
       });
     });
   }
+  var isFuture = SEL_DATE > todayStr();
+  var isToday  = SEL_DATE === todayStr();
   h += '<div style="display:flex;gap:8px;margin-top:12px">' +
     '<button class="btn btn-sm" onclick="markRest(\''+SEL_DATE+'\')" style="flex:1">💤 Отдых</button>' +
-    '<button class="btn btn-acc btn-sm" onclick="startOnDate(\''+SEL_DATE+'\')" style="flex:1">+ Тренировка</button>' +
+    (isFuture
+      ? '<button class="btn btn-sm btn-plan" onclick="createPlan(null,\''+SEL_DATE+'\');goTab(\'workout\')" style="flex:1">📋 Запланировать</button>'
+      : '<button class="btn btn-acc btn-sm" onclick="startOnDate(\''+SEL_DATE+'\')" style="flex:1">'+(isToday?'▶ Начать':'+ Добавить')+'</button>'
+    ) +
     '</div></div>';
   el.innerHTML = h;
 }

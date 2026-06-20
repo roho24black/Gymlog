@@ -1685,7 +1685,7 @@ function renderWorkout() {
         h += '<div class="set-row'+(s.done?' done':'')+'" style="grid-template-columns:26px 1.15fr 0.95fr 30px">';
         h += '<div class="set-n">'+(si+1)+'</div>';
         h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimdist\')">'+(s.dist||0)+'<span class="set-cell-unit">м</span></div>';
-        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+fmtTime(s.secs||0)+'</div>';
+        h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+(s.secs ? fmtTime(s.secs) : '<span style="color:var(--dim);font-weight:600;font-size:13px">+ время</span>')+'</div>';
       } else {
         h += '<div class="set-row'+(s.done?' done':'')+'">';
         h += '<div class="set-n">'+(si+1)+'</div>';

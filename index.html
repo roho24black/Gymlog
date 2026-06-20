@@ -2320,7 +2320,8 @@ function editorAddEx(name) {
   if (!EDITOR_TPL) return;
   var stat = isStatic(name);
   var card = isCardio(name);
-  EDITOR_TPL.exs.push(stat ? {name:name,sets:3,reps:60} : card ? {name:name,sets:1,reps:20} : {name:name,sets:3,reps:12,weight:0});
+  var swim = isSwim(name);
+  EDITOR_TPL.exs.push(stat ? {name:name,sets:3,reps:60} : swim ? {name:name,sets:1,reps:100} : card ? {name:name,sets:1,reps:20} : {name:name,sets:3,reps:12,weight:0});
   dbClose(); renderEditorExs();
 }
 function editorRemoveEx(i) { EDITOR_TPL.exs.splice(i,1); renderEditorExs(); }

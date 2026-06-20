@@ -1828,15 +1828,26 @@ function openSheet(ei, si, field) {
     for (var v=5; v<=300; v+=5) range.push(v);
     presets = [[-15,'−15'],[-5,'−5'],[5,'+5'],[15,'+15']];
     document.getElementById('sh-title').textContent = 'Удержание (сек)';
+  } else if (field === 'swimdist') {
+    cur = s.dist||100; step = 25; unit = 'м';
+    for (var v=0; v<=3000; v+=25) range.push(v);
+    presets = [[-50,'−50'],[-25,'−25'],[25,'+25'],[50,'+50']];
+    document.getElementById('sh-title').textContent = 'Метраж (м)';
+  } else if (field === 'swimtime') {
+    cur = s.secs||120; step = 5; unit = '';
+    for (var v=0; v<=3600; v+=5) range.push(v);
+    presets = [[-30,'−30с'],[-5,'−5с'],[5,'+5с'],[30,'+30с']];
+    document.getElementById('sh-title').textContent = 'Время (мин:сек)';
   }
   SH_RANGE = range; SH_VAL = cur; SH_STEP = step;
+  SH_FMT = (field === 'swimtime') ? fmtTime : nf;
   document.getElementById('sh-val-unit').textContent = unit;
   var ph = document.getElementById('sh-presets');
   ph.innerHTML = presets.map(function(p){
     return '<button class="preset" onclick="shPreset('+p[0]+')">'+p[1]+'</button>';
   }).join('');
   var drum = document.getElementById('sh-drum');
-  drum.innerHTML = range.map(function(v){ return '<div class="drum-item">'+nf(v)+'</div>'; }).join('');
+  drum.innerHTML = range.map(function(v){ return '<div class="drum-item">'+SH_FMT(v)+'</div>'; }).join('');
   document.getElementById('sh-overlay').classList.add('vis');
   setTimeout(function(){
     var idx = range.indexOf(cur);
@@ -1844,6 +1855,7 @@ function openSheet(ei, si, field) {
     drum.scrollTop = idx * 48;
     SH_VAL = range[idx];
     highlightDrum();
+    document.getElementById('sh-val-display').innerHTML = SH_FMT(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+unit+'</span>';
   }, 50);
 }
 function drumScroll() {
@@ -1852,7 +1864,7 @@ function drumScroll() {
   idx = Math.max(0,Math.min(idx,SH_RANGE.length-1));
   SH_VAL = SH_RANGE[idx];
   highlightDrum();
-  document.getElementById('sh-val-display').innerHTML = nf(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+document.getElementById('sh-val-unit').textContent+'</span>';
+  document.getElementById('sh-val-display').innerHTML = (SH_FMT||nf)(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+document.getElementById('sh-val-unit').textContent+'</span>';
 }
 function highlightDrum() {
   var drum = document.getElementById('sh-drum');

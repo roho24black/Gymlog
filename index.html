@@ -1102,9 +1102,19 @@ function renderWorkout() {
     var h = '<div class="inner">' +
       '<div class="sec-badge">Сегодня</div>' +
       '<div class="sec-title" style="margin-bottom:16px">Тренировка</div>';
-    h += buildRecBlock();
+    // Карточка восстановления (если активна)
+    h += renderRecoveryCard();
+
+    var rcvActive = ST.recovery && Date.now() < getRecoveryEnd();
+
+    // Рекомендации (только если нет активного восстановления)
+    if (!rcvActive) h += buildRecBlock();
+
     if (ws.length === 0) {
       h += '<button class="btn btn-acc btn-full" onclick="startWorkout()" style="border-radius:14px;height:52px;font-size:16px">Начать тренировку</button>';
+      if (!rcvActive) {
+        h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="margin-top:8px;border-radius:14px;height:44px">🔋 Рассчитать восстановление</button>';
+      }
     } else {
       ws.forEach(function(w) {
         var dur = w.endTime ? fmtTime(Math.floor((w.endTime-w.startTime)/1000)) : '';
@@ -1114,6 +1124,9 @@ function renderWorkout() {
           '<div style="font-size:12px;color:var(--mut);margin-top:2px">'+(w.exercises||[]).length+' упр.'+(dur?' · '+dur:'')+'</div></div></div>';
       });
       h += '<button class="btn btn-acc btn-full" style="margin-top:8px;border-radius:14px;height:44px" onclick="startWorkout()">+ Ещё тренировка</button>';
+      if (!rcvActive) {
+        h += '<button class="btn btn-full btn-rcv" onclick="startRecovery()" style="margin-top:8px;border-radius:14px;height:44px">🔋 Запустить период восстановления</button>';
+      }
     }
     h += '</div>';
     pg.innerHTML = h;

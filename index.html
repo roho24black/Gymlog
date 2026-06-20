@@ -1412,7 +1412,7 @@ function renderPlanView(wkt) {
   var exCount = exs.length;
   h += '<button onclick="closePlan()" style="display:flex;align-items:center;justify-content:center;gap:7px;width:calc(100% - 28px);height:48px;border-radius:14px;background:transparent;border:1.5px dashed '+accentBrd+';color:'+accentClr+';font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .12s;margin:8px 14px">' +
     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-    'Сохранить план' +
+    (wkt.planned ? 'Сохранить план' : 'Сохранить запись') +
   '</button>';
 
   return h;

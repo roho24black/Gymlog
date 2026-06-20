@@ -1897,7 +1897,30 @@ function useTpl(builtinId, customIdx) {
   if (builtinId) tpl = BUILT_IN.find(function(t){return t.id===builtinId;});
   else tpl = ST.templates[customIdx];
   if (!tpl) return;
-  startWorkout(tpl);
+  showTplSheet(tpl);
+}
+
+function showTplSheet(tpl) {
+  var overlay = document.createElement('div');
+  overlay.id = 'tpl-sheet-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML =
+    '<div style="background:var(--card);border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom)+20px);width:100%;max-width:480px;box-sizing:border-box">' +
+      '<div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 18px"></div>' +
+      '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:4px">'+esc(tpl.name)+'</div>' +
+      '<div style="font-size:12px;color:var(--mut);margin-bottom:20px">'+tpl.exs.length+' упражнений · '+((tpl.loc||'gym')==='pool'?'Бассейн':'Зал')+'</div>' +
+      '<button onclick="closeTplSheet();startWorkout(window.__pendingTpl)" style="width:100%;height:52px;border-radius:14px;background:var(--pur);color:#fff;font-size:16px;font-weight:700;border:none;margin-bottom:10px">▶ Начать тренировку</button>' +
+      '<button onclick="closeTplSheet();createPlan(window.__pendingTpl)" style="width:100%;height:48px;border-radius:14px;background:rgba(167,139,250,0.1);color:var(--pur);font-size:15px;font-weight:700;border:1px solid rgba(167,139,250,0.3);margin-bottom:10px">📋 Добавить в план</button>' +
+      '<button onclick="closeTplSheet()" style="width:100%;height:40px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2)">Отмена</button>' +
+    '</div>';
+  window.__pendingTpl = tpl;
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeTplSheet(); });
+  document.body.appendChild(overlay);
+}
+
+function closeTplSheet() {
+  var el = document.getElementById('tpl-sheet-overlay');
+  if (el) el.remove();
 }
 function delTpl(ti) {
   if (!confirm('Удалить шаблон?')) return;

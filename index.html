@@ -1998,9 +1998,11 @@ function renderCalDetail() {
       '</div>';
   } else {
     day.workouts.forEach(function(w, wi){
-      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--sub);flex:1">'+(w.loc==='pool'?'🌊':'🏋️')+' '+esc(w.name)+'</div>' +
-        '<button onclick="removeCalWorkout(\''+SEL_DATE+'\','+wi+')" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:1px solid rgba(244,63,94,0.25)">Удалить</button>' +
+      var canRepeat = (w.exercises||[]).length > 0 && !w.planned;
+      h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--sub);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(w.loc==='pool'?'🌊':'🏋️')+' '+esc(w.name)+(w.planned?' <span style="color:var(--pur);font-weight:600">· план</span>':'')+'</div>' +
+        (canRepeat ? '<button onclick="repeatWorkout(\''+SEL_DATE+'\','+w.id+')" style="background:none;border:none;color:var(--pur);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:1px solid rgba(167,139,250,0.3);white-space:nowrap">🔁 Повторить</button>' : '') +
+        '<button onclick="removeCalWorkout(\''+SEL_DATE+'\','+wi+')" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:1px solid rgba(244,63,94,0.25);white-space:nowrap">Удалить</button>' +
         '</div>';
       (w.exercises||[]).forEach(function(ex){
         var done = ex.sets.filter(function(s){return s.done;}).length;

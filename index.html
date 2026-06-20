@@ -1129,23 +1129,26 @@ function planCard(w, date) {
       else if (isCardio(ex.name)) detail = ex.sets.length + '×' + (s0.mins||20) + ' мин';
       else detail = ex.sets.length + '×' + (s0.r||0) + (s0.w ? ' · ' + s0.w + ' кг' : '');
     }
-    return esc(ex.name) + (detail ? '<span style="color:var(--dim)"> — ' + detail + '</span>' : '');
+    return '<span style="color:var(--txt)">'+esc(ex.name)+'</span>'+(detail ? '<span style="color:var(--dim)"> '+detail+'</span>' : '');
   }).join('<br>');
-  var more = (w.exercises||[]).length > 4 ? '<br><span style="color:var(--dim);font-size:11px">+' + ((w.exercises||[]).length-4) + ' упр.</span>' : '';
+  var more = (w.exercises||[]).length > 4 ? '<br><span style="color:var(--dim);font-size:11px">ещё +' + ((w.exercises||[]).length-4) + '</span>' : '';
+  var isEmpty = (w.exercises||[]).length === 0;
 
   return '<div class="plan-card">' +
-    '<div class="plan-card-badge">' +
-      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
-      'ПЛАН' +
+    '<div class="plan-card-top">' +
+      '<button class="plan-edit-ico" onclick="openPlan(\''+date+'\','+w.id+')" title="Редактировать">✏️</button>' +
+      '<div class="plan-card-badge">' +
+        '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+        'Запланировано' +
+      '</div>' +
+      '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:2px">'+esc(w.name)+'</div>' +
+      '<div style="font-size:12px;color:var(--dim);margin-bottom:'+(isEmpty?'0':'8px')+'">'+(w.exercises||[]).length+' упр. · '+(w.loc==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</div>' +
+      (!isEmpty ? '<div class="plan-card-exs">'+exLines+more+'</div>' : '') +
     '</div>' +
-    '<div style="font-size:15px;font-weight:700;margin-bottom:1px">'+esc(w.name)+'</div>' +
-    '<div style="font-size:12px;color:var(--dim);margin-bottom:6px">'+(w.exercises||[]).length+' упр. · '+(w.loc==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</div>' +
-    ((w.exercises||[]).length > 0 ? '<div class="plan-card-exs">'+exLines+more+'</div>' : '') +
-    '<div class="plan-card-acts">' +
-      '<button class="plan-btn-edit" onclick="openPlan(\''+date+'\','+w.id+')">✏️ Редактировать</button>' +
-      '<button class="plan-btn-start" onclick="launchPlan(\''+date+'\','+w.id+')">' +
-        '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>Начать тренировку</button>' +
-    '</div>' +
+    '<button class="plan-btn-start" onclick="launchPlan(\''+date+'\','+w.id+')">' +
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>' +
+      'Начать тренировку' +
+    '</button>' +
     '</div>';
 }
 

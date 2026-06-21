@@ -1389,8 +1389,9 @@ function togglePlanEx(ei) {
   var body = document.getElementById('pex-body-'+ei);
   var chev = document.getElementById('pex-chev-'+ei);
   if (!body) return;
-  body.classList.toggle('open');
+  var open = body.classList.toggle('open');
   if (chev) chev.classList.toggle('open');
+  OPEN_EX[ei] = open;
 }
 
 function planExSummary(ex) {

@@ -1449,6 +1449,7 @@ function renderPlanView(wkt) {
     var st     = (!cardio && !swim && !stat) ? getExStats(ex.name) : null;
     var summary = planExSummary(ex);
 
+    var exOpen = OPEN_EX[ei] ? ' open' : '';
     h += '<div class="plan-ex-row">' +
       '<div class="plan-ex-hd" onclick="togglePlanEx('+ei+')">' +
         '<div class="plan-ex-tile" style="background:'+color+'">'+letterOf(ex.name)+'</div>' +
@@ -1456,9 +1457,9 @@ function renderPlanView(wkt) {
           '<div class="plan-ex-name">'+esc(ex.name)+'</div>' +
           '<div class="plan-ex-summary">'+summary+'</div>' +
         '</div>' +
-        '<span class="plan-ex-chev" id="pex-chev-'+ei+'">'+chevSvg+'</span>' +
+        '<span class="plan-ex-chev'+exOpen+'" id="pex-chev-'+ei+'">'+chevSvg+'</span>' +
       '</div>' +
-      '<div class="plan-ex-body" id="pex-body-'+ei+'">';
+      '<div class="plan-ex-body'+exOpen+'" id="pex-body-'+ei+'">';
 
     if (st) {
       h += '<div class="ex-hist" style="margin-bottom:6px"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +

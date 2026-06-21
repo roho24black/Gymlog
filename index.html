@@ -2318,14 +2318,14 @@ function showPlanTplPicker() {
   var myRows = '';
   (ST.templates||[]).forEach(function(t, i){
     if (poolMode !== ((t.loc||'gym')==='pool')) return;
-    myRows += tplPickRow('applyTplToPlan('+i+',false)', t.name, (t.exs||[]).length, t.loc);
+    myRows += tplPickRow('applyTplToPlan('+i+',false)', t.name, t.exs, t.loc);
   });
   if (myRows) items += hdr('Мои шаблоны') + myRows;
 
   var biRows = '';
   BUILT_IN.forEach(function(t, i){
     if (poolMode !== ((t.loc||'gym')==='pool')) return;
-    biRows += tplPickRow('applyTplToPlan('+i+',true)', t.name, (t.exs||[]).length, t.loc);
+    biRows += tplPickRow('applyTplToPlan('+i+',true)', t.name, t.exs, t.loc);
   });
   if (biRows) items += hdr('Готовые программы') + biRows;
 

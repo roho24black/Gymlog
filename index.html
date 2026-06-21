@@ -1243,6 +1243,8 @@ function createPlan(fromTpl, date) {
   saveST();
   PLAN_WKT = {date:date, wid:wid};
   OPEN_EX = {};
+  // Из шаблона — сразу раскрываем упражнения, чтобы их было видно
+  if (fromTpl) wkt.exercises.forEach(function(_, i){ OPEN_EX[i] = true; });
   renderTopbar(); renderWorkout();
 }
 

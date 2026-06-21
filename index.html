@@ -1951,7 +1951,6 @@ function dbFilter(key) { DB_FILTER = DB_FILTER===key?null:key; renderDbChips(); 
 function dbExsForGroup(groupKey) {
   // Map UI filter key → actual DB group name
   var dbGroup = groupKey;
-  if (groupKey==='Кардио') dbGroup = 'Тренажёры';
   if (groupKey==='Плавание') dbGroup = 'Стили';
   var results = [];
   DB_SECTIONS.forEach(function(sec){

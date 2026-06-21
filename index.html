@@ -2347,7 +2347,9 @@ function applyTplToPlan(idx, isBuiltin) {
   (tpl.exs || []).forEach(function(e){ wkt.exercises.push(makeEx(typeof e === 'string' ? e : e.name)); });
   saveST();
   closePlanTplPicker();
+  // Раскрываем все упражнения, чтобы сразу было видно содержимое шаблона
   OPEN_EX = {};
+  wkt.exercises.forEach(function(_, i){ OPEN_EX[i] = true; });
   renderWorkout();
 }
 

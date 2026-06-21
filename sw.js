@@ -1,4 +1,4 @@
-const CACHE = 'gymlog-v5';
+const CACHE = 'gymlog-v6';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -31,20 +31,14 @@ self.addEventListener('fetch', e => {
   const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
 
   if (isPage) {
-    // Stale-while-revalidate: сразу из кэша + обновляем в фоне
+    // Network-first: всегда свежий HTML, кэш только как fallback оффлайн
     e.respondWith(
-      caches.open(CACHE).then(c =>
-        c.match(e.request).then(cached => {
-          const networkFetch = fetch(e.request)
-            .then(r => {
-              if (r.ok) c.put(e.request, r.clone());
-              return r;
-            })
-            .catch(() => cached || c.match(self.registration.scope));
-          // Если есть кэш — отдаём сразу, обновляем фоном
-          return cached ? (networkFetch.catch(() => {}), cached) : networkFetch;
+      fetch(e.request)
+        .then(r => {
+          if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone()));
+          return r;
         })
-      )
+        .catch(() => caches.match(e.request).then(c => c || caches.match(self.registration.scope)))
     );
   } else {
     // Иконка, манифест — сначала кэш

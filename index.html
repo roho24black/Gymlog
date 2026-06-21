@@ -640,7 +640,6 @@ function muscleGroupColor(groupName) {
     'Плечи':    '#a78bfa',
     'Руки':     '#fb923c',
     'Стили':    '#06b6d4',
-    'Тренажёры':'#71717a',
     'Кардио':   '#8b5cf6',
     'Статика':  '#34d399'
   };
@@ -829,7 +828,7 @@ function getExStats(name) {
 }
 // ═══════════════════════ RECOVERY ═══════════════════════
 var RCV_TIMER_ID = null;
-var BASE_RCV_H = {'Ноги':72,'Спина':64,'Грудь':56,'Плечи':44,'Руки':36,'Статика':28,'Кардио':22,'Стили':18,'Тренажёры':40};
+var BASE_RCV_H = {'Ноги':72,'Спина':64,'Грудь':56,'Плечи':44,'Руки':36,'Статика':28,'Кардио':22,'Стили':18};
 
 function calcRecovery(exercises) {
   // Aggregate done sets per muscle group

@@ -2085,18 +2085,15 @@ function renderCal() {
     {color:'#f59e0b', label:'Ноги'},
     {color:'#22c55e', label:'Грудь'},
     {color:'#38bdf8', label:'Спина'},
-    {color:'#a78bfa', label:'Плечи'},
-    {color:'#fb923c', label:'Руки'},
+    {color:'#a855f7', label:'Плечи'},
+    {color:'#ec4899', label:'Руки'},
     {color:'#06b6d4', label:'Плавание'},
-    {color:'#8b5cf6', label:'Кардио'},
-    {color:'#34d399', label:'Статика'},
-    {color:'#71717a', label:'Отдых', dashed:true}
+    {color:'#eab308', label:'Кардио'},
+    {color:'#f43f5e', label:'Статика'},
+    {color:'#71717a', label:'Отдых'}
   ];
   document.getElementById('cal-legend').innerHTML = LEGEND.map(function(l){
-    var dot = l.dashed
-      ? '<div class="cal-legend-dot" style="background:none;border:1.5px dashed '+l.color+'"></div>'
-      : '<div class="cal-legend-dot" style="background:'+l.color+'"></div>';
-    return '<div class="cal-legend-item">'+dot+l.label+'</div>';
+    return '<div class="cal-legend-item"><div class="cal-legend-dot" style="background:'+l.color+'"></div>'+l.label+'</div>';
   }).join('');
 
   renderCalDetail();

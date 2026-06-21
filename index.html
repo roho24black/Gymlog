@@ -2033,7 +2033,7 @@ function dbRender() {
     var exs = dbExsForGroup(DB_FILTER).filter(function(e){ return !q||e.name.toLowerCase().indexOf(q)!==-1; });
     html = exs.length ? exs.map(renderEx).join('') : '<div class="empty" style="padding:20px">Ничего не найдено</div>';
   } else {
-    DB_MUSCLE_FILTERS.forEach(function(f){
+    dbModeFilters().forEach(function(f){
       var exs = dbExsForGroup(f.key).filter(function(e){ return !q||e.name.toLowerCase().indexOf(q)!==-1; });
       if (!exs.length) return;
       html += '<div class="db-sec-hd">'+f.icon+' '+f.label+'</div>';

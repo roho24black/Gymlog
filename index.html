@@ -836,12 +836,11 @@ function calcRecovery(exercises) {
   exercises.forEach(function(ex) {
     var g = exGroup(ex.name);
     if (!g) return;
-    if (!groups[g]) groups[g] = {doneSets:0, totalReps:0, setCount:0, maxW:0};
+    if (!groups[g]) groups[g] = {doneSets:0, totalReps:0, setCount:0};
     (ex.sets||[]).forEach(function(s) {
       if (!s.done) return;
       groups[g].doneSets++;
-      if (s.r)  { groups[g].totalReps += s.r; groups[g].setCount++; }
-      if (s.w && s.w > groups[g].maxW) groups[g].maxW = s.w;
+      if (s.r) { groups[g].totalReps += s.r; groups[g].setCount++; }
     });
   });
 

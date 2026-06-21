@@ -1979,6 +1979,14 @@ function shConfirm() {
 function openDbModal(cb) {
   DB_CB = cb || addExToWorkout;
   DB_FILTER = null;
+  // Режим (зал/бассейн) — из редактора шаблона или из текущей тренировки/плана
+  if (cb === editorAddEx && typeof EDITOR_TPL !== 'undefined' && EDITOR_TPL) {
+    DB_POOL = EDITOR_TPL.loc === 'pool';
+  } else {
+    var ref = curWktRef();
+    var w = ref ? getWkt(ref.date, ref.wid) : null;
+    DB_POOL = !!(w && w.loc === 'pool');
+  }
   document.getElementById('db-search').value = '';
   document.getElementById('db-modal').classList.add('vis');
   renderDbChips(); dbRender();

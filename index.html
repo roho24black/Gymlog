@@ -1996,8 +1996,11 @@ function dbClose(e) {
   if (!e || e.target===document.getElementById('db-modal'))
     document.getElementById('db-modal').classList.remove('vis');
 }
+function dbModeFilters() {
+  return DB_MUSCLE_FILTERS.filter(function(f){ return DB_POOL ? f.key==='Плавание' : f.key!=='Плавание'; });
+}
 function renderDbChips() {
-  document.getElementById('db-chips').innerHTML = DB_MUSCLE_FILTERS.map(function(f){
+  document.getElementById('db-chips').innerHTML = dbModeFilters().map(function(f){
     return '<button class="db-chip'+(DB_FILTER===f.key?' on':'')+'" onclick="dbFilter(\''+f.key+'\')">'+f.icon+' '+f.label+'</button>';
   }).join('');
 }

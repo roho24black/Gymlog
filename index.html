@@ -2294,12 +2294,15 @@ function closeTplSheet() {
 }
 
 // ── Выбор шаблона внутри редактора плана ──
-function tplPickRow(onclick, name, count, loc) {
+function tplPickRow(onclick, name, exs, loc) {
+  exs = exs || [];
+  var names = exs.map(function(e){ return typeof e==='string'?e:e.name; });
+  var preview = names.slice(0,3).join(' · ') + (names.length>3 ? ' +'+(names.length-3) : '');
   return '<button onclick="'+onclick+'" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card2);border:1px solid var(--brd2);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-family:inherit">' +
     '<div style="font-size:20px">'+(loc==='pool'?'🌊':'🏋️')+'</div>' +
     '<div style="flex:1;min-width:0">' +
       '<div style="font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(name)+'</div>' +
-      '<div style="font-size:12px;color:var(--mut)">'+count+' упр.</div>' +
+      '<div style="font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+names.length+' упр. · '+esc(preview)+'</div>' +
     '</div>' +
   '</button>';
 }

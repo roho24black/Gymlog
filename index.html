@@ -830,17 +830,51 @@ function getExStats(name) {
 var RCV_TIMER_ID = null;
 var BASE_RCV_H = {'Ноги':72,'Спина':64,'Грудь':56,'Плечи':44,'Руки':36,'Статика':28,'Кардио':22,'Стили':18};
 
+// Оценка 1ПМ по формуле Эпли
+function e1RM(w, r) { return (w > 0 && r > 0) ? w * (1 + r / 30) : 0; }
+
+// Лучший расчётный 1ПМ упражнения за всю историю (включая сегодня) — мера силы
+function bestE1RM(name) {
+  var best = 0;
+  Object.keys(ST.w).forEach(function(ds) {
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(wkt) {
+      (wkt.exercises || []).forEach(function(ex) {
+        if (ex.name !== name) return;
+        (ex.sets || []).forEach(function(s) {
+          if (!s.done) return;
+          var e = e1RM(s.w || 0, s.r || 0);
+          if (e > best) best = e;
+        });
+      });
+    });
+  });
+  return best;
+}
+
 function calcRecovery(exercises) {
   // Aggregate done sets per muscle group
   var groups = {};
   exercises.forEach(function(ex) {
     var g = exGroup(ex.name);
     if (!g) return;
-    if (!groups[g]) groups[g] = {doneSets:0, totalReps:0, setCount:0};
+    if (!groups[g]) groups[g] = {doneSets:0, totalReps:0, setCount:0, relSum:0, relCount:0};
+    var exBest = null; // ленивый расчёт лучшего 1ПМ для этого упражнения
     (ex.sets||[]).forEach(function(s) {
       if (!s.done) return;
       groups[g].doneSets++;
       if (s.r) { groups[g].totalReps += s.r; groups[g].setCount++; }
+      // Реальная интенсивность по весу: % от лучшего 1ПМ для этого упражнения
+      if ((s.w||0) > 0 && (s.r||0) > 0) {
+        if (exBest === null) exBest = bestE1RM(ex.name);
+        if (exBest > 0) {
+          var rel = s.w / exBest;
+          if (rel > 1) rel = 1;
+          groups[g].relSum += rel;
+          groups[g].relCount++;
+        }
+      }
     });
   });
 
@@ -858,15 +892,26 @@ function calcRecovery(exercises) {
     else if (d.doneSets <= 15) volMod = 1.40;
     else                       volMod = 1.60;
 
-    // Intensity modifier: низкие повторения → высокая нагрузка на ЦНС
-    var avgReps = d.setCount > 0 ? d.totalReps / d.setCount : 10;
+    // Intensity modifier: по РЕАЛЬНОМУ весу (% от 1ПМ), иначе откат на повторения
     var intMod;
-    if      (avgReps <= 3)  intMod = 1.40; // максимальная сила, высокая ЦНС нагрузка
-    else if (avgReps <= 5)  intMod = 1.25; // сила
-    else if (avgReps <= 8)  intMod = 1.15; // сила-гипертрофия
-    else if (avgReps <= 12) intMod = 1.00; // гипертрофия
-    else if (avgReps <= 20) intMod = 0.90; // гипертрофия-выносливость
-    else                    intMod = 0.78; // выносливость
+    if (d.relCount > 0) {
+      var pct = d.relSum / d.relCount; // средний рабочий вес как доля от 1ПМ
+      if      (pct >= 0.90) intMod = 1.45; // ~максимальная нагрузка
+      else if (pct >= 0.825)intMod = 1.30;
+      else if (pct >= 0.75) intMod = 1.18;
+      else if (pct >= 0.65) intMod = 1.05;
+      else if (pct >= 0.55) intMod = 0.95;
+      else if (pct >= 0.40) intMod = 0.85;
+      else                  intMod = 0.75; // совсем лёгкий день относительно силы
+    } else {
+      var avgReps = d.setCount > 0 ? d.totalReps / d.setCount : 10;
+      if      (avgReps <= 3)  intMod = 1.40;
+      else if (avgReps <= 5)  intMod = 1.25;
+      else if (avgReps <= 8)  intMod = 1.15;
+      else if (avgReps <= 12) intMod = 1.00;
+      else if (avgReps <= 20) intMod = 0.90;
+      else                    intMod = 0.78;
+    }
 
     var h = Math.round(base * volMod * intMod);
     result[g] = Math.max(18, Math.min(96, h));

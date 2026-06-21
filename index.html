@@ -884,29 +884,42 @@ function getRecoveryEnd() {
 }
 
 function startRecovery() {
-  // Собираем упражнения из тренировок: сначала сегодня, потом вчера, потом 2 дня назад
-  var allEx = [], label = '';
+  // Берём последнюю завершённую тренировку (сегодня → вчера → 2 дня назад)
+  // и отсчитываем восстановление ОТ ВРЕМЕНИ ОКОНЧАНИЯ тренировки, а не от нажатия кнопки.
+  var now = Date.now();
+  var allEx = [], label = '', refMs = 0;
   var sources = [todayStr(), dateOffset(-1), dateOffset(-2)];
   for (var i = 0; i < sources.length; i++) {
-    var wkts = getWorkouts(sources[i]);
+    var ds = sources[i];
+    var wkts = getWorkouts(ds).filter(function(w){
+      return !w.planned && (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); });
+    });
     if (wkts.length) {
       wkts.forEach(function(w) {
         label = label || w.name;
+        var t = w.endTime || w.startTime || new Date(ds+'T18:00:00').getTime();
+        if (t > refMs) refMs = t;
         (w.exercises||[]).forEach(function(ex){ allEx.push(ex); });
       });
       break;
     }
   }
-  if (!allEx.length) { alert('Нет данных тренировок для расчёта'); return; }
+  if (!allEx.length) { alert('Нет завершённой тренировки для расчёта'); return; }
 
   var groupHours = calcRecovery(allEx);
   if (!Object.keys(groupHours).length) { alert('Нет выполненных подходов'); return; }
 
-  var now = Date.now();
-  var groups = {};
-  Object.keys(groupHours).forEach(function(g){ groups[g] = now + groupHours[g] * 3600000; });
+  if (!refMs || refMs > now) refMs = now;
 
-  ST.recovery = { startMs: now, groups: groups, label: label };
+  var groups = {}, maxEnd = 0;
+  Object.keys(groupHours).forEach(function(g){
+    var e = refMs + groupHours[g] * 3600000;
+    groups[g] = e;
+    if (e > maxEnd) maxEnd = e;
+  });
+  if (maxEnd <= now) { alert('По расчёту вы уже восстановились 💪'); return; }
+
+  ST.recovery = { startMs: refMs, groups: groups, label: label };
   saveST();
   startRecoveryTimer();
   renderWorkout();

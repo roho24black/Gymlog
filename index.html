@@ -1297,7 +1297,7 @@ function createPlan(fromTpl, date) {
   var wkt = {id:wid, name: fromTpl ? fromTpl.name : 'Тренировка', loc: fromTpl ? (fromTpl.loc||'gym') : 'gym', planned:true, startTime:null, endTime:null, exercises:[]};
   if (fromTpl) {
     (fromTpl.exs||[]).forEach(function(e) {
-      wkt.exercises.push(makeEx(typeof e === 'string' ? e : e.name));
+      wkt.exercises.push(makeExFromEntry(e));
     });
   }
   ST.w[date].workouts.push(wkt);

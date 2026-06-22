@@ -670,7 +670,10 @@ function mtnSegs(prog) {
 function makeExFromEntry(e) {
   var name = (typeof e === 'string') ? e : e.name;
   var ex = makeEx(name);
-  if (typeof e === 'object' && e.style && isStyleDrill(name)) ex.style = e.style;
+  if (typeof e === 'object' && e.style && isStyleDrill(name)) {
+    ex.style = e.style;
+    if (isMountain(name) && e.style !== 'Своя') ex.sets = mtnSegs(e.style);
+  }
   return ex;
 }
 var STATIC_EX  = ['Планка','Боковая планка (левая)','Боковая планка (правая)','Стул у стены','Вакуум','Мёртвый жук','Птица-собака','Удержание угла (L-sit)','Удержание в нижней точке приседа','Ягодичный мост — удержание','Планка на вытянутых руках'];

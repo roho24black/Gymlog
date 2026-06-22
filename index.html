@@ -1932,21 +1932,65 @@ function openSheet(ei, si, field) {
   SH_RANGE = range; SH_VAL = cur; SH_STEP = step;
   SH_FMT = (field === 'swimtime') ? fmtTime : nf;
   document.getElementById('sh-val-unit').textContent = unit;
+  document.getElementById('sh-manual-unit').textContent = unit;
   var ph = document.getElementById('sh-presets');
   ph.innerHTML = presets.map(function(p){
     return '<button class="preset" onclick="shPreset('+p[0]+')">'+p[1]+'</button>';
   }).join('');
   var drum = document.getElementById('sh-drum');
   drum.innerHTML = range.map(function(v){ return '<div class="drum-item">'+SH_FMT(v)+'</div>'; }).join('');
+  shUpdateDisplay();
+  applyInputMode(false);
   document.getElementById('sh-overlay').classList.add('vis');
   setTimeout(function(){
     var idx = range.indexOf(cur);
     if (idx === -1) { var best=0; for(var i=0;i<range.length;i++) if(Math.abs(range[i]-cur)<Math.abs(range[best]-cur)) best=i; idx=best; }
     drum.scrollTop = idx * 48;
-    SH_VAL = range[idx];
+    if (getInputMode() !== 'manual' || field === 'swimtime') SH_VAL = range[idx];
     highlightDrum();
-    document.getElementById('sh-val-display').innerHTML = SH_FMT(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+unit+'</span>';
+    shUpdateDisplay();
   }, 50);
+}
+function shUpdateDisplay() {
+  var unitEl = document.getElementById('sh-val-unit');
+  var unit = unitEl ? unitEl.textContent : '';
+  document.getElementById('sh-val-display').innerHTML = (SH_FMT||nf)(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+unit+'</span>';
+}
+function getInputMode() { return (ST.cfg && ST.cfg.inputMode === 'manual') ? 'manual' : 'drum'; }
+function setInputMode(mode) {
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.inputMode = mode; saveST();
+  applyInputMode(true);
+}
+function applyInputMode(focusIt) {
+  var isTime = SH_MODE && SH_MODE.field === 'swimtime';
+  var manual = !isTime && getInputMode() === 'manual';
+  var modeRow = document.getElementById('sh-mode');
+  if (modeRow) modeRow.style.display = isTime ? 'none' : 'flex';
+  var bd = document.getElementById('sh-mode-drum'), bm = document.getElementById('sh-mode-manual');
+  if (bd) bd.className = manual ? '' : 'on';
+  if (bm) bm.className = manual ? 'on' : '';
+  var dw = document.getElementById('sh-drum-wrap'), mw = document.getElementById('sh-manual-wrap'), disp = document.getElementById('sh-val-display');
+  if (manual) {
+    if (dw) dw.style.display = 'none';
+    if (mw) mw.style.display = 'flex';
+    if (disp) disp.style.display = 'none';
+    var inp = document.getElementById('sh-manual-input');
+    if (inp) {
+      inp.step = SH_STEP || 1;
+      inp.value = Math.round(SH_VAL*100)/100;
+      if (focusIt) setTimeout(function(){ inp.focus(); inp.select(); }, 60);
+    }
+  } else {
+    if (dw) dw.style.display = 'block';
+    if (mw) mw.style.display = 'none';
+    if (disp) disp.style.display = 'block';
+  }
+}
+function shManualInput() {
+  var inp = document.getElementById('sh-manual-input');
+  var v = parseFloat(inp.value);
+  if (!isNaN(v)) SH_VAL = v;
 }
 function drumScroll() {
   var drum = document.getElementById('sh-drum');
@@ -1954,7 +1998,7 @@ function drumScroll() {
   idx = Math.max(0,Math.min(idx,SH_RANGE.length-1));
   SH_VAL = SH_RANGE[idx];
   highlightDrum();
-  document.getElementById('sh-val-display').innerHTML = (SH_FMT||nf)(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+document.getElementById('sh-val-unit').textContent+'</span>';
+  shUpdateDisplay();
 }
 function highlightDrum() {
   var drum = document.getElementById('sh-drum');
@@ -1966,6 +2010,12 @@ function highlightDrum() {
   });
 }
 function shPreset(delta) {
+  if (getInputMode() === 'manual' && !(SH_MODE && SH_MODE.field === 'swimtime')) {
+    SH_VAL = Math.max(0, Math.round((SH_VAL+delta)*100)/100);
+    var inp = document.getElementById('sh-manual-input');
+    if (inp) inp.value = SH_VAL;
+    return;
+  }
   var next = Math.round((SH_VAL+delta)*100)/100;
   next = Math.max(SH_RANGE[0], Math.min(SH_RANGE[SH_RANGE.length-1], next));
   var best=0; for(var i=0;i<SH_RANGE.length;i++) if(Math.abs(SH_RANGE[i]-next)<Math.abs(SH_RANGE[best]-next)) best=i;

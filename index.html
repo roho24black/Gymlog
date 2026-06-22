@@ -1582,6 +1582,8 @@ function renderPlanView(wkt) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr"><div>№</div><div>Удержание</div></div>';
     } else if (swim) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1.15fr 0.95fr"><div>№</div><div>Метраж</div><div>Время</div></div>';
+    } else if (mtn) {
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr 0.8fr 1fr"><div>№</div><div>Время</div><div>Наклон</div><div>Дистанция</div></div>';
     }
     ex.sets.forEach(function(s, si) {
       if (stat) {
@@ -1594,6 +1596,13 @@ function renderPlanView(wkt) {
           '<div class="set-n">'+(si+1)+'</div>' +
           '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimdist\')">'+(s.dist||0)+'<span class="set-cell-unit">м</span></div>' +
           '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+(s.secs ? fmtTime(s.secs) : '<span style="color:var(--dim);font-weight:600;font-size:13px">+ время</span>')+'</div>' +
+          '</div>';
+      } else if (mtn) {
+        h += '<div class="set-row" style="grid-template-columns:26px 1fr 0.8fr 1fr">' +
+          '<div class="set-n">'+(si+1)+'</div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||0)+'<span class="set-cell-unit">мин</span></div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'incline\')">'+(s.incline||0)+'<span class="set-cell-unit">%</span></div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>' +
           '</div>';
       } else if (cardio) {
         h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +

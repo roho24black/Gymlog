@@ -641,13 +641,14 @@ function exTitle(ex) { return (isStyleDrill(ex.name) && ex.style) ? (ex.name + '
 // Горные маршруты My Mountain. Профиль = наклон (%) по частям (≈2 мин каждая),
 // два пика как на дисплее. Дистанция считается по скорости (на крутом подъёме медленнее).
 // Реконструкция в реальных пределах машины (−5%…50%); точные значения правятся в «Своя».
+// Пики наклона по мануалу MM5050: LOW max 19%, MIDDLE max 35%, HIGH max 50%
 var MTN_PROGRAMS = {
-  'LOW':    {seg:2, inc:[2,4,6,8,6,4,6,9,12,8,5,2]},
-  'MIDDLE': {seg:2, inc:[3,7,11,16,12,8,12,18,25,17,9,4]},
-  'HIGH':   {seg:2, inc:[5,12,20,30,22,15,24,34,45,30,16,6]},
+  'LOW':    {seg:2, inc:[2,5,8,12,9,6,9,14,19,13,7,3]},
+  'MIDDLE': {seg:2, inc:[4,9,15,22,16,11,17,27,35,24,13,5]},
+  'HIGH':   {seg:2, inc:[5,13,22,33,25,17,27,40,50,35,18,6]},
   'Своя':   {seg:2, inc:[5]}
 };
-function mtnSpeed(incline) { return Math.max(1.5, Math.round((6 - incline*0.09)*10)/10); } // км/ч
+function mtnSpeed(incline) { return Math.max(2, Math.round((6 - incline*0.08)*10)/10); } // км/ч
 function mtnSegs(prog) {
   var p = MTN_PROGRAMS[prog] || MTN_PROGRAMS['Своя'];
   return p.inc.map(function(inc){

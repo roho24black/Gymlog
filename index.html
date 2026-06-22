@@ -628,40 +628,17 @@ var DB_MUSCLE_FILTERS = [
 
 var CARDIO_EX = ['Беговая дорожка','Эллипс','Велотренажёр вертикальный','Велотренажёр горизонтальный','Гребной тренажёр','Лестничный тренажёр (Stairmaster)','Лыжный тренажёр (SkiErg)','Air Bike'];
 var SWIM_EX   = ['Разминка','Вольный стиль','Брасс','Баттерфляй','На спине','Комплексное плавание','Интервалы в бассейне','Проныры (под водой)','Ноги с доской','Руки с колобашкой','Стрелка на спине','Откупка (заминка)'];
-// Упражнения с вариантом, который выбирается чипами в самом упражнении (стиль / программа)
+// Упражнения с вариантом, который выбирается чипами в самом упражнении (стиль плавания)
 var EX_VARIANTS = {
-  'Ноги с доской':       {label:'Стиль',    opts:['Кроль','Брасс','Дельфин','На спине']},
-  'Руки с колобашкой':   {label:'Стиль',    opts:['Кроль','Брасс','Баттерфляй','На спине']},
-  'My Mountain (горка)': {label:'Программа', opts:['LOW','MIDDLE','HIGH','Своя']}
+  'Ноги с доской':     {label:'Стиль', opts:['Кроль','Брасс','Дельфин','На спине']},
+  'Руки с колобашкой': {label:'Стиль', opts:['Кроль','Брасс','Баттерфляй','На спине']}
 };
 function isStyleDrill(name) { return !!EX_VARIANTS[name]; }
-function isMountain(name) { return name === 'My Mountain (горка)'; }
 function exTitle(ex) { return (isStyleDrill(ex.name) && ex.style) ? (ex.name + ' · ' + ex.style) : ex.name; }
-
-// Горные маршруты My Mountain. Профиль = наклон (%) по частям (≈2 мин каждая),
-// два пика как на дисплее. Дистанция считается по скорости (на крутом подъёме медленнее).
-// Реконструкция в реальных пределах машины (−5%…50%); точные значения правятся в «Своя».
-// Пики наклона по мануалу MM5050: LOW max 19%, MIDDLE max 35%, HIGH max 50%
-var MTN_PROGRAMS = {
-  'LOW':    {seg:2, inc:[2,5,8,12,9,6,9,14,19,13,7,3]},
-  'MIDDLE': {seg:2, inc:[4,9,15,22,16,11,17,27,35,24,13,5]},
-  'HIGH':   {seg:2, inc:[5,13,22,33,25,17,27,40,50,35,18,6]},
-  'Своя':   {seg:2, inc:[5]}
-};
-function mtnSpeed(incline) { return Math.max(2, Math.round((6 - incline*0.08)*10)/10); } // км/ч
-function mtnSegs(prog) {
-  var p = MTN_PROGRAMS[prog] || MTN_PROGRAMS['Своя'];
-  return p.inc.map(function(inc){
-    return {mins:p.seg, incline:inc, dist:Math.round(p.seg/60*mtnSpeed(inc)*100)/100, done:false};
-  });
-}
 function makeExFromEntry(e) {
   var name = (typeof e === 'string') ? e : e.name;
   var ex = makeEx(name);
-  if (typeof e === 'object' && e.style && isStyleDrill(name)) {
-    ex.style = e.style;
-    if (isMountain(name) && e.style !== 'Своя') ex.sets = mtnSegs(e.style);
-  }
+  if (typeof e === 'object' && e.style && isStyleDrill(name)) ex.style = e.style;
   return ex;
 }
 var STATIC_EX  = ['Планка','Боковая планка (левая)','Боковая планка (правая)','Стул у стены','Вакуум','Мёртвый жук','Птица-собака','Удержание угла (L-sit)','Удержание в нижней точке приседа','Ягодичный мост — удержание','Планка на вытянутых руках'];

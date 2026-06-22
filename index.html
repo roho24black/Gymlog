@@ -638,34 +638,21 @@ function isStyleDrill(name) { return !!EX_VARIANTS[name]; }
 function isMountain(name) { return name === 'My Mountain (горка)'; }
 function exTitle(ex) { return (isStyleDrill(ex.name) && ex.style) ? (ex.name + ' · ' + ex.style) : ex.name; }
 
-// Программы дорожки My Mountain — каждая делится на части: время (мин) · дистанция (км) · наклон (%)
+// Горные маршруты My Mountain. Профиль = наклон (%) по частям (≈2 мин каждая),
+// два пика как на дисплее. Дистанция считается по скорости (на крутом подъёме медленнее).
+// Реконструкция в реальных пределах машины (−5%…50%); точные значения правятся в «Своя».
 var MTN_PROGRAMS = {
-  'LOW': [
-    {mins:5, dist:0.4, incline:2},
-    {mins:5, dist:0.4, incline:6},
-    {mins:5, dist:0.4, incline:10},
-    {mins:5, dist:0.4, incline:2}
-  ],
-  'MIDDLE': [
-    {mins:5, dist:0.4, incline:3},
-    {mins:6, dist:0.5, incline:10},
-    {mins:6, dist:0.5, incline:18},
-    {mins:5, dist:0.4, incline:10},
-    {mins:3, dist:0.2, incline:3}
-  ],
-  'HIGH': [
-    {mins:5, dist:0.4, incline:5},
-    {mins:7, dist:0.5, incline:15},
-    {mins:7, dist:0.45, incline:25},
-    {mins:6, dist:0.4, incline:18},
-    {mins:5, dist:0.35, incline:5}
-  ],
-  'Своя': [
-    {mins:5, dist:0.4, incline:5}
-  ]
+  'LOW':    {seg:2, inc:[2,4,6,8,6,4,6,9,12,8,5,2]},
+  'MIDDLE': {seg:2, inc:[3,7,11,16,12,8,12,18,25,17,9,4]},
+  'HIGH':   {seg:2, inc:[5,12,20,30,22,15,24,34,45,30,16,6]},
+  'Своя':   {seg:2, inc:[5]}
 };
+function mtnSpeed(incline) { return Math.max(1.5, Math.round((6 - incline*0.09)*10)/10); } // км/ч
 function mtnSegs(prog) {
-  return (MTN_PROGRAMS[prog] || MTN_PROGRAMS['Своя']).map(function(s){ return {mins:s.mins, dist:s.dist, incline:s.incline, done:false}; });
+  var p = MTN_PROGRAMS[prog] || MTN_PROGRAMS['Своя'];
+  return p.inc.map(function(inc){
+    return {mins:p.seg, incline:inc, dist:Math.round(p.seg/60*mtnSpeed(inc)*100)/100, done:false};
+  });
 }
 function makeExFromEntry(e) {
   var name = (typeof e === 'string') ? e : e.name;

@@ -1778,13 +1778,14 @@ function renderWorkout() {
     h += '<div class="ex-card-hd">' +
       '<div class="ex-tile" style="background:'+color+';opacity:0.85">'+letterOf(ex.name)+'</div>' +
       '<div class="ex-info">' +
-        '<div class="ex-name">'+esc(ex.name)+'</div>' +
+        '<div class="ex-name">'+esc(exTitle(ex))+'</div>' +
         '<div class="ex-sub">'+(group||'Упражнение')+' · '+doneSets+'/'+ex.sets.length+' подх.</div>' +
       '</div>' +
       (exVol > 0 ? '<div class="ex-vol">'+exVol+' кг</div>' : '') +
       '</div>';
 
     h += '<div class="ex-body open">';
+    h += styleChips(ex, ei);
     if (!cardio && !swim && !stat) {
       var st = getExStats(ex.name);
       if (st) {

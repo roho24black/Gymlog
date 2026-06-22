@@ -1200,8 +1200,6 @@ function setExStyle(ei, style) {
   var wkt = getWkt(ref.date, ref.wid);
   var ex = wkt.exercises[ei]; if (!ex) return;
   ex.style = style;
-  // Смена программы дорожки — перезагружаем части (кроме «Своя», там оставляем как есть)
-  if (isMountain(ex.name) && style !== 'Своя') ex.sets = mtnSegs(style);
   saveST(); renderWorkout();
 }
 function styleChips(ex, ei) {

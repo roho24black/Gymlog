@@ -512,12 +512,20 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="sh-handle"></div>
     <div class="sh-title" id="sh-title">Вес (кг)</div>
+    <div class="sh-mode" id="sh-mode">
+      <button id="sh-mode-drum" onclick="setInputMode('drum')">🎰 Барабан</button>
+      <button id="sh-mode-manual" onclick="setInputMode('manual')">⌨️ Ввод</button>
+    </div>
     <div class="sh-val-display" id="sh-val-display">0 <span class="sh-val-unit" id="sh-val-unit">кг</span></div>
     <div class="presets" id="sh-presets"></div>
-    <div class="drum-wrap">
+    <div class="drum-wrap" id="sh-drum-wrap">
       <div class="drum-mask"></div>
       <div class="drum-center"></div>
       <div class="drum" id="sh-drum" onscroll="drumScroll()"></div>
+    </div>
+    <div class="sh-manual-wrap" id="sh-manual-wrap">
+      <input class="sh-manual-input" id="sh-manual-input" type="number" inputmode="decimal" oninput="shManualInput()">
+      <span class="sh-manual-unit" id="sh-manual-unit">кг</span>
     </div>
     <button class="sh-done" onclick="shConfirm()">Готово</button>
   </div>

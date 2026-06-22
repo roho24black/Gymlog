@@ -1215,6 +1215,10 @@ function buildRecBlock() {
   return h;
 }
 function makeEx(name) {
+  // Дорожка My Mountain — части программы (время · дистанция · наклон)
+  if (isMountain(name)) {
+    return {id:name, name:name, style:'LOW', sets:mtnSegs('LOW'), note:''};
+  }
   var cardio = isCardio(name);
   var swim  = isSwim(name);
   var stat  = isStatic(name);
@@ -1231,7 +1235,10 @@ function setExStyle(ei, style) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);
   var ex = wkt.exercises[ei]; if (!ex) return;
-  ex.style = style; saveST(); renderWorkout();
+  ex.style = style;
+  // Смена программы дорожки — перезагружаем части (кроме «Своя», там оставляем как есть)
+  if (isMountain(ex.name) && style !== 'Своя') ex.sets = mtnSegs(style);
+  saveST(); renderWorkout();
 }
 function styleChips(ex, ei) {
   if (!isStyleDrill(ex.name)) return '';

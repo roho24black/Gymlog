@@ -2552,26 +2552,6 @@ renderTopbar();
 renderWorkout();
 if (ST.recovery && Date.now() < getRecoveryEnd()) startRecoveryTimer();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
-
-// TEMP DEBUG v7 — измерения положения нижнего бара
-setTimeout(function(){
-  try{
-    var probe=document.createElement('div');
-    probe.style.cssText='position:fixed;bottom:0;left:0;height:env(safe-area-inset-bottom);width:1px;pointer-events:none';
-    document.body.appendChild(probe);
-    var sab=Math.round(parseFloat(getComputedStyle(probe).height))||0;
-    probe.remove();
-    var nav=document.querySelector('.bnav');
-    var r=nav?nav.getBoundingClientRect():{top:0,bottom:0,height:0};
-    var gap=Math.round(window.innerHeight-r.bottom);
-    var d=document.createElement('div');
-    d.id='dbgbox';
-    d.style.cssText='position:fixed;left:6px;top:90px;z-index:99999;background:#000;color:#0f0;font:12px/1.5 monospace;padding:7px 9px;border:1px solid #0f0;white-space:pre;border-radius:6px';
-    d.textContent='BUILD v7\ninnerH='+window.innerHeight+'\nnav.top='+Math.round(r.top)+'\nnav.bottom='+Math.round(r.bottom)+'\nnav.h='+Math.round(r.height)+'\nGAP below nav='+gap+'\nsafe-bottom(env)='+sab;
-    d.onclick=function(){ d.remove(); };
-    document.body.appendChild(d);
-  }catch(e){}
-}, 500);
 </script>
 </body>
 </html>

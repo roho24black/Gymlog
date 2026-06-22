@@ -2272,7 +2272,7 @@ function renderCalDetail() {
       (w.exercises||[]).forEach(function(ex){
         var done = ex.sets.filter(function(s){return s.done;}).length;
         var maxW = 0; ex.sets.forEach(function(s){ if((s.w||0)>maxW) maxW=s.w||0; });
-        h += '<div class="cal-ex-row"><div class="cal-ex-name">'+esc(ex.name)+'</div>' +
+        h += '<div class="cal-ex-row"><div class="cal-ex-name">'+esc(exTitle(ex))+'</div>' +
           '<div class="cal-ex-meta">'+done+' подх.'+(maxW?' · '+maxW+' кг':'')+'</div></div>';
       });
     });

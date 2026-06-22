@@ -1525,6 +1525,7 @@ function renderPlanView(wkt) {
       '</div>' +
       '<div class="plan-ex-body'+exOpen+'" id="pex-body-'+ei+'">';
 
+    h += styleChips(ex, ei);
     if (st) {
       h += '<div class="ex-hist" style="margin-bottom:6px"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
         (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') + '</div>';

@@ -1550,12 +1550,13 @@ function renderPlanView(wkt) {
   // Collapsible exercise rows
   h += '<div class="plan-ex-wrap">';
   exs.forEach(function(ex, ei) {
-    var cardio = isCardio(ex.name);
+    var mtn    = isMountain(ex.name);
+    var cardio = isCardio(ex.name) && !mtn;
     var swim   = isSwim(ex.name);
     var stat   = isStatic(ex.name);
     var color  = exTileColor(ex.name);
     var group  = exGroup(ex.name);
-    var st     = (!cardio && !swim && !stat) ? getExStats(ex.name) : null;
+    var st     = (!cardio && !swim && !stat && !mtn) ? getExStats(ex.name) : null;
     var summary = planExSummary(ex);
 
     var exOpen = OPEN_EX[ei] ? ' open' : '';

@@ -2034,7 +2034,9 @@ function shConfirm() {
   var key = SH_MODE.field;
   if (key === 'swimtime') key = 'secs';
   else if (key === 'swimdist') key = 'dist';
-  wkt.exercises[SH_MODE.ei].sets[SH_MODE.si][key] = SH_VAL;
+  var val = (typeof SH_VAL === 'number' && !isNaN(SH_VAL)) ? SH_VAL : 0;
+  val = Math.max(0, Math.round(val*100)/100);
+  wkt.exercises[SH_MODE.ei].sets[SH_MODE.si][key] = val;
   saveST();
   document.getElementById('sh-overlay').classList.remove('vis');
   SH_MODE = null;

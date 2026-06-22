@@ -1183,10 +1183,6 @@ function buildRecBlock() {
   return h;
 }
 function makeEx(name) {
-  // Дорожка My Mountain — части программы (время · дистанция · наклон)
-  if (isMountain(name)) {
-    return {id:name, name:name, style:'LOW', sets:mtnSegs('LOW'), note:''};
-  }
   var cardio = isCardio(name);
   var swim  = isSwim(name);
   var stat  = isStatic(name);

@@ -632,10 +632,41 @@ var SWIM_EX   = ['Разминка','Вольный стиль','Брасс','Б
 var EX_VARIANTS = {
   'Ноги с доской':       {label:'Стиль',    opts:['Кроль','Брасс','Дельфин','На спине']},
   'Руки с колобашкой':   {label:'Стиль',    opts:['Кроль','Брасс','Баттерфляй','На спине']},
-  'My Mountain (горка)': {label:'Программа', opts:['LOW','MIDDLE','HIGH']}
+  'My Mountain (горка)': {label:'Программа', opts:['LOW','MIDDLE','HIGH','Своя']}
 };
 function isStyleDrill(name) { return !!EX_VARIANTS[name]; }
+function isMountain(name) { return name === 'My Mountain (горка)'; }
 function exTitle(ex) { return (isStyleDrill(ex.name) && ex.style) ? (ex.name + ' · ' + ex.style) : ex.name; }
+
+// Программы дорожки My Mountain — каждая делится на части: время (мин) · дистанция (км) · наклон (%)
+var MTN_PROGRAMS = {
+  'LOW': [
+    {mins:5, dist:0.4, incline:2},
+    {mins:5, dist:0.4, incline:6},
+    {mins:5, dist:0.4, incline:10},
+    {mins:5, dist:0.4, incline:2}
+  ],
+  'MIDDLE': [
+    {mins:5, dist:0.4, incline:3},
+    {mins:6, dist:0.5, incline:10},
+    {mins:6, dist:0.5, incline:18},
+    {mins:5, dist:0.4, incline:10},
+    {mins:3, dist:0.2, incline:3}
+  ],
+  'HIGH': [
+    {mins:5, dist:0.4, incline:5},
+    {mins:7, dist:0.5, incline:15},
+    {mins:7, dist:0.45, incline:25},
+    {mins:6, dist:0.4, incline:18},
+    {mins:5, dist:0.35, incline:5}
+  ],
+  'Своя': [
+    {mins:5, dist:0.4, incline:5}
+  ]
+};
+function mtnSegs(prog) {
+  return (MTN_PROGRAMS[prog] || MTN_PROGRAMS['Своя']).map(function(s){ return {mins:s.mins, dist:s.dist, incline:s.incline, done:false}; });
+}
 function makeExFromEntry(e) {
   var name = (typeof e === 'string') ? e : e.name;
   var ex = makeEx(name);

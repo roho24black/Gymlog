@@ -1593,7 +1593,7 @@ function startWorkout(fromTpl) {
     wkt.name = fromTpl.name;
     wkt.loc = fromTpl.loc || 'gym';
     (fromTpl.exs || []).forEach(function(e) {
-      var ex = makeEx(typeof e === 'string' ? e : e.name);
+      var ex = makeExFromEntry(e);
       if (typeof e === 'object' && e.sets) {
         var stat = isStatic(ex.name);
         var card = isCardio(ex.name);

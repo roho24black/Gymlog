@@ -2486,7 +2486,7 @@ function applyTplToPlan(idx, isBuiltin) {
   if (!wkt) return;
   if (tpl.loc) wkt.loc = tpl.loc;
   if (!wkt.name || wkt.name === 'Тренировка') wkt.name = tpl.name;
-  (tpl.exs || []).forEach(function(e){ wkt.exercises.push(makeEx(typeof e === 'string' ? e : e.name)); });
+  (tpl.exs || []).forEach(function(e){ wkt.exercises.push(makeExFromEntry(e)); });
   saveST();
   closePlanTplPicker();
   // Раскрываем все упражнения, чтобы сразу было видно содержимое шаблона

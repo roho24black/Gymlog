@@ -1193,6 +1193,24 @@ function makeEx(name) {
   return ex;
 }
 
+function setExStyle(ei, style) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var ex = wkt.exercises[ei]; if (!ex) return;
+  ex.style = style; saveST(); renderWorkout();
+}
+function styleChips(ex, ei) {
+  if (!isStyleDrill(ex.name)) return '';
+  var styles = SWIM_STYLE_DRILLS[ex.name], cur = ex.style || styles[0];
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' +
+    '<span style="font-size:11px;color:var(--mut);align-self:center;margin-right:2px">Стиль:</span>' +
+    styles.map(function(st){
+      var on = cur === st;
+      return '<button onclick="setExStyle('+ei+',\''+st+'\')" style="padding:6px 11px;border-radius:100px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?'rgba(56,189,248,0.5)':'var(--brd2)')+';background:'+(on?'rgba(56,189,248,0.15)':'none')+';color:'+(on?'var(--blu)':'var(--sub)')+'">'+st+'</button>';
+    }).join('') +
+  '</div>';
+}
+
 // ═══════════════════════ PLAN ═══════════════════════
 function curWktRef() { return ACTIVE_WKT || PLAN_WKT; }
 

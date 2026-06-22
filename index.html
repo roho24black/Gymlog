@@ -1565,7 +1565,7 @@ function renderPlanView(wkt) {
           '</div>';
       }
     });
-    h += '<div class="add-row"><button class="add-btn" onclick="addSet('+ei+')">'+(mtn?'+ Часть':'+ Подход')+'</button>' +
+    h += '<div class="add-row"><button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
       (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') + '</div>';
     h += '<button class="rm-ex-btn" onclick="removeEx('+ei+')">Удалить упражнение</button>';
     h += '</div></div>';

@@ -188,6 +188,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 .sh-handle{width:40px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:14px auto 0}
 .sh-title{font-size:13px;font-weight:600;padding:12px 20px 2px;color:var(--sub);text-align:center;
   text-transform:uppercase;letter-spacing:.5px}
+.sh-mode{display:flex;gap:5px;margin:8px 16px 0;background:var(--card2);border:1px solid var(--brd2);border-radius:11px;padding:3px}
+.sh-mode button{flex:1;padding:8px 4px;font-size:12.5px;font-weight:700;font-family:inherit;border:none;background:none;color:var(--sub);border-radius:8px;cursor:pointer;transition:all .15s;-webkit-user-select:none;user-select:none}
+.sh-mode button.on{background:rgba(34,197,94,0.18);color:var(--acc)}
+.sh-manual-wrap{display:none;align-items:baseline;justify-content:center;gap:8px;padding:26px 20px 14px}
+.sh-manual-input{width:160px;text-align:center;font-size:40px;font-weight:800;color:var(--txt);background:var(--card2);border:2px solid var(--acc-brd);border-radius:16px;padding:12px 8px;font-family:inherit;-webkit-appearance:none;-moz-appearance:textfield;outline:none;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.sh-manual-input:focus{border-color:var(--acc)}
+.sh-manual-input::-webkit-outer-spin-button,.sh-manual-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sh-manual-unit{font-size:18px;color:var(--mut);font-weight:600}
 .sh-val-display{text-align:center;font-size:36px;font-weight:800;color:var(--txt);
   margin:6px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:-1px}
 .sh-val-unit{font-size:16px;color:var(--mut);font-weight:500}

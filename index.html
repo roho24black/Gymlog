@@ -1202,12 +1202,13 @@ function setExStyle(ei, style) {
 }
 function styleChips(ex, ei) {
   if (!isStyleDrill(ex.name)) return '';
-  var styles = SWIM_STYLE_DRILLS[ex.name], cur = ex.style || styles[0];
+  var cfg = EX_VARIANTS[ex.name], styles = cfg.opts, cur = ex.style || styles[0];
+  var clr = muscleGroupColor(exGroup(ex.name));
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' +
-    '<span style="font-size:11px;color:var(--mut);align-self:center;margin-right:2px">Стиль:</span>' +
+    '<span style="font-size:11px;color:var(--mut);align-self:center;margin-right:2px">'+cfg.label+':</span>' +
     styles.map(function(st){
       var on = cur === st;
-      return '<button onclick="setExStyle('+ei+',\''+st+'\')" style="padding:6px 11px;border-radius:100px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?'rgba(56,189,248,0.5)':'var(--brd2)')+';background:'+(on?'rgba(56,189,248,0.15)':'none')+';color:'+(on?'var(--blu)':'var(--sub)')+'">'+st+'</button>';
+      return '<button onclick="setExStyle('+ei+',\''+st+'\')" style="padding:6px 11px;border-radius:100px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?clr:'var(--brd2)')+';background:'+(on?'rgba(255,255,255,0.05)':'none')+';color:'+(on?clr:'var(--sub)')+'">'+st+'</button>';
     }).join('') +
   '</div>';
 }

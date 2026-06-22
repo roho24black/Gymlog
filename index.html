@@ -1464,11 +1464,6 @@ function togglePlanEx(ei) {
 function planExSummary(ex) {
   var s0 = ex.sets && ex.sets[0];
   if (!s0) return ex.sets.length + ' подх.';
-  if (isMountain(ex.name)) {
-    var totMin = ex.sets.reduce(function(a,s){return a+(s.mins||0);},0);
-    var maxInc = ex.sets.reduce(function(a,s){return Math.max(a,s.incline||0);},0);
-    return ex.sets.length + ' ч. · ' + totMin + ' мин · до ' + maxInc + '%';
-  }
   if (isSwim(ex.name))    return ex.sets.length + ' × ' + (s0.dist||100) + ' м' + (s0.secs ? ' · ' + fmtTime(s0.secs) : '');
   if (isStatic(ex.name))  return ex.sets.length + ' × ' + (s0.secs||60) + ' сек';
   if (isCardio(ex.name))  return ex.sets.length + ' × ' + (s0.mins||20) + ' мин' + (s0.dist ? ' · ' + s0.dist + ' км' : '');

@@ -1190,7 +1190,7 @@ function makeEx(name) {
   for (var i = 0; i < n; i++)
     sets.push(swim ? {dist:100, done:false} : cardio ? {w:0,r:0,dist:3,mins:20,done:false} : stat ? {secs:60,done:false} : {w:0,r:12,done:false});
   var ex = {id:name, name:name, sets:sets, note:''};
-  if (isStyleDrill(name)) ex.style = SWIM_STYLE_DRILLS[name][0];
+  if (isStyleDrill(name)) ex.style = EX_VARIANTS[name].opts[0];
   return ex;
 }
 

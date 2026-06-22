@@ -1889,14 +1889,14 @@ function renderWorkout() {
       h += '</div>';
     });
     h += '<div class="add-row">' +
-      '<button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
+      '<button class="add-btn" onclick="addSet('+ei+')">'+(mtn?'+ Часть':'+ Подход')+'</button>' +
       (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') +
       '</div>';
     var nextSet = -1;
     for (var si = 0; si < ex.sets.length; si++) if (!ex.sets[si].done){ nextSet = si; break; }
     if (nextSet !== -1) {
       var s = ex.sets[nextSet];
-      var target = stat ? ((s.secs||60)+' сек') : swim ? ((s.dist||0)+' м'+(s.secs?' · '+fmtTime(s.secs):'')) : cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
+      var target = stat ? ((s.secs||60)+' сек') : swim ? ((s.dist||0)+' м'+(s.secs?' · '+fmtTime(s.secs):'')) : mtn ? ((s.mins||0)+' мин · '+(s.incline||0)+'% · '+(s.dist||0)+' км') : cardio ? ((s.mins||20)+' мин') : ((s.w||0)+' кг × '+(s.r||0));
       h += '<button class="set-rec-btn'+(swim?' pool':'')+'" onclick="recordSet('+ei+','+nextSet+')">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' +
         'Записать подход · '+target+'</button>';

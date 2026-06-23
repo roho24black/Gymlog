@@ -1866,7 +1866,7 @@ function recordSet(ei, si) {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   wkt.exercises[ei].sets[si].done = true;
-  saveST(); startRest(90); updateVolBar(); renderWorkout();
+  saveST(); startRest(45); updateVolBar(); renderWorkout();
 }
 
 function addSet(ei) {

@@ -1353,23 +1353,51 @@ function closePlan() {
   renderTopbar(); renderWorkout();
 }
 
+// Свой confirm/toast — нативные confirm()/alert() ненадёжны в PWA на iOS
+function uiConfirm(message, onYes, yesLabel) {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:18px;max-width:320px;width:100%;padding:20px;box-sizing:border-box;border:1px solid var(--brd2)">' +
+      '<div style="font-size:15px;font-weight:600;color:var(--txt);text-align:center;margin-bottom:18px;line-height:1.4">'+esc(message)+'</div>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button id="uc-no" style="flex:1;height:46px;border-radius:12px;background:var(--card2);border:1px solid var(--brd2);color:var(--sub);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">Отмена</button>' +
+        '<button id="uc-yes" style="flex:1;height:46px;border-radius:12px;background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.4);color:var(--red);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">'+(yesLabel||'Удалить')+'</button>' +
+      '</div>' +
+    '</div>';
+  function close(){ if (ov.parentNode) ov.remove(); }
+  ov.addEventListener('click', function(e){ if (e.target===ov) close(); });
+  document.body.appendChild(ov);
+  document.getElementById('uc-no').onclick = close;
+  document.getElementById('uc-yes').onclick = function(){ close(); if (onYes) onYes(); };
+}
+function uiToast(message) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--card2);color:var(--txt);border:1px solid var(--brd2);border-radius:12px;padding:12px 18px;font-size:14px;font-weight:600;z-index:9600;max-width:82%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.5)';
+  t.textContent = message;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){ if(t.parentNode) t.remove(); },300); }, 2200);
+}
+
 function deletePlan(date, wid) {
-  if (!confirm('Удалить план тренировки?')) return;
-  if (!ST.w[date]) return;
-  ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
-  if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
-  saveST();
-  if (PLAN_WKT && PLAN_WKT.wid === wid) PLAN_WKT = null;
-  renderTopbar(); renderWorkout();
+  uiConfirm('Удалить тренировку?', function(){
+    if (!ST.w[date]) return;
+    ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
+    if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
+    saveST();
+    if (PLAN_WKT && PLAN_WKT.wid === wid) PLAN_WKT = null;
+    renderTopbar(); renderWorkout();
+  });
 }
 
 function deleteWorkout(date, wid) {
-  if (!confirm('Удалить запись тренировки?')) return;
-  if (!ST.w[date]) return;
-  ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
-  if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
-  saveST();
-  renderWorkout();
+  uiConfirm('Удалить запись тренировки?', function(){
+    if (!ST.w[date]) return;
+    ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
+    if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
+    saveST();
+    renderWorkout();
+  });
 }
 
 function launchPlan(date, wid) {

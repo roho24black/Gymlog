@@ -2119,18 +2119,26 @@ function renderTmr() {
     var totSec = TMR.seq.reduce(function(a,p){ return a + p.secs; }, 0);
     var stepBtn = function(fn, t){ return '<button onclick="'+fn+'" style="width:44px;height:44px;border-radius:12px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:22px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;flex-shrink:0">'+t+'</button>'; };
     var row = function(label, val, dec, inc){ return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px"><div style="font-size:14px;font-weight:700;color:var(--txt);line-height:1.2">'+label+'</div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+stepBtn(dec,'−')+'<div style="min-width:62px;text-align:center;font-size:22px;font-weight:800;color:var(--txt);font-variant-numeric:tabular-nums">'+val+'</div>'+stepBtn(inc,'+')+'</div></div>'; };
+    var statics = (getWkt(ACTIVE_WKT.date,ACTIVE_WKT.wid).exercises||[]).filter(function(ex){ return isStatic(ex.name); });
+    var exList = statics.map(function(ex){
+      var secs = (ex.sets||[]).map(function(s){ return s.secs||60; });
+      var same = secs.every(function(x){ return x===secs[0]; });
+      var t = same ? (secs.length+' × '+fmtTime(secs[0])) : secs.map(fmtTime).join(' · ');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--brd2)"><span style="font-size:13px;font-weight:700;color:var(--txt);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(ex.name)+'</span><span style="font-size:13px;color:var(--sub);flex-shrink:0">'+t+'</span></div>';
+    }).join('');
     h = '<div style="padding:max(env(safe-area-inset-top),20px) 20px 0;display:flex;align-items:center;justify-content:space-between">' +
         '<div style="font-size:18px;font-weight:800;color:var(--txt)">⏱️ Таймер подходов</div>' +
         '<button onclick="closeTmr()" style="background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
       '</div>' +
       '<div style="flex:1;overflow-y:auto;padding:24px 20px 20px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
-        row('Время подхода', fmtTime(TMR.work), 'tmrSetWork(-5)', 'tmrSetWork(5)') +
         row('Отдых между подходами', fmtTime(TMR.restSet), 'tmrSetRestSet(-5)', 'tmrSetRestSet(5)') +
         row('Отдых между упражнениями', fmtTime(TMR.restEx), 'tmrSetRestEx(-5)', 'tmrSetRestEx(5)') +
-        '<div style="margin-top:8px;padding:14px;background:var(--card);border:1px solid var(--brd2);border-radius:14px;text-align:center;color:var(--sub);font-size:13px;line-height:1.6">' +
-          '<b style="color:var(--txt);font-size:15px">'+TMR.totalWork+'</b> подх. · держание '+fmtTime(TMR.work)+'<br>отдых: подходы '+fmtTime(TMR.restSet)+' · упражнения '+fmtTime(TMR.restEx)+'<br>≈ '+Math.round(totSec/60)+' мин всего' +
+        '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 4px">Программа (время — из подходов)</div>' +
+        '<div style="margin-bottom:8px">'+exList+'</div>' +
+        '<div style="margin-top:10px;padding:14px;background:var(--card);border:1px solid var(--brd2);border-radius:14px;text-align:center;color:var(--sub);font-size:13px;line-height:1.6">' +
+          '<b style="color:var(--txt);font-size:15px">'+TMR.totalWork+'</b> подх. · отдых: подходы '+fmtTime(TMR.restSet)+' · упр. '+fmtTime(TMR.restEx)+'<br>≈ '+Math.round(totSec/60)+' мин всего' +
         '</div>' +
-        '<div style="font-size:12px;color:var(--mut);text-align:center;margin-top:12px">Время подхода применится ко всем статическим упражнениям</div>' +
+        '<div style="font-size:12px;color:var(--mut);text-align:center;margin-top:12px">Время удержания каждого подхода берётся из плана. «Пропуск» запишет реально продержанное время.</div>' +
       '</div>' +
       '<div style="padding:0 20px max(env(safe-area-inset-bottom),20px);max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
         '<button onclick="tmrStart()" style="width:100%;height:58px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:18px;font-weight:800;border:none;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">▶ Старт</button>' +

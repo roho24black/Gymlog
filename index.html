@@ -1988,10 +1988,9 @@ function tmrVibe(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch
 function openWorkoutTimer() {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
-  var work = 60, found = false;
-  (wkt.exercises||[]).forEach(function(ex){ if (!found && isStatic(ex.name) && ex.sets[0]) { work = ex.sets[0].secs||60; found = true; } });
+  var found = (wkt.exercises||[]).some(function(ex){ return isStatic(ex.name) && ex.sets[0]; });
   if (!found) { uiToast('Добавь статическое упражнение'); return; }
-  TMR = { running:false, done:false, work:work, idx:0, seq:[], raf:null, ringC: 2*Math.PI*110,
+  TMR = { running:false, done:false, idx:0, seq:[], raf:null, ringC: 2*Math.PI*110,
           restSet:(ST.cfg&&ST.cfg.restStaticSet)||30, restEx:(ST.cfg&&ST.cfg.restStaticEx)||60 };
   renderTmr();
 }

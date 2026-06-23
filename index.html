@@ -988,10 +988,10 @@ function startRecovery() {
       break;
     }
   }
-  if (!allEx.length) { alert('Нет завершённой тренировки для расчёта'); return; }
+  if (!allEx.length) { uiToast('Нет завершённой тренировки для расчёта'); return; }
 
   var groupHours = calcRecovery(allEx);
-  if (!Object.keys(groupHours).length) { alert('Нет выполненных подходов'); return; }
+  if (!Object.keys(groupHours).length) { uiToast('Нет выполненных подходов'); return; }
 
   if (!refMs || refMs > now) refMs = now;
 

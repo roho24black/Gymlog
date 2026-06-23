@@ -2530,8 +2530,7 @@ function closePlanTplPicker() {
   if (el) el.remove();
 }
 function delTpl(ti) {
-  if (!confirm('Удалить шаблон?')) return;
-  ST.templates.splice(ti,1); saveST(); renderTemplates();
+  uiConfirm('Удалить шаблон?', function(){ ST.templates.splice(ti,1); saveST(); renderTemplates(); });
 }
 
 // ═══════════════════════ TEMPLATE EDITOR ═══════════════════════

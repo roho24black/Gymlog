@@ -1969,6 +1969,178 @@ function restStop() {
   document.getElementById('rest-bar').classList.remove('vis');
 }
 
+// ═══════════════════════ ТАЙМЕР ПОДХОДОВ (статика) ═══════════════════════
+function tmrBeep(freq, dur) {
+  try {
+    if (!TMR_AC) return;
+    var o = TMR_AC.createOscillator(), g = TMR_AC.createGain();
+    o.type = 'sine'; o.frequency.value = freq || 880;
+    o.connect(g); g.connect(TMR_AC.destination);
+    var t = TMR_AC.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.15));
+    o.start(t); o.stop(t + (dur || 0.15) + 0.03);
+  } catch(e) {}
+}
+function tmrVibe(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {} }
+
+function openWorkoutTimer() {
+  if (!ACTIVE_WKT) return;
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var work = 60, found = false;
+  (wkt.exercises||[]).forEach(function(ex){ if (!found && isStatic(ex.name) && ex.sets[0]) { work = ex.sets[0].secs||60; found = true; } });
+  if (!found) { uiToast('Добавь статическое упражнение'); return; }
+  TMR = { running:false, done:false, rest:(ST.cfg&&ST.cfg.restStatic)||30, work:work, idx:0, remain:0, seq:[] };
+  renderTmr();
+}
+function tmrBuildSeq() {
+  var seq = [];
+  if (ACTIVE_WKT) {
+    var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+    (wkt.exercises||[]).forEach(function(ex, ei){
+      if (!isStatic(ex.name)) return;
+      (ex.sets||[]).forEach(function(s, si){
+        seq.push({type:'work', ei:ei, si:si, name:ex.name, secs:Math.max(1, s.secs||60), setNum:si+1, setTotal:ex.sets.length});
+        seq.push({type:'rest', secs:Math.max(1, TMR.rest)});
+      });
+    });
+    if (seq.length && seq[seq.length-1].type === 'rest') seq.pop();
+  }
+  TMR.seq = seq;
+  TMR.totalWork = seq.filter(function(p){ return p.type==='work'; }).length;
+}
+function tmrSetWork(delta) {
+  if (!ACTIVE_WKT || !TMR) return;
+  var nv = Math.max(5, (TMR.work||60) + delta);
+  TMR.work = nv;
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  (wkt.exercises||[]).forEach(function(ex){ if (isStatic(ex.name)) (ex.sets||[]).forEach(function(s){ s.secs = nv; }); });
+  saveST();
+  renderTmr();
+}
+function tmrSetRest(delta) {
+  if (!TMR) return;
+  TMR.rest = Math.max(5, (TMR.rest||30) + delta);
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.restStatic = TMR.rest; saveST();
+  renderTmr();
+}
+function tmrStart() {
+  try { TMR_AC = TMR_AC || new (window.AudioContext||window.webkitAudioContext)(); if (TMR_AC.state==='suspended') TMR_AC.resume(); } catch(e) {}
+  tmrBuildSeq();
+  if (!TMR.seq.length) { uiToast('Нет подходов'); return; }
+  TMR.idx = 0; TMR.remain = TMR.seq[0].secs; TMR.running = true; TMR.done = false;
+  if (TMR_ID) clearInterval(TMR_ID);
+  TMR_ID = setInterval(tmrTick, 1000);
+  tmrBeep(880, 0.12); tmrVibe(60);
+  renderTmr();
+}
+function tmrTick() {
+  if (!TMR || !TMR.running) return;
+  TMR.remain--;
+  if (TMR.remain > 0 && TMR.remain <= 3) tmrBeep(660, 0.07);
+  if (TMR.remain <= 0) { tmrAdvance(); return; }
+  var el = document.getElementById('tmr-num'); if (el) el.textContent = fmtTime(TMR.remain);
+  var bar = document.getElementById('tmr-bar'); if (bar) { var ph=TMR.seq[TMR.idx]; bar.style.width = Math.round((1 - TMR.remain/ph.secs)*100)+'%'; }
+}
+function tmrAdvance() {
+  var cur = TMR.seq[TMR.idx];
+  if (cur.type === 'work' && ACTIVE_WKT) {
+    var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+    if (wkt.exercises[cur.ei] && wkt.exercises[cur.ei].sets[cur.si]) { wkt.exercises[cur.ei].sets[cur.si].done = true; saveST(); }
+  }
+  TMR.idx++;
+  if (TMR.idx >= TMR.seq.length) { tmrFinish(); return; }
+  var nxt = TMR.seq[TMR.idx];
+  tmrBeep(nxt.type==='work' ? 990 : 520, 0.2); tmrVibe(nxt.type==='work' ? [90,50,90] : 150);
+  TMR.remain = nxt.secs;
+  renderTmr();
+}
+function tmrToggle() {
+  if (!TMR) return;
+  TMR.running = !TMR.running;
+  renderTmr();
+}
+function tmrSkip() {
+  if (!TMR || !TMR.running) return;
+  TMR.remain = 0; tmrAdvance();
+}
+function tmrFinish() {
+  TMR.running = false; TMR.done = true;
+  if (TMR_ID) { clearInterval(TMR_ID); TMR_ID = null; }
+  tmrBeep(990, 0.3); setTimeout(function(){ tmrBeep(1320, 0.3); }, 180);
+  tmrVibe([120,60,120,60,200]);
+  renderTmr();
+}
+function closeTmr() {
+  if (TMR_ID) { clearInterval(TMR_ID); TMR_ID = null; }
+  TMR = null;
+  var el = document.getElementById('tmr-overlay'); if (el) el.remove();
+  renderWorkout();
+}
+function renderTmr() {
+  var ov = document.getElementById('tmr-overlay');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'tmr-overlay'; ov.style.cssText = 'position:fixed;inset:0;z-index:9700;background:var(--bg);display:flex;flex-direction:column'; document.body.appendChild(ov); }
+  if (!TMR) { ov.remove(); return; }
+  var h = '';
+  if (!TMR.running && !TMR.done) {
+    // setup
+    tmrBuildSeq();
+    var totSec = TMR.seq.reduce(function(a,p){ return a + p.secs; }, 0);
+    var stepBtn = function(fn, t){ return '<button onclick="'+fn+'" style="width:48px;height:48px;border-radius:12px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:22px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">'+t+'</button>'; };
+    var row = function(label, val, dec, inc){ return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px"><div style="font-size:15px;font-weight:700;color:var(--txt)">'+label+'</div><div style="display:flex;align-items:center;gap:10px">'+stepBtn(dec,'−')+'<div style="min-width:74px;text-align:center;font-size:24px;font-weight:800;color:var(--txt);font-variant-numeric:tabular-nums">'+val+'</div>'+stepBtn(inc,'+')+'</div></div>'; };
+    h = '<div style="padding:max(env(safe-area-inset-top),20px) 20px 0;display:flex;align-items:center;justify-content:space-between">' +
+        '<div style="font-size:18px;font-weight:800;color:var(--txt)">⏱️ Таймер подходов</div>' +
+        '<button onclick="closeTmr()" style="background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
+      '</div>' +
+      '<div style="flex:1;overflow-y:auto;padding:24px 20px 20px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
+        row('Время подхода', fmtTime(TMR.work), 'tmrSetWork(-5)', 'tmrSetWork(5)') +
+        row('Отдых между', fmtTime(TMR.rest), 'tmrSetRest(-5)', 'tmrSetRest(5)') +
+        '<div style="margin-top:8px;padding:14px;background:var(--card);border:1px solid var(--brd2);border-radius:14px;text-align:center;color:var(--sub);font-size:13px">' +
+          '<b style="color:var(--txt);font-size:15px">'+TMR.totalWork+'</b> подх. · держание '+fmtTime(TMR.work)+' · отдых '+fmtTime(TMR.rest)+'<br>≈ '+Math.round(totSec/60)+' мин всего' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--mut);text-align:center;margin-top:12px">Время подхода применится ко всем статическим упражнениям</div>' +
+      '</div>' +
+      '<div style="padding:0 20px max(env(safe-area-inset-bottom),20px);max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
+        '<button onclick="tmrStart()" style="width:100%;height:58px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:18px;font-weight:800;border:none;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">▶ Старт</button>' +
+      '</div>';
+  } else if (TMR.done) {
+    h = '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">' +
+        '<div style="font-size:64px">🏁</div>' +
+        '<div style="font-size:26px;font-weight:800;color:var(--txt)">Готово!</div>' +
+        '<div style="font-size:15px;color:var(--sub)">'+TMR.totalWork+' подх. выполнено</div>' +
+        '<button onclick="closeTmr()" style="margin-top:10px;width:220px;height:54px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:17px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Завершить</button>' +
+      '</div>';
+  } else {
+    var ph = TMR.seq[TMR.idx];
+    var workNo = 0; for (var i=0;i<=TMR.idx;i++) if (TMR.seq[i].type==='work') workNo++;
+    var isWork = ph.type === 'work';
+    var clr = isWork ? '#34d399' : '#38bdf8';
+    var label = isWork ? esc(ph.name) : 'ОТДЫХ';
+    var sub;
+    if (isWork) { sub = 'Подход '+ph.setNum+'/'+ph.setTotal; }
+    else { var nx = TMR.seq[TMR.idx+1]; sub = nx ? ('Далее: '+esc(nx.name)+' · подход '+nx.setNum) : 'Далее'; }
+    h = '<div style="padding:max(env(safe-area-inset-top),16px) 18px 0;display:flex;align-items:center;justify-content:space-between">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px">'+workNo+'/'+TMR.totalWork+' подх.</div>' +
+        '<button onclick="closeTmr()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
+      '</div>' +
+      '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 20px">' +
+        '<div style="font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:'+clr+'">'+(isWork?'ДЕРЖИ':'ОТДЫХ')+'</div>' +
+        '<div style="font-size:20px;font-weight:700;color:var(--txt);text-align:center;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div>' +
+        '<div style="font-size:13px;color:var(--sub);margin-bottom:6px">'+sub+'</div>' +
+        '<div id="tmr-num" style="font-size:96px;font-weight:800;color:'+clr+';font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-2px">'+fmtTime(TMR.remain)+'</div>' +
+        '<div style="width:80%;max-width:320px;height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-top:14px"><div id="tmr-bar" style="height:100%;background:'+clr+';width:'+Math.round((1-TMR.remain/ph.secs)*100)+'%;transition:width .3s linear"></div></div>' +
+      '</div>' +
+      '<div style="padding:0 20px max(env(safe-area-inset-bottom),20px);display:flex;gap:10px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
+        '<button onclick="tmrToggle()" style="flex:1;height:54px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer">'+(TMR.running?'⏸ Пауза':'▶ Продолжить')+'</button>' +
+        '<button onclick="tmrSkip()" style="flex:1;height:54px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--sub);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer">⏭ Пропуск</button>' +
+        '<button onclick="closeTmr()" style="width:54px;height:54px;border-radius:14px;background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.35);color:var(--red);font-size:18px;font-weight:700;font-family:inherit;cursor:pointer">✕</button>' +
+      '</div>';
+  }
+  ov.innerHTML = h;
+}
+
 // ═══════════════════════ BOTTOM SHEET (DRUM PICKER) ═══════════════════════
 function openSheet(ei, si, field) {
   var ref = curWktRef(); if (!ref) return;

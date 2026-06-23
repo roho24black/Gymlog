@@ -1792,6 +1792,11 @@ function renderWorkout() {
     (wkt.loc==='pool'?'background:rgba(56,189,248,0.15);color:var(--blu)':'background:none;color:var(--sub)')+'" onclick="setWktLoc(\'pool\')">🌊 Бассейн</button>' +
     '</div>';
 
+  // Таймер подходов (для статики) — опционально
+  if ((wkt.exercises||[]).some(function(ex){ return isStatic(ex.name); })) {
+    h += '<button onclick="openWorkoutTimer()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 28px);max-width:560px;margin:6px auto 2px;height:46px;border-radius:14px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.4);color:#34d399;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">⏱️ Таймер подходов</button>';
+  }
+
   h += '<div class="ex-list">';
   var exs = wkt.exercises || [];
   exs.forEach(function(ex, ei) {

@@ -2014,14 +2014,6 @@ function tmrBuildSeq() {
   TMR.seq = seq;
   TMR.totalWork = seq.filter(function(p){ return p.type==='work'; }).length;
 }
-function tmrSetWork(delta) {
-  if (!ACTIVE_WKT || !TMR) return;
-  var nv = Math.max(5, (TMR.work||60) + delta);
-  TMR.work = nv;
-  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
-  (wkt.exercises||[]).forEach(function(ex){ if (isStatic(ex.name)) (ex.sets||[]).forEach(function(s){ s.secs = nv; }); });
-  saveST(); renderTmr();
-}
 function tmrSetRestSet(delta) {
   if (!TMR) return;
   TMR.restSet = Math.max(0, (TMR.restSet||30) + delta);

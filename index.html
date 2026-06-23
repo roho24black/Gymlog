@@ -2062,8 +2062,12 @@ function tmrAdvance() {
   if (TMR.raf) { cancelAnimationFrame(TMR.raf); TMR.raf = null; }
   var cur = TMR.seq[TMR.idx];
   if (cur.type === 'work' && ACTIVE_WKT) {
+    // записываем реально продержанное время (при пропуске — меньше планового)
+    var remain = Math.max(0, (TMR.endAt - Date.now())/1000);
+    var actual = Math.max(1, Math.round(TMR.phaseSecs - remain));
     var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
-    if (wkt.exercises[cur.ei] && wkt.exercises[cur.ei].sets[cur.si]) { wkt.exercises[cur.ei].sets[cur.si].done = true; saveST(); }
+    var st = wkt.exercises[cur.ei] && wkt.exercises[cur.ei].sets[cur.si];
+    if (st) { st.secs = actual; st.done = true; saveST(); }
   }
   TMR.idx++;
   if (TMR.idx >= TMR.seq.length) { tmrFinish(); return; }

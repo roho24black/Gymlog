@@ -1001,7 +1001,7 @@ function startRecovery() {
     groups[g] = e;
     if (e > maxEnd) maxEnd = e;
   });
-  if (maxEnd <= now) { alert('По расчёту вы уже восстановились 💪'); return; }
+  if (maxEnd <= now) { uiToast('По расчёту вы уже восстановились 💪'); return; }
 
   ST.recovery = { startMs: refMs, groups: groups, label: label };
   saveST();

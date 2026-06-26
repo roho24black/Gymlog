@@ -2263,7 +2263,7 @@ function setInputMode(mode) {
   ST.cfg.inputMode = mode; saveST();
   applyInputMode(true);
   // При возврате к барабану подкручиваем его к текущему значению
-  if (mode === 'drum' && !(SH_MODE && SH_MODE.field === 'swimtime') && SH_RANGE.length) {
+  if (mode === 'drum' && SH_RANGE.length) {
     var best = 0;
     for (var i=0;i<SH_RANGE.length;i++) if (Math.abs(SH_RANGE[i]-SH_VAL) < Math.abs(SH_RANGE[best]-SH_VAL)) best = i;
     SH_VAL = SH_RANGE[best];

@@ -2274,9 +2274,9 @@ function setInputMode(mode) {
 }
 function applyInputMode(focusIt) {
   var isTime = SH_MODE && SH_MODE.field === 'swimtime';
-  var manual = !isTime && getInputMode() === 'manual';
+  var manual = getInputMode() === 'manual';
   var modeRow = document.getElementById('sh-mode');
-  if (modeRow) modeRow.style.display = isTime ? 'none' : 'flex';
+  if (modeRow) modeRow.style.display = 'flex';
   var bd = document.getElementById('sh-mode-drum'), bm = document.getElementById('sh-mode-manual');
   if (bd) bd.className = manual ? '' : 'on';
   if (bm) bm.className = manual ? 'on' : '';
@@ -2286,9 +2286,16 @@ function applyInputMode(focusIt) {
     if (mw) mw.style.display = 'flex';
     if (disp) disp.style.display = 'none';
     var inp = document.getElementById('sh-manual-input');
+    var un = document.getElementById('sh-manual-unit');
     if (inp) {
-      inp.step = SH_STEP || 1;
-      inp.value = Math.round(SH_VAL*100)/100;
+      if (isTime) {
+        inp.type = 'text'; inp.setAttribute('inputmode','numeric'); inp.placeholder = 'м:сс';
+        inp.value = fmtTime(Math.max(0, Math.round(SH_VAL)));
+        if (un) un.textContent = 'мин:сек';
+      } else {
+        inp.type = 'number'; inp.setAttribute('inputmode','decimal'); inp.step = SH_STEP || 1;
+        inp.value = Math.round(SH_VAL*100)/100;
+      }
       if (focusIt) setTimeout(function(){ inp.focus(); inp.select(); }, 60);
     }
   } else {
@@ -2297,8 +2304,18 @@ function applyInputMode(focusIt) {
     if (disp) disp.style.display = 'block';
   }
 }
+function parseMMSS(str) {
+  str = String(str||'').trim();
+  if (str.indexOf(':') !== -1) {
+    var p = str.split(':');
+    return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0);
+  }
+  var n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
+}
 function shManualInput() {
   var inp = document.getElementById('sh-manual-input');
+  if (SH_MODE && SH_MODE.field === 'swimtime') { SH_VAL = parseMMSS(inp.value); return; }
   var v = parseFloat(inp.value);
   if (!isNaN(v)) SH_VAL = v;
 }

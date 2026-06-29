@@ -638,7 +638,19 @@ function exTitle(ex) { return (isStyleDrill(ex.name) && ex.style) ? (ex.name + '
 function makeExFromEntry(e) {
   var name = (typeof e === 'string') ? e : e.name;
   var ex = makeEx(name);
-  if (typeof e === 'object' && e.style && isStyleDrill(name)) ex.style = e.style;
+  if (typeof e !== 'object') return ex;
+  if (e.style && isStyleDrill(name)) ex.style = e.style;
+  if (e.sets) {
+    var n = Math.max(1, e.sets|0);
+    var sw = isSwim(name), stat = isStatic(name), cd = isCardio(name);
+    ex.sets = [];
+    for (var i = 0; i < n; i++) {
+      if (sw)        ex.sets.push(e.time ? {dist:e.dist||e.reps||100, secs:e.time, done:false} : {dist:e.dist||e.reps||100, done:false});
+      else if (stat) ex.sets.push({secs:e.secs||e.reps||60, done:false});
+      else if (cd)   ex.sets.push({w:0, r:0, dist:e.dist||3, mins:e.mins||e.reps||20, done:false});
+      else           ex.sets.push({w:e.weight||0, r:e.reps||12, done:false});
+    }
+  }
   return ex;
 }
 var STATIC_EX  = ['Планка','Планка на вытянутых руках','Боковая планка (левая)','Боковая планка (правая)','Планка с подъёмом руки','Планка с подъёмом ноги','Стул у стены','Изометрический выпад — удержание','Удержание в нижней точке приседа','Вакуум','Полое тело (hollow hold)','Лодочка — удержание','Супермен — удержание','Мёртвый жук','Птица-собака','Удержание угла (L-sit)','Удержание ног (подъём лёжа)','Мёртвый вис на турнике','Уголок в висе — удержание','Удержание в верхней точке подтягивания','Удержание в нижней точке отжимания','Фермерское удержание','Ягодичный мост — удержание','Стойка на руках у стены — удержание'];
@@ -730,35 +742,25 @@ var BUILT_IN = [
    exs:['Беговая дорожка','Эллипс','Велотренажёр вертикальный']},
   {id:'cardio_legs', name:'Кардио + Нижний блок', loc:'gym',
    exs:['Беговая дорожка','Жим ногами 45°','Разгибание ног','Сгибание ног лёжа','Обратная гиперэкстензия']},
-  // ── Pool ──
-  {id:'swim_end', name:'Плавание — Аэробная выносливость', loc:'pool',
-   exs:['Вольный стиль','Брасс','Комплексное плавание']},
-  {id:'swim_int', name:'Плавание — Интервальный протокол', loc:'pool',
-   exs:['Интервалы в бассейне','Вольный стиль','Баттерфляй']},
-  {id:'swim_tech', name:'Плавание — Техника всех стилей', loc:'pool',
-   exs:['Вольный стиль','На спине','Брасс','Баттерфляй']},
-  {id:'swim_im', name:'Плавание — Комплекс (IM)', loc:'pool',
-   exs:['Комплексное плавание','Баттерфляй','На спине','Брасс','Вольный стиль']},
-  {id:'swim_sprint', name:'Плавание — Спринт и скорость', loc:'pool',
-   exs:['Интервалы в бассейне','Вольный стиль','Баттерфляй']},
-  {id:'swim_crawl', name:'Плавание — Кроль в фокусе', loc:'pool',
-   exs:['Вольный стиль','Интервалы в бассейне','Комплексное плавание']},
-  {id:'swim_easy', name:'Плавание — Лёгкое восстановление', loc:'pool',
-   exs:['Брасс','На спине','Вольный стиль']},
-  {id:'swim_long', name:'Плавание — Длинная дистанция', loc:'pool',
-   exs:['Вольный стиль','Комплексное плавание','На спине']},
-  {id:'swim_warm', name:'Плавание — Разминка + откупка', loc:'pool',
-   exs:['Разминка','Вольный стиль','На спине','Откупка (заминка)']},
-  {id:'swim_kick', name:'Плавание — Ноги с доской', loc:'pool',
-   exs:['Разминка',{name:'Ноги с доской',style:'Кроль'},{name:'Ноги с доской',style:'Брасс'},{name:'Ноги с доской',style:'Дельфин'},'Откупка (заминка)']},
-  {id:'swim_pull', name:'Плавание — Руки с колобашкой', loc:'pool',
-   exs:['Разминка',{name:'Руки с колобашкой',style:'Кроль'},{name:'Руки с колобашкой',style:'Брасс'},'Откупка (заминка)']},
-  {id:'swim_drill', name:'Плавание — Техника (доска + колобашка)', loc:'pool',
-   exs:['Разминка',{name:'Ноги с доской',style:'Кроль'},{name:'Руки с колобашкой',style:'Кроль'},'Стрелка на спине','Откупка (заминка)']},
-  {id:'swim_dive', name:'Плавание — Спринт и проныры', loc:'pool',
-   exs:['Разминка','Проныры (под водой)','Интервалы в бассейне','Вольный стиль','Откупка (заминка)']},
-  {id:'swim_full', name:'Плавание — Полная сессия', loc:'pool',
-   exs:['Разминка',{name:'Ноги с доской',style:'Кроль'},{name:'Руки с колобашкой',style:'Кроль'},'Комплексное плавание','Интервалы в бассейне','Откупка (заминка)']},
+  // ── Pool (серьёзные объёмы 1500–2500 м) ──
+  {id:'swim_easy', name:'Плавание — Лёгкая (1500 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:300},{name:'Вольный стиль',sets:6,dist:100},{name:'На спине',sets:4,dist:100},{name:'Откупка (заминка)',sets:1,dist:200}]},
+  {id:'swim_end', name:'Плавание — Выносливость (2000 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:400},{name:'Вольный стиль',sets:10,dist:100},{name:'Комплексное плавание',sets:2,dist:200},{name:'Откупка (заминка)',sets:1,dist:200}]},
+  {id:'swim_int', name:'Плавание — Интервалы (2000 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:400},{name:'Интервалы в бассейне',sets:16,dist:50},{name:'Вольный стиль',sets:6,dist:100},{name:'Откупка (заминка)',sets:1,dist:200}]},
+  {id:'swim_tech', name:'Плавание — Техника (1800 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:300},{name:'Ноги с доской',style:'Кроль',sets:6,dist:50},{name:'Руки с колобашкой',style:'Кроль',sets:6,dist:50},{name:'Вольный стиль',sets:6,dist:100},{name:'Откупка (заминка)',sets:1,dist:300}]},
+  {id:'swim_drill', name:'Плавание — Доска + колобашка (1500 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:300},{name:'Ноги с доской',style:'Кроль',sets:6,dist:50},{name:'Руки с колобашкой',style:'Кроль',sets:6,dist:50},{name:'Стрелка на спине',sets:4,dist:25},{name:'Вольный стиль',sets:3,dist:100},{name:'Откупка (заминка)',sets:1,dist:200}]},
+  {id:'swim_im', name:'Плавание — Комплекс IM (2000 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:400},{name:'Комплексное плавание',sets:6,dist:200},{name:'Откупка (заминка)',sets:1,dist:400}]},
+  {id:'swim_sprint', name:'Плавание — Спринт + проныры (1600 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:400},{name:'Проныры (под водой)',sets:4,dist:25},{name:'Интервалы в бассейне',sets:12,dist:50},{name:'Вольный стиль',sets:4,dist:100},{name:'Откупка (заминка)',sets:1,dist:100}]},
+  {id:'swim_crawl', name:'Плавание — Кроль (2200 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:400},{name:'Вольный стиль',sets:6,dist:200},{name:'Интервалы в бассейне',sets:10,dist:50},{name:'Откупка (заминка)',sets:1,dist:100}]},
+  {id:'swim_long', name:'Плавание — Длинная (2500 м)', loc:'pool',
+   exs:[{name:'Разминка',sets:1,dist:400},{name:'Вольный стиль',sets:4,dist:400},{name:'Комплексное плавание',sets:1,dist:300},{name:'Откупка (заминка)',sets:1,dist:200}]},
   // ── Isometric ──
   {id:'iso_core', name:'Изометрика — Кор и стабилизация', loc:'gym',
    exs:['Планка','Боковая планка (левая)','Боковая планка (правая)','Мёртвый жук','Птица-собака']},
@@ -1228,10 +1230,11 @@ function fmtPlanDate(ds) {
   return DAYS_RU[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS_RU[d.getMonth()];
 }
 
-function showPlanDateSheet(fromTpl, repeatSrc) {
+function showPlanDateSheet(fromTpl, repeatSrc, importPayload) {
   closePlanDateSheet();
   window.__pdsTpl = fromTpl || null;
   window.__pdsRepeat = repeatSrc || null;
+  window.__pdsImport = importPayload || null;
   window.__pdsIdx = 0;
 
   var days = [];
@@ -1241,8 +1244,9 @@ function showPlanDateSheet(fromTpl, repeatSrc) {
     return '<div class="drum-item" style="font-size:17px;font-weight:600;letter-spacing:-0.2px" data-ds="'+ds+'" data-idx="'+idx+'">'+fmtPlanDate(ds)+'</div>';
   }).join('');
 
-  var title = repeatSrc ? '🔁 Повторить на дату' : 'Выбери дату';
-  var sub = repeatSrc ? '<div style="font-size:13px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(repeatSrc.name)+' · '+(repeatSrc.exercises||[]).length+' упр.</div>' : '';
+  var title = importPayload ? '📥 Добавить на дату' : (repeatSrc ? '🔁 Повторить на дату' : 'Выбери дату');
+  var subSrc = importPayload ? {name:importPayload.n, exercises:importPayload.e} : repeatSrc;
+  var sub = subSrc ? '<div style="font-size:13px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(subSrc.name)+' · '+(subSrc.exercises||[]).length+' упр.</div>' : '';
 
   var overlay = document.createElement('div');
   overlay.id = 'plan-date-overlay';
@@ -1284,7 +1288,8 @@ function planDateConfirm() {
     if (item) ds = item.getAttribute('data-ds');
   }
   closePlanDateSheet();
-  if (rep) createPlanFromWorkout(rep, ds);
+  if (window.__pdsImport) importSharedWorkout(window.__pdsImport, ds);
+  else if (rep) createPlanFromWorkout(rep, ds);
   else createPlan(window.__pdsTpl, ds);
 }
 
@@ -1341,6 +1346,111 @@ function createPlanFromWorkout(src, date) {
   OPEN_EX = {};
   goTab('workout');
   renderTopbar(); renderWorkout();
+}
+
+// ═══════════════════════ ПОДЕЛИТЬСЯ ПЛАНОМ ═══════════════════════
+function b64enc(str) { return btoa(unescape(encodeURIComponent(str))); }
+function b64dec(b64) { return decodeURIComponent(escape(atob(b64))); }
+
+function shareWorkout(date, wid) {
+  var wkt = getWkt(date, wid);
+  if (!wkt) return;
+  var payload = {
+    n: wkt.name, l: wkt.loc,
+    e: (wkt.exercises||[]).map(function(ex){
+      var o = { n: ex.name, st: (ex.sets||[]).map(function(s){ var x={}; for (var k in s) { if (k!=='done' && s.hasOwnProperty(k)) x[k]=s[k]; } return x; }) };
+      if (ex.style) o.s = ex.style;
+      return o;
+    })
+  };
+  var url = location.origin + location.pathname + '#share=' + b64enc(JSON.stringify(payload));
+  if (navigator.share) {
+    navigator.share({ title: 'Тренировка: '+wkt.name, text: 'Тренировка из GYM Log — открой ссылку, чтобы посмотреть и добавить в свой план', url: url }).catch(function(){});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function(){ uiToast('Ссылка на тренировку скопирована'); }).catch(function(){ uiShareLink(url); });
+  } else {
+    uiShareLink(url);
+  }
+}
+function uiShareLink(url) {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.innerHTML = '<div style="background:var(--card);border-radius:18px;max-width:340px;width:100%;padding:20px;box-sizing:border-box;border:1px solid var(--brd2)">' +
+    '<div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:10px">Ссылка на тренировку</div>' +
+    '<div style="font-size:12px;color:var(--sub);word-break:break-all;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px;max-height:120px;overflow:auto;margin-bottom:14px">'+esc(url)+'</div>' +
+    '<button id="usl-close" style="width:100%;height:44px;border-radius:12px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">Закрыть</button>' +
+  '</div>';
+  ov.addEventListener('click', function(e){ if (e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+  document.getElementById('usl-close').onclick = function(){ ov.remove(); };
+}
+
+function checkShareImport() {
+  var m = (location.hash||'').match(/#share=(.+)$/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    var payload = JSON.parse(b64dec(decodeURIComponent(m[1])));
+    if (payload && payload.e) showSharedPreview(payload);
+  } catch(e) { uiToast('Не удалось открыть тренировку'); }
+}
+function showSharedPreview(payload) {
+  var ov = document.createElement('div');
+  ov.id = 'shared-preview-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:flex-end;justify-content:center';
+  var exRows = (payload.e||[]).map(function(pe){
+    var n = pe.n + (pe.s ? ' · '+pe.s : '');
+    var info = (pe.st||[]).length + ' подх.';
+    var s0 = (pe.st||[])[0];
+    if (s0) {
+      if (s0.dist!=null && s0.secs==null && isSwim(pe.n)) info = (pe.st.length)+' × '+(s0.dist)+' м';
+      else if (s0.secs!=null && isStatic(pe.n)) info = (pe.st.length)+' × '+fmtTime(s0.secs);
+      else if (s0.w!=null) info = (pe.st.length)+' × '+(s0.r||0)+' повт';
+    }
+    return '<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--brd2)">' +
+      '<span style="font-size:15px;width:18px;text-align:center">'+(isSwim(pe.n)?'🌊':isStatic(pe.n)?'⏱️':isCardio(pe.n)?'🏃':'🏋️')+'</span>' +
+      '<span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(n)+'</span>' +
+      '<span style="font-size:12px;color:var(--mut);flex-shrink:0">'+info+'</span>' +
+    '</div>';
+  }).join('');
+  ov.innerHTML = '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box;max-height:84vh;display:flex;flex-direction:column">' +
+    '<div style="padding:18px 18px 8px;flex-shrink:0">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--pur);text-transform:uppercase;letter-spacing:.5px">📥 Тренировка от друга</div>' +
+      '<div style="font-size:18px;font-weight:800;color:var(--txt);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(payload.n||'Тренировка')+'</div>' +
+      '<div style="font-size:12px;color:var(--mut);margin-top:1px">'+(payload.e||[]).length+' упр. · '+((payload.l==='pool')?'🌊 Бассейн':'🏋️ Зал')+'</div>' +
+    '</div>' +
+    '<div style="overflow-y:auto;padding:4px 18px 8px;-webkit-overflow-scrolling:touch">'+exRows+'</div>' +
+    '<div style="padding:10px 18px calc(env(safe-area-inset-bottom) + 14px);flex-shrink:0;display:flex;flex-direction:column;gap:9px">' +
+      '<button onclick="closeSharedPreview();showPlanDateSheet(null,null,window.__sharedPayload)" style="width:100%;height:50px;border-radius:14px;background:var(--pur);color:#fff;font-size:16px;font-weight:700;border:none;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none">📋 Добавить в план</button>' +
+      '<button onclick="closeSharedPreview()" style="width:100%;height:42px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2);font-family:inherit;cursor:pointer">Не сейчас</button>' +
+    '</div>' +
+  '</div>';
+  window.__sharedPayload = payload;
+  ov.addEventListener('click', function(e){ if (e.target===ov) closeSharedPreview(); });
+  document.body.appendChild(ov);
+}
+function closeSharedPreview() {
+  var el = document.getElementById('shared-preview-ov'); if (el) el.remove();
+}
+function importSharedWorkout(payload, date) {
+  date = date || dateOffset(1);
+  ensureDay(date);
+  var wid = Date.now();
+  var wkt = {id:wid, name:payload.n||'Тренировка', loc:payload.l||'gym', planned:true, startTime:null, endTime:null, exercises:[]};
+  (payload.e||[]).forEach(function(pe){
+    var ex = {id:pe.n, name:pe.n, note:'', sets:[]};
+    if (pe.s && isStyleDrill(pe.n)) ex.style = pe.s;
+    (pe.st||[]).forEach(function(s){ var o={}; for (var k in s) o[k]=s[k]; o.done=false; ex.sets.push(o); });
+    if (!ex.sets.length) ex = makeEx(pe.n);
+    wkt.exercises.push(ex);
+  });
+  ST.w[date].workouts.push(wkt);
+  saveST();
+  PLAN_WKT = {date:date, wid:wid};
+  OPEN_EX = {};
+  wkt.exercises.forEach(function(_, i){ OPEN_EX[i] = true; });
+  goTab('workout'); renderTopbar(); renderWorkout();
+  uiToast('Тренировка добавлена в план');
 }
 
 function openPlan(date, wid) {
@@ -1508,10 +1618,13 @@ function renderPlanView(wkt) {
   var backSvg = '<svg width="7" height="12" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var trashSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 
+  var shareSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
+
   // Sticky header
   var h = '<div class="plan-ed-hd" style="border-bottom:'+hdBorder+'">' +
     '<button class="plan-ed-back" onclick="closePlan()">'+backSvg+' Назад</button>' +
     '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название" oninput="setPlanName(this.value)">' +
+    '<button class="plan-ed-del" onclick="shareWorkout(\''+PLAN_WKT.date+'\','+wkt.id+')" title="Поделиться">'+shareSvg+'</button>' +
     '<button class="plan-ed-del" onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')">'+trashSvg+'</button>' +
   '</div>';
 
@@ -1624,16 +1737,7 @@ function startWorkout(fromTpl) {
     wkt.name = fromTpl.name;
     wkt.loc = fromTpl.loc || 'gym';
     (fromTpl.exs || []).forEach(function(e) {
-      var ex = makeExFromEntry(e);
-      if (typeof e === 'object' && e.sets) {
-        var stat = isStatic(ex.name);
-        var card = isCardio(ex.name);
-        var swm  = isSwim(ex.name);
-        ex.sets = [];
-        for (var i = 0; i < e.sets; i++)
-          ex.sets.push(stat ? {secs:e.reps||60,done:false} : swm ? {dist:e.reps||100, done:false} : card ? {w:0,r:0,dist:3,mins:e.reps||20,done:false} : {w:e.weight||0,r:e.reps||12,done:false});
-      }
-      wkt.exercises.push(ex);
+      wkt.exercises.push(makeExFromEntry(e));
     });
   }
   ST.w[date].workouts.push(wkt);
@@ -1922,6 +2026,15 @@ function removeEx(ei) {
   var wkt = getWkt(ref.date, ref.wid);
   wkt.exercises.splice(ei, 1);
   delete OPEN_EX[ei];
+  saveST(); renderWorkout();
+}
+function moveEx(ei, dir) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var j = ei + dir;
+  if (j < 0 || j >= wkt.exercises.length) return;
+  var tmp = wkt.exercises[ei]; wkt.exercises[ei] = wkt.exercises[j]; wkt.exercises[j] = tmp;
+  var a = OPEN_EX[ei], b = OPEN_EX[j]; OPEN_EX[ei] = b; OPEN_EX[j] = a;
   saveST(); renderWorkout();
 }
 function addExToWorkout(name) {
@@ -2945,6 +3058,7 @@ loadST();
 renderTopbar();
 renderWorkout();
 if (ST.recovery && Date.now() < getRecoveryEnd()) startRecoveryTimer();
+checkShareImport();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
 </script>
 </body>

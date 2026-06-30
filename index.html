@@ -3023,58 +3023,193 @@ function stepperBox(i, field, val, lbl, step) {
 }
 
 // ═══════════════════════ PROGRESS ═══════════════════════
-function renderProgress() {
-  var body = document.getElementById('prog-body');
-  var h = '<div class="sec-badge">Аналитика</div><div class="sec-title" style="margin-bottom:16px">Прогресс</div>';
-  var totalWkts=0, totalSets=0;
-  Object.keys(ST.w).forEach(function(ds){
-    var day=ST.w[ds];
-    if(day&&day.workouts) day.workouts.forEach(function(w){
+function pStartOfWeek(ds) {
+  var d = new Date(ds+'T12:00:00');
+  var dow = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-dow);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function pWeekLabel(ds) {
+  var d = new Date(ds+'T12:00:00');
+  return d.getDate()+'.'+pad(d.getMonth()+1);
+}
+function computeProgressData() {
+  var byExName = {}, dailyVol = {}, workoutDays = {}, groupSets30 = {};
+  var totalWkts = 0, totalSets = 0, totalVolAll = 0;
+  var cutoff30 = dateOffset(-30);
+  Object.keys(ST.w).sort().forEach(function(ds) {
+    var day = ST.w[ds];
+    if (!day || !day.workouts || !day.workouts.length) return;
+    day.workouts.forEach(function(w) {
+      if (w.planned) return;
+      var hasAnyDone = (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); });
+      if (!hasAnyDone) return;
       totalWkts++;
-      (w.exercises||[]).forEach(function(ex){ ex.sets.forEach(function(s){if(s.done)totalSets++;}); });
-    });
-  });
-  h += '<div class="stat-row">' +
-    '<div class="stat-box"><div class="stat-num">'+totalWkts+'</div><div class="stat-lbl">Тренировок</div></div>' +
-    '<div class="stat-box"><div class="stat-num">'+totalSets+'</div><div class="stat-lbl">Подходов</div></div>' +
-    '</div>';
-  var allEx = {};
-  Object.keys(ST.w).forEach(function(ds){
-    var day=ST.w[ds];
-    if(day&&day.workouts) day.workouts.forEach(function(w){
-      (w.exercises||[]).forEach(function(ex){
-        if(!allEx[ex.name]) allEx[ex.name]=[];
-        ex.sets.forEach(function(s){ if(s.done&&s.w) allEx[ex.name].push({date:ds,w:s.w,r:s.r||0}); });
+      workoutDays[ds] = true;
+      (w.exercises||[]).forEach(function(ex) {
+        var grp = exGroup(ex.name);
+        (ex.sets||[]).forEach(function(s) {
+          if (!s.done) return;
+          totalSets++;
+          if (grp && ds >= cutoff30) groupSets30[grp] = (groupSets30[grp]||0)+1;
+          if ((s.w||0) > 0) {
+            var vol = s.w * (s.r||0);
+            totalVolAll += vol;
+            dailyVol[ds] = (dailyVol[ds]||0) + vol;
+            if (!byExName[ex.name]) byExName[ex.name] = [];
+            byExName[ex.name].push({ds:ds, w:s.w, r:s.r||0});
+          }
+        });
       });
     });
   });
-  var exNames = Object.keys(allEx).sort();
-  if (!exNames.length) {
+  return {byExName:byExName, dailyVol:dailyVol, workoutDays:workoutDays, groupSets30:groupSets30, totalWkts:totalWkts, totalSets:totalSets, totalVolAll:totalVolAll};
+}
+function computeStreak(workoutDays) {
+  var streak = 0, ds = todayStr();
+  if (!workoutDays[ds]) ds = dateAdd(ds, -1);
+  while (workoutDays[ds]) { streak++; ds = dateAdd(ds, -1); }
+  return streak;
+}
+function computeWeeklyVolume(dailyVol, weeks) {
+  var res = [], curWeekStart = pStartOfWeek(todayStr());
+  for (var i = weeks-1; i >= 0; i--) {
+    var wkStart = dateAdd(curWeekStart, -7*i);
+    var kg = 0;
+    for (var d = 0; d < 7; d++) kg += dailyVol[dateAdd(wkStart, d)] || 0;
+    res.push({start:wkStart, kg:Math.round(kg), isCur:i===0});
+  }
+  return res;
+}
+function computePRList(byExName) {
+  var list = [];
+  Object.keys(byExName).forEach(function(name) {
+    var best = null, bestE = 0;
+    byExName[name].forEach(function(s) {
+      var e = e1RM(s.w, s.r);
+      if (e > bestE) { bestE = e; best = s; }
+    });
+    if (best) list.push({name:name, w:best.w, r:best.r, ds:best.ds});
+  });
+  list.sort(function(a,b){ return b.ds.localeCompare(a.ds); });
+  return list;
+}
+function fmtVol(kg) {
+  kg = Math.round(kg);
+  return kg >= 1000 ? (Math.round(kg/100)/10).toString().replace('.',',')+'k' : kg;
+}
+function statCard(num, lbl, unit, color) {
+  return '<div class="stat-box"><div class="stat-num" style="color:'+color+'">'+num+(unit?'<span style="font-size:13px;color:var(--mut);font-weight:700"> '+unit+'</span>':'')+'</div>' +
+    '<div class="stat-lbl">'+lbl+'</div></div>';
+}
+function weeklyBarsHtml(weeks) {
+  var max = Math.max.apply(null, weeks.map(function(w){ return w.kg; }).concat([1]));
+  return '<div class="wk-bars">' + weeks.map(function(w) {
+    var hpct = w.kg > 0 ? Math.max(4, Math.round(w.kg/max*100)) : 1;
+    return '<div class="wk-bar-col"><div class="wk-bar'+(w.isCur?' cur':'')+'" style="height:'+hpct+'%"></div>' +
+      '<div class="wk-bar-lbl">'+pWeekLabel(w.start)+'</div></div>';
+  }).join('') + '</div>';
+}
+function exSelectOptions(names) {
+  var byGroup = {};
+  names.forEach(function(n) {
+    var g = exGroup(n) || 'Другое';
+    if (!byGroup[g]) byGroup[g] = [];
+    byGroup[g].push(n);
+  });
+  return Object.keys(byGroup).sort().map(function(g) {
+    return '<optgroup label="'+g+'">' + byGroup[g].map(function(n){ return '<option>'+esc(n)+'</option>'; }).join('') + '</optgroup>';
+  }).join('');
+}
+function renderProgress() {
+  var body = document.getElementById('prog-body');
+  var h = '<div class="sec-badge">Аналитика</div><div class="sec-title" style="margin-bottom:14px">Прогресс</div>';
+  var pd = computeProgressData();
+  window._progData = pd;
+
+  if (!pd.totalWkts) {
     h += '<div class="empty"><div class="empty-ico">📈</div><div class="empty-msg">Данные появятся после тренировок</div></div>';
-  } else {
-    h += '<select class="prog-sel" onchange="renderProgChart(this.value)">'+exNames.map(function(n){ return '<option>'+esc(n)+'</option>'; }).join('')+'</select>';
+    body.innerHTML = h;
+    return;
+  }
+
+  var streak = computeStreak(pd.workoutDays);
+  h += '<div class="prog-overview">' +
+    statCard(pd.totalWkts, pd.totalWkts===1?'Тренировка':pd.totalWkts<5?'Тренировки':'Тренировок', null, 'var(--acc)') +
+    statCard(fmtVol(pd.totalVolAll), 'Общий объём', 'кг', 'var(--ylw)') +
+    statCard(pd.totalSets, 'Подходов', null, 'var(--blu)') +
+    statCard(streak, streak===1?'День подряд':streak<5?'Дня подряд':'Дней подряд', null, 'var(--pur)') +
+  '</div>';
+
+  var weeks = computeWeeklyVolume(pd.dailyVol, 8);
+  h += '<div class="chart-box"><div class="chart-title">Объём по неделям, кг</div>' + weeklyBarsHtml(weeks) + '</div>';
+
+  var groups = Object.keys(pd.groupSets30).sort(function(a,b){ return pd.groupSets30[b]-pd.groupSets30[a]; });
+  if (groups.length) {
+    var totalG = groups.reduce(function(a,g){ return a+pd.groupSets30[g]; }, 0);
+    h += '<div class="chart-box"><div class="chart-title">Фокус последних 30 дней</div>';
+    groups.forEach(function(g) {
+      var pct = Math.round(pd.groupSets30[g]/totalG*100);
+      var clr = muscleGroupColor(g);
+      h += '<div class="msplit-row"><div class="msplit-lbl" style="color:'+clr+'">'+g+'</div>' +
+        '<div class="msplit-bar-wrap"><div class="msplit-bar-fill" style="width:'+pct+'%;background:'+clr+'"></div></div>' +
+        '<div class="msplit-pct">'+pct+'%</div></div>';
+    });
+    h += '</div>';
+  }
+
+  var prs = computePRList(pd.byExName).slice(0, 6);
+  if (prs.length) {
+    h += '<div class="chart-box"><div class="chart-title">Последние рекорды</div>';
+    prs.forEach(function(p) {
+      h += '<div class="pr-row"><div class="pr-tile" style="background:'+exTileColor(p.name)+'">'+letterOf(p.name)+'</div>' +
+        '<div class="pr-info"><div class="pr-name">'+esc(p.name)+'</div><div class="pr-date">'+dateLabel(p.ds)+'</div></div>' +
+        '<div class="pr-val">'+nf(p.w)+' кг <span style="font-size:11px;color:var(--mut);font-weight:600">× '+p.r+'</span></div></div>';
+    });
+    h += '</div>';
+  }
+
+  var names = Object.keys(pd.byExName).sort();
+  if (names.length) {
+    h += '<div class="chart-title" style="margin:4px 2px 8px">История по упражнению</div>';
+    h += '<select class="prog-sel" id="prog-ex-sel" onchange="renderProgChart(this.value)">' + exSelectOptions(names) + '</select>';
     h += '<div id="prog-chart"></div>';
   }
+
   body.innerHTML = h;
-  if (exNames.length) { window._progAllEx = allEx; renderProgChart(exNames[0], allEx); }
+  if (names.length) renderProgChart(names[0]);
 }
-function renderProgChart(name, allEx) {
-  allEx = allEx||window._progAllEx||{};
+function renderProgChart(name) {
+  var pd = window._progData || computeProgressData();
   var el = document.getElementById('prog-chart'); if (!el) return;
-  var data = (allEx[name]||[]).slice(-20); if (!data.length){ el.innerHTML=''; return; }
-  var maxW = Math.max.apply(null,data.map(function(d){return d.w;}));
-  var W=300,H=120,p=16;
+  var data = (pd.byExName[name]||[]).slice(-15);
+  if (!data.length) { el.innerHTML = ''; return; }
+  var maxW = Math.max.apply(null, data.map(function(d){ return d.w; }));
+  var minW = Math.min.apply(null, data.map(function(d){ return d.w; }));
+  var range = Math.max(1, maxW-minW);
+  var W=300,H=120,p=14;
   var xs=data.map(function(d,i){ return p+i*(W-2*p)/(Math.max(data.length-1,1)); });
-  var ys=data.map(function(d){ return H-p-(d.w/maxW)*(H-2*p); });
+  var ys=data.map(function(d){ return H-p-((d.w-minW)/range)*(H-2*p); });
   var pathD=xs.map(function(x,i){ return (i===0?'M':'L')+x+' '+ys[i]; }).join(' ');
   var fillD=pathD+' L'+xs[xs.length-1]+' '+H+' L'+xs[0]+' '+H+' Z';
-  el.innerHTML='<div class="chart-box"><div class="chart-title">Максимальный вес — '+esc(name)+'</div>' +
+
+  var first = data[0].w, last = data[data.length-1].w, diff = Math.round((last-first)*10)/10;
+  var trendClr = diff > 0 ? 'var(--acc)' : diff < 0 ? 'var(--red)' : 'var(--mut)';
+  var st = getExStats(name);
+  var pr = st ? Math.max(st.pr, last) : last;
+
+  var hdr = '<div class="prog-chart-hd">' +
+    '<div><div class="prog-chart-hd-num" style="color:var(--txt)">'+nf(last)+' кг</div><div class="prog-chart-hd-lbl">Последний</div></div>' +
+    '<div><div class="prog-chart-hd-num" style="color:var(--ylw)">'+nf(pr)+' кг</div><div class="prog-chart-hd-lbl">Рекорд</div></div>' +
+    '<div><div class="prog-chart-hd-num" style="color:'+trendClr+'">'+(diff>0?'+':'')+nf(diff)+' кг</div><div class="prog-chart-hd-lbl">За период</div></div>' +
+  '</div>';
+
+  el.innerHTML='<div class="chart-box"><div class="chart-title">'+esc(name)+'</div>' + hdr +
     '<svg class="chart-svg" viewBox="0 0 '+W+' '+H+'">' +
     '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e" stop-opacity=".3"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs>' +
     '<path d="'+fillD+'" fill="url(#g)"/>' +
     '<path d="'+pathD+'" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round"/>' +
-    xs.map(function(x,i){ return '<circle cx="'+x+'" cy="'+ys[i]+'" r="4" fill="#22c55e"/>'; }).join('') +
-    '<text x="'+xs[xs.length-1]+'" y="'+(ys[ys.length-1]-8)+'" fill="#4ade80" font-size="12" font-weight="700" text-anchor="middle">'+data[data.length-1].w+' кг</text>' +
+    xs.map(function(x,i){ return '<circle cx="'+x+'" cy="'+ys[i]+'" r="'+(i===xs.length-1?5:3.5)+'" fill="#22c55e"'+(i===xs.length-1?' stroke="#0a0a0a" stroke-width="2"':'')+'/>'; }).join('') +
     '</svg></div>';
 }
 

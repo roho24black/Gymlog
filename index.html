@@ -3152,7 +3152,7 @@ function renderProgress() {
   '</div>';
 
   var weeks = computeWeeklyVolume(pd.dailyVol, 8);
-  h += '<div class="chart-box"><div class="chart-title">Объём по неделям, кг</div>' + weeklyBarsHtml(weeks) + '</div>';
+  h += '<div class="chart-box"><div class="chart-title">Объём по неделям</div>' + weeklyBarsHtml(weeks) + '</div>';
 
   var groups = Object.keys(pd.groupSets30).sort(function(a,b){ return pd.groupSets30[b]-pd.groupSets30[a]; });
   if (groups.length) {

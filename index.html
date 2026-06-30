@@ -3192,34 +3192,66 @@ function renderProgress() {
 function renderProgChart(name) {
   var pd = window._progData || computeProgressData();
   var el = document.getElementById('prog-chart'); if (!el) return;
-  var data = (pd.byExName[name]||[]).slice(-15);
-  if (!data.length) { el.innerHTML = ''; return; }
+  var raw = (pd.byExName[name]||[]).slice(-20);
+  if (!raw.length) { el.innerHTML = ''; return; }
+  // deduplicate dates — keep max weight per day
+  var byDate = {};
+  raw.forEach(function(d){ if (!byDate[d.ds] || d.w > byDate[d.ds].w) byDate[d.ds] = d; });
+  var data = Object.keys(byDate).sort().map(function(ds){ return byDate[ds]; }).slice(-12);
+  var n = data.length;
+
   var maxW = Math.max.apply(null, data.map(function(d){ return d.w; }));
   var minW = Math.min.apply(null, data.map(function(d){ return d.w; }));
-  var range = Math.max(1, maxW-minW);
-  var W=300,H=120,p=14;
-  var xs=data.map(function(d,i){ return p+i*(W-2*p)/(Math.max(data.length-1,1)); });
-  var ys=data.map(function(d){ return H-p-((d.w-minW)/range)*(H-2*p); });
-  var pathD=xs.map(function(x,i){ return (i===0?'M':'L')+x+' '+ys[i]; }).join(' ');
-  var fillD=pathD+' L'+xs[xs.length-1]+' '+H+' L'+xs[0]+' '+H+' Z';
+  var pad = Math.max(2.5, (maxW-minW)*0.2);
+  var yMax = maxW+pad, yMin = Math.max(0, minW-pad);
+  var range = Math.max(1, yMax-yMin);
 
-  var first = data[0].w, last = data[data.length-1].w, diff = Math.round((last-first)*10)/10;
-  var trendClr = diff > 0 ? 'var(--acc)' : diff < 0 ? 'var(--red)' : 'var(--mut)';
+  var W=320, H=130, lp=6, rp=6, tp=28, bp=24;
+  var cW=W-lp-rp, cH=H-tp-bp;
+  var xs=data.map(function(d,i){ return lp+(n===1?cW/2:i*cW/(n-1)); });
+  var ys=data.map(function(d){ return tp+cH-((d.w-yMin)/range)*cH; });
+  var pathD=xs.map(function(x,i){ return (i===0?'M':'L')+x.toFixed(1)+' '+ys[i].toFixed(1); }).join(' ');
+  var fillD=pathD+' L'+xs[n-1].toFixed(1)+' '+(tp+cH)+' L'+lp+' '+(tp+cH)+' Z';
+
+  // grid lines at min, mid, max
+  var gridVals = [Math.round(yMin*2)/2, Math.round((yMin+yMax)/2*2)/2, Math.round(yMax*2)/2];
+  var grid = gridVals.map(function(v) {
+    var gy = (tp+cH-((v-yMin)/range)*cH).toFixed(1);
+    return '<line x1="'+lp+'" y1="'+gy+'" x2="'+(W-rp)+'" y2="'+gy+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>' +
+      '<text x="'+(W-rp)+'" y="'+(+gy-3)+'" text-anchor="end" font-size="8" fill="rgba(255,255,255,.28)" font-weight="600">'+nf(v)+'</text>';
+  }).join('');
+
+  // date labels first/last
+  var dateLbls = n > 1
+    ? '<text x="'+xs[0].toFixed(1)+'" y="'+(H-6)+'" text-anchor="start" font-size="8.5" fill="rgba(255,255,255,.3)">'+dateLabel(data[0].ds)+'</text>' +
+      '<text x="'+xs[n-1].toFixed(1)+'" y="'+(H-6)+'" text-anchor="end" font-size="8.5" fill="rgba(255,255,255,.3)">'+dateLabel(data[n-1].ds)+'</text>'
+    : '';
+
+  // dots + last value label
+  var dots = xs.map(function(x,i) {
+    var isLast = i===n-1, y = ys[i].toFixed(1);
+    return '<circle cx="'+x.toFixed(1)+'" cy="'+y+'" r="'+(isLast?5:3)+'" fill="#22c55e"'+(isLast?' stroke="rgba(0,0,0,.7)" stroke-width="2"':'')+'/>' +
+      (isLast?'<text x="'+x.toFixed(1)+'" y="'+(+y-9)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#22c55e">'+nf(data[i].w)+'</text>':'');
+  }).join('');
+
+  var first=data[0].w, last=data[n-1].w, diff=Math.round((last-first)*10)/10;
+  var trendClr = diff>0?'#22c55e':diff<0?'#f43f5e':'rgba(255,255,255,.4)';
   var st = getExStats(name);
   var pr = st ? Math.max(st.pr, last) : last;
 
-  var hdr = '<div class="prog-chart-hd">' +
-    '<div><div class="prog-chart-hd-num" style="color:var(--txt)">'+nf(last)+' кг</div><div class="prog-chart-hd-lbl">Последний</div></div>' +
-    '<div><div class="prog-chart-hd-num" style="color:var(--ylw)">'+nf(pr)+' кг</div><div class="prog-chart-hd-lbl">Рекорд</div></div>' +
-    '<div><div class="prog-chart-hd-num" style="color:'+trendClr+'">'+(diff>0?'+':'')+nf(diff)+' кг</div><div class="prog-chart-hd-lbl">За период</div></div>' +
+  var hdr = '<div style="display:flex;gap:0;margin-bottom:14px">' +
+    '<div style="flex:1"><div style="font-size:20px;font-weight:800;letter-spacing:-.5px">'+nf(last)+'<span style="font-size:12px;font-weight:600;color:var(--mut)"> кг</span></div><div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Последний</div></div>' +
+    '<div style="flex:1"><div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--ylw)">'+nf(pr)+'<span style="font-size:12px;font-weight:600;color:var(--mut)"> кг</span></div><div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Рекорд</div></div>' +
+    '<div style="flex:1;text-align:right"><div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:'+trendClr+'">'+(diff>0?'+':'')+nf(diff)+'<span style="font-size:12px;font-weight:600;color:var(--mut)"> кг</span></div><div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">За период</div></div>' +
   '</div>';
 
-  el.innerHTML='<div class="chart-box"><div class="chart-title">'+esc(name)+'</div>' + hdr +
-    '<svg class="chart-svg" viewBox="0 0 '+W+' '+H+'">' +
-    '<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e" stop-opacity=".3"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs>' +
-    '<path d="'+fillD+'" fill="url(#g)"/>' +
-    '<path d="'+pathD+'" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round"/>' +
-    xs.map(function(x,i){ return '<circle cx="'+x+'" cy="'+ys[i]+'" r="'+(i===xs.length-1?5:3.5)+'" fill="#22c55e"'+(i===xs.length-1?' stroke="#0a0a0a" stroke-width="2"':'')+'/>'; }).join('') +
+  el.innerHTML = '<div class="chart-box">' + hdr +
+    '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;overflow:visible">' +
+    '<defs><linearGradient id="pgg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e" stop-opacity=".22"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs>' +
+    grid +
+    '<path d="'+fillD+'" fill="url(#pgg)"/>' +
+    '<path d="'+pathD+'" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+    dots + dateLbls +
     '</svg></div>';
 }
 

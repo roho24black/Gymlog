@@ -3133,8 +3133,8 @@ function exSelectOptions(names) {
 }
 function renderProgress() {
   var body = document.getElementById('prog-body');
-  var h = '<div class="sec-badge">Аналитика</div><div class="sec-title" style="margin-bottom:14px">Прогресс</div>';
   var pd = computeProgressData();
+  var h = '';
   window._progData = pd;
 
   if (!pd.totalWkts) {

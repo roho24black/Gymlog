@@ -2620,13 +2620,19 @@ function dbExsForGroup(groupKey) {
   return results;
 }
 
+function dbPick(name) {
+  if (!ST.recentEx) ST.recentEx = [];
+  ST.recentEx = [name].concat(ST.recentEx.filter(function(n){ return n!==name; })).slice(0,10);
+  saveST();
+  DB_CB(name);
+}
 function dbRender() {
   var q = (document.getElementById('db-search').value||'').toLowerCase().trim();
   var list = document.getElementById('db-list');
   var html = '';
 
   function renderEx(ex) {
-    return '<div class="db-item" onclick="DB_CB(\''+ex.name.replace(/'/g,"\\'")+'\')">'+
+    return '<div class="db-item" onclick="dbPick(\''+ex.name.replace(/'/g,"\\'")+'\')">'+
       '<div class="db-item-name">'+esc(ex.name)+'</div>'+
       '<span style="font-size:16px">'+ex.icon+'</span></div>';
   }
@@ -2635,6 +2641,15 @@ function dbRender() {
     var exs = dbExsForGroup(DB_FILTER).filter(function(e){ return !q||e.name.toLowerCase().indexOf(q)!==-1; });
     html = exs.length ? exs.map(renderEx).join('') : '<div class="empty" style="padding:20px">Ничего не найдено</div>';
   } else {
+    var validNames = {};
+    dbModeFilters().forEach(function(f){ dbExsForGroup(f.key).forEach(function(e){ validNames[e.name] = e.icon; }); });
+    if (!q && ST.recentEx && ST.recentEx.length) {
+      var recent = ST.recentEx.filter(function(n){ return validNames[n]; }).slice(0,6);
+      if (recent.length) {
+        html += '<div class="db-sec-hd">🕐 Недавние</div>';
+        html += recent.map(function(n){ return renderEx({name:n, icon:validNames[n]}); }).join('');
+      }
+    }
     dbModeFilters().forEach(function(f){
       var exs = dbExsForGroup(f.key).filter(function(e){ return !q||e.name.toLowerCase().indexOf(q)!==-1; });
       if (!exs.length) return;

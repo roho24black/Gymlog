@@ -3035,9 +3035,10 @@ function pWeekLabel(ds) {
 }
 function computeProgressData() {
   var byExName = {}, byCardioName = {}, bySwimName = {}, byStaticName = {};
-  var dailyVol = {}, workoutDays = {}, groupSets30 = {};
+  var dailyVol = {}, workoutDays = {}, groupSets30 = {}, groupLastDs = {};
   var totalWkts = 0, totalSets = 0, totalVolAll = 0;
   var totalCardioKm = 0, totalCardioMins = 0, totalSwimM = 0, totalStaticSec = 0;
+  var totalDurationMs = 0, durationCount = 0;
   var cutoff30 = dateOffset(-30);
   Object.keys(ST.w).sort().forEach(function(ds) {
     var day = ST.w[ds];
@@ -3048,13 +3049,20 @@ function computeProgressData() {
       if (!hasAnyDone) return;
       totalWkts++;
       workoutDays[ds] = true;
+      if (w.startTime && w.endTime && w.endTime > w.startTime) {
+        totalDurationMs += (w.endTime - w.startTime);
+        durationCount++;
+      }
       (w.exercises||[]).forEach(function(ex) {
         var grp = exGroup(ex.name);
         var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
         (ex.sets||[]).forEach(function(s) {
           if (!s.done) return;
           totalSets++;
-          if (grp && ds >= cutoff30) groupSets30[grp] = (groupSets30[grp]||0)+1;
+          if (grp) {
+            if (ds >= cutoff30) groupSets30[grp] = (groupSets30[grp]||0)+1;
+            if (!groupLastDs[grp] || ds > groupLastDs[grp]) groupLastDs[grp] = ds;
+          }
           if (cardio) {
             totalCardioKm += s.dist||0; totalCardioMins += s.mins||0;
             if (!byCardioName[ex.name]) byCardioName[ex.name] = [];

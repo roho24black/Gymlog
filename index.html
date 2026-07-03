@@ -2333,7 +2333,7 @@ function openSheet(ei, si, field) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);
   var s = wkt.exercises[ei].sets[si];
-  SH_MODE = {ei:ei, si:si, field:field};
+  SH_MODE = {ei:ei, si:si, field:field, name:wkt.exercises[ei].name};
   var presets = [], range = [], step = 1, cur = 0, unit = '';
   if (field === 'w') {
     cur = s.w||0; step = 2.5; unit = 'кг';

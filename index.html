@@ -2149,9 +2149,15 @@ function delSet(ei) {
 function removeEx(ei) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);
-  wkt.exercises.splice(ei, 1);
-  delete OPEN_EX[ei];
-  saveST(); renderWorkout();
+  var ex = wkt.exercises[ei];
+  var doRemove = function(){
+    wkt.exercises.splice(ei, 1);
+    delete OPEN_EX[ei];
+    saveST(); renderWorkout();
+  };
+  var hasDone = ex && (ex.sets||[]).some(function(s){ return s.done; });
+  if (hasDone) uiConfirm('Удалить «'+esc(exTitle(ex))+'»? Записанные подходы будут потеряны.', doRemove);
+  else doRemove();
 }
 function moveEx(ei, dir) {
   var ref = curWktRef(); if (!ref) return;

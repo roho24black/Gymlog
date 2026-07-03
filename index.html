@@ -3400,17 +3400,31 @@ function renderCardioChart(el, name, pd) {
   });
   var data = Object.keys(byDate).sort().map(function(ds){ return byDate[ds]; }).slice(-PROG_EX_N);
   var n = data.length;
-  var vals = data.map(function(d){ return d.dist; });
   var dsArr = data.map(function(d){ return d.ds; });
   var last = data[n-1], best = data.reduce(function(a,b){ return b.dist>a.dist?b:a; });
-  var pace = last.dist>0 ? last.mins/last.dist : 0;
+  var paceOf = function(d){ return d.dist>0 ? d.mins/d.dist : 0; };
+  var bestPace = data.reduce(function(bp,d){ var p=paceOf(d); return (p>0 && (bp===0||p<bp)) ? p : bp; }, 0);
 
-  var hdr = trendHeader([
-    {val:nf(last.dist), unit:'км', lbl:'Последний', color:'var(--txt)'},
-    {val:nf(best.dist), unit:'км', lbl:'Лучший', color:'var(--ylw)'},
-    {val:fmtPace(pace), unit:'/км', lbl:'Темп', color:'var(--blu)'}
-  ]);
-  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, nf) + '</div>';
+  var chips = chipsHtml('prog-chip', [['dist','Дистанция'],['pace','Темп']], PROG_CARDIO_MODE, 'progSetCardioMode');
+  var vals, fmt, hdr;
+  if (PROG_CARDIO_MODE === 'pace') {
+    vals = data.map(paceOf);
+    fmt = fmtPace;
+    hdr = trendHeader([
+      {val:fmtPace(paceOf(last)), unit:'/км', lbl:'Последний темп', color:'var(--txt)'},
+      {val:fmtPace(bestPace), unit:'/км', lbl:'Лучший темп', color:'var(--ylw)'},
+      {val:nf(last.dist), unit:'км', lbl:'Дистанция', color:'var(--blu)'}
+    ]);
+  } else {
+    vals = data.map(function(d){ return d.dist; });
+    fmt = nf;
+    hdr = trendHeader([
+      {val:nf(last.dist), unit:'км', lbl:'Последний', color:'var(--txt)'},
+      {val:nf(best.dist), unit:'км', lbl:'Лучший', color:'var(--ylw)'},
+      {val:fmtPace(paceOf(last)), unit:'/км', lbl:'Темп', color:'var(--blu)'}
+    ]);
+  }
+  el.innerHTML = '<div class="chart-box">' + chips + hdr + svgLineChart(vals, dsArr, fmt) + '</div>';
 }
 function renderSwimChart(el, name, pd) {
   var raw = pd.bySwimName[name]||[];

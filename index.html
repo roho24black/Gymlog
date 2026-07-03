@@ -1823,9 +1823,55 @@ function finishWorkout() {
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   if (wkt) wkt.endTime = Date.now();
   saveST();
+  var summary = wkt ? buildWorkoutSummary(wkt) : null;
   ACTIVE_WKT = null; WKT_START = null;
   if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
   renderTopbar(); renderWorkout();
+  if (summary && summary.sets > 0) showWorkoutSummary(summary);
+}
+function buildWorkoutSummary(wkt) {
+  var sets = 0, vol = 0, prs = [];
+  (wkt.exercises||[]).forEach(function(ex){
+    var isStrength = !isCardio(ex.name) && !isSwim(ex.name) && !isStatic(ex.name);
+    var bestSet = null;
+    (ex.sets||[]).forEach(function(s){
+      if (!s.done) return;
+      sets++;
+      if ((s.w||0) > 0) {
+        vol += s.w*(s.r||0);
+        if (isStrength && (!bestSet || s.w > bestSet.w)) bestSet = s;
+      }
+    });
+    if (isStrength && bestSet) {
+      var st = getExStats(ex.name);
+      if (!st || bestSet.w > st.pr) prs.push({name:ex.name, w:bestSet.w, r:bestSet.r||0});
+    }
+  });
+  var durMs = (wkt.endTime && wkt.startTime) ? wkt.endTime - wkt.startTime : 0;
+  return {sets:sets, vol:vol, prs:prs, durMs:durMs};
+}
+function showWorkoutSummary(sum) {
+  var ov = document.createElement('div');
+  ov.id = 'wkt-summary-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:flex-end;justify-content:center';
+  var durMin = Math.round(sum.durMs/60000);
+  var prsHtml = sum.prs.length
+    ? '<div style="margin-top:14px">' + sum.prs.map(function(p){
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px">🔥 <span style="flex:1;color:var(--txt);font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</span><span style="color:var(--ylw);font-weight:700;flex-shrink:0">'+nf(p.w)+' кг × '+p.r+'</span></div>';
+      }).join('') + '</div>'
+    : '';
+  ov.innerHTML = '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box;padding:22px 20px calc(env(safe-area-inset-bottom) + 20px)">' +
+    '<div style="font-size:18px;font-weight:800;margin-bottom:4px">Тренировка завершена 🎉</div>' +
+    '<div style="font-size:13px;color:var(--sub);margin-bottom:16px">Отличная работа!</div>' +
+    '<div style="display:flex;gap:10px">' +
+      '<div style="flex:1;background:var(--card2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800">'+durMin+'</div><div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin-top:2px">Минут</div></div>' +
+      '<div style="flex:1;background:var(--card2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--ylw)">'+fmtVol(Math.round(sum.vol))+'</div><div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin-top:2px">Кг объём</div></div>' +
+      '<div style="flex:1;background:var(--card2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--blu)">'+sum.sets+'</div><div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin-top:2px">Подходов</div></div>' +
+    '</div>' +
+    prsHtml +
+    '<button onclick="document.getElementById(\'wkt-summary-ov\').remove()" style="width:100%;height:48px;border-radius:14px;background:var(--acc);border:none;color:#0a0a0a;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:18px">Готово</button>' +
+    '</div>';
+  document.body.appendChild(ov);
 }
 
 function tickWktTimer() {

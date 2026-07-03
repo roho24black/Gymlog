@@ -3302,9 +3302,16 @@ function renderProgress() {
       statCard(fmtTime(pd.totalStaticSec), 'Общее время', null, 'var(--red)') +
     '</div></div>';
   }
+  if (pd.durationCount > 0) {
+    h += '<div class="chart-box"><div class="chart-title">Время в зале</div><div style="display:flex;gap:10px">' +
+      statCard(nf(pd.totalDurationMs/3600000), 'Всего часов', null, 'var(--acc)') +
+      statCard(Math.round(pd.totalDurationMs/pd.durationCount/60000), 'Средняя тренировка', 'мин', 'var(--blu)') +
+    '</div></div>';
+  }
 
   var weeks = computeWeeklyVolume(pd.dailyVol, PROG_WEEKS);
-  h += '<div class="chart-box"><div class="chart-title">Объём по неделям</div>' +
+  h += '<div class="chart-box"><div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">' +
+    '<span>Объём по неделям</span>' + weekDeltaBadge(pd.dailyVol) + '</div>' +
     '<div id="prog-weeks-chips">' + chipsHtml('prog-chip', [[8,'8 нед'],[12,'12 нед'],[26,'26 нед']], PROG_WEEKS, 'progSetWeeks') + '</div>' +
     '<div id="prog-weeks-chart">' + weeklyBarsHtml(weeks) + '</div></div>';
 
@@ -3315,16 +3322,20 @@ function renderProgress() {
     groups.forEach(function(g) {
       var pct = Math.round(pd.groupSets30[g]/totalG*100);
       var clr = muscleGroupColor(g);
-      h += '<div class="msplit-row"><div class="msplit-lbl" style="color:'+clr+'">'+g+'</div>' +
+      var lastDs = pd.groupLastDs[g];
+      var daysAgo = lastDs ? daysBetween(lastDs, todayStr()) : null;
+      var neglect = (daysAgo != null && daysAgo >= 10) ? '<span style="font-size:10px;font-weight:700;color:var(--red);margin-left:6px">· '+daysAgo+' дн назад</span>' : '';
+      h += '<div class="msplit-row"><div class="msplit-lbl" style="color:'+clr+'">'+g+neglect+'</div>' +
         '<div class="msplit-bar-wrap"><div class="msplit-bar-fill" style="width:'+pct+'%;background:'+clr+'"></div></div>' +
         '<div class="msplit-pct">'+pct+'%</div></div>';
     });
     h += '</div>';
   }
 
+  var recentPRs = countRecentPRs(pd.byExName, dateOffset(-30));
   var prs = computePRList(pd.byExName).slice(0, 6);
   if (prs.length) {
-    h += '<div class="chart-box"><div class="chart-title">Последние рекорды</div>';
+    h += '<div class="chart-box"><div class="chart-title">Последние рекорды'+(recentPRs>0?' · '+recentPRs+' за 30 дней':'')+'</div>';
     prs.forEach(function(p) {
       h += '<div class="pr-row"><div class="pr-tile" style="background:'+exTileColor(p.name)+'">'+letterOf(p.name)+'</div>' +
         '<div class="pr-info"><div class="pr-name">'+esc(p.name)+'</div><div class="pr-date">'+dateLabel(p.ds)+'</div></div>' +

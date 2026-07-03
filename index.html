@@ -3009,6 +3009,23 @@ function editTpl(ti) {
   EDITOR_IDX = ti;
   openEditor();
 }
+function dupTpl(ti) {
+  var t = ST.templates[ti];
+  if (!t) return;
+  ST.templates.push({name:t.name+' (копия)', loc:t.loc||'gym', exs:JSON.parse(JSON.stringify(t.exs||[]))});
+  saveST(); renderTemplates();
+  uiToast('Шаблон продублирован');
+}
+function dupBuiltIn(id) {
+  var t = BUILT_IN.find(function(x){ return x.id===id; });
+  if (!t) return;
+  var exs = (t.exs||[]).map(function(e){
+    return typeof e==='string' ? {name:e,sets:3,reps:12,weight:0} : Object.assign({sets:3,reps:12,weight:0},e);
+  });
+  ST.templates.push({name:t.name+' (копия)', loc:t.loc||'gym', exs:exs});
+  saveST(); renderTemplates();
+  uiToast('Добавлено в «Мои шаблоны»');
+}
 function openEditor() {
   document.getElementById('editor-name').value = EDITOR_TPL.name;
   updateEditorLoc();

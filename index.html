@@ -3579,6 +3579,8 @@ function renderProgress() {
     '<div id="prog-weeks-chips">' + chipsHtml('prog-chip', [[8,'8 нед'],[12,'12 нед'],[26,'26 нед']], PROG_WEEKS, 'progSetWeeks') + '</div>' +
     '<div id="prog-weeks-chart">' + weeklyBarsHtml(weeks) + '</div></div>';
 
+  h += '<div class="chart-box"><div class="chart-title">По дням недели</div>' + weekdayPatternHtml(computeWeekdayPattern(pd.workoutDays)) + '</div>';
+
   var groups = Object.keys(pd.groupSets30).sort(function(a,b){ return pd.groupSets30[b]-pd.groupSets30[a]; });
   if (groups.length) {
     var totalG = groups.reduce(function(a,g){ return a+pd.groupSets30[g]; }, 0);

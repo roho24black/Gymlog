@@ -3087,9 +3087,10 @@ function computeProgressData() {
     });
   });
   return {byExName:byExName, byCardioName:byCardioName, bySwimName:bySwimName, byStaticName:byStaticName,
-    dailyVol:dailyVol, workoutDays:workoutDays, groupSets30:groupSets30,
+    dailyVol:dailyVol, workoutDays:workoutDays, groupSets30:groupSets30, groupLastDs:groupLastDs,
     totalWkts:totalWkts, totalSets:totalSets, totalVolAll:totalVolAll,
-    totalCardioKm:totalCardioKm, totalCardioMins:totalCardioMins, totalSwimM:totalSwimM, totalStaticSec:totalStaticSec};
+    totalCardioKm:totalCardioKm, totalCardioMins:totalCardioMins, totalSwimM:totalSwimM, totalStaticSec:totalStaticSec,
+    totalDurationMs:totalDurationMs, durationCount:durationCount};
 }
 function computeStreak(workoutDays) {
   var streak = 0, ds = todayStr();

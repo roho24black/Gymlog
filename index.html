@@ -3476,6 +3476,40 @@ function renderProgress() {
   body.innerHTML = h;
   if (names.length) renderProgChart(names[0]);
 }
+function logBodyweight() {
+  var inp = document.getElementById('bw-input');
+  var v = parseFloat(inp.value);
+  if (!v || v <= 0) { uiToast('Введи вес'); return; }
+  v = Math.round(v*10)/10;
+  if (!ST.bw) ST.bw = {};
+  ST.bw[todayStr()] = v;
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.weight = v;
+  saveST();
+  renderProgress();
+}
+function bwSectionHtml() {
+  var bw = ST.bw || {};
+  var dates = Object.keys(bw).sort();
+  var last = dates.length ? bw[dates[dates.length-1]] : ((ST.cfg && ST.cfg.weight) || '');
+  var chart = '';
+  if (dates.length >= 2) {
+    var dsArr = dates.slice(-30);
+    var vals = dsArr.map(function(ds){ return bw[ds]; });
+    var first = vals[0], diff = Math.round((vals[vals.length-1]-first)*10)/10;
+    var trendClr = diff>0?'#f43f5e':diff<0?'#22c55e':'rgba(255,255,255,.4)';
+    var hdr = trendHeader([
+      {val:nf(vals[vals.length-1]), unit:'кг', lbl:'Текущий', color:'var(--txt)'},
+      {val:(diff>0?'+':'')+nf(diff), unit:'кг', lbl:'За период', color:trendClr}
+    ]);
+    chart = hdr + svgLineChart(vals, dsArr, nf);
+  }
+  return '<div class="chart-box"><div class="chart-title">Вес тела</div>' +
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(chart?'12px':'0')+'">' +
+    '<input type="number" id="bw-input" inputmode="decimal" step="0.1" value="'+esc(last)+'" placeholder="кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:15px;font-family:inherit;box-sizing:border-box" />' +
+    '<button class="btn btn-sm" onclick="logBodyweight()">Сохранить</button>' +
+    '</div>' + chart + '</div>';
+}
 function dataBackupBoxHtml() {
   return '<div class="chart-box"><div class="chart-title">Данные</div>' +
     '<div style="display:flex;gap:8px">' +

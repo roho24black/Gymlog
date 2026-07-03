@@ -1688,11 +1688,13 @@ function renderPlanView(wkt) {
   var trashSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 
   var shareSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
+  var saveTplSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
   // Sticky header
   var h = '<div class="plan-ed-hd" style="border-bottom:'+hdBorder+'">' +
     '<button class="plan-ed-back" onclick="closePlan()">'+backSvg+' Назад</button>' +
     '<input class="plan-name-inp" value="'+esc(wkt.name)+'" placeholder="Название" oninput="setPlanName(this.value)">' +
+    '<button class="plan-ed-del" onclick="savePlanAsTemplate()" title="Сохранить как шаблон">'+saveTplSvg+'</button>' +
     '<button class="plan-ed-del" onclick="shareWorkout(\''+PLAN_WKT.date+'\','+wkt.id+')" title="Поделиться">'+shareSvg+'</button>' +
     '<button class="plan-ed-del" onclick="deletePlan(\''+PLAN_WKT.date+'\','+wkt.id+')">'+trashSvg+'</button>' +
   '</div>';

@@ -2170,6 +2170,12 @@ function moveEx(ei, dir) {
   var a = OPEN_EX[ei], b = OPEN_EX[j]; OPEN_EX[ei] = b; OPEN_EX[j] = a;
   saveST(); renderWorkout();
 }
+function updateExNote(ei, val) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  if (wkt.exercises[ei]) wkt.exercises[ei].note = val;
+  saveST();
+}
 function addExToWorkout(name) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);

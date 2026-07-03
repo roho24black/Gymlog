@@ -2041,6 +2041,7 @@ function renderWorkout() {
 
     h += '<div class="ex-body open">';
     h += styleChips(ex, ei);
+    h += '<input type="text" class="ex-note-input" value="'+esc(ex.note||'')+'" placeholder="+ заметка" oninput="updateExNote('+ei+',this.value)" onclick="event.stopPropagation()" />';
     if (!cardio && !swim && !stat) {
       var st = getExStats(ex.name);
       if (st) {

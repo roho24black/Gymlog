@@ -1847,6 +1847,7 @@ function renderWorkout() {
       '<div class="sec-badge">Сегодня</div>' +
       '<div class="sec-title" style="margin-bottom:14px">Тренировка</div>';
 
+    h += inactivityBannerHtml();
     h += renderRecoveryCard();
     var rcvActive = ST.recovery && Date.now() < getRecoveryEnd();
     if (!rcvActive) h += buildRecBlock();

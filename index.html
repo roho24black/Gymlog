@@ -1733,6 +1733,7 @@ function renderPlanView(wkt) {
       '<div class="plan-ex-body'+exOpen+'" id="pex-body-'+ei+'">';
 
     h += styleChips(ex, ei);
+    h += '<input type="text" class="ex-note-input" value="'+esc(ex.note||'')+'" placeholder="+ заметка" oninput="updateExNote('+ei+',this.value)" onclick="event.stopPropagation()" />';
     if (st) {
       h += '<div class="ex-hist" style="margin-bottom:6px"><span>Посл: <span class="ex-hist-val">'+st.lastW+' кг × '+st.lastR+'</span></span>' +
         (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') + '</div>';

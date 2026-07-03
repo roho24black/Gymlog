@@ -2879,7 +2879,7 @@ function removeCalWorkout(ds, wi) {
     saveST(); renderCalDetail(); renderCal();
   };
   var hasDone = w && (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); });
-  if (hasDone) uiConfirm('Удалить «'+esc(w.name||'Тренировка')+'» за '+dateLabel(ds)+'? Вся история этой тренировки будет потеряна.', doRemove);
+  if (hasDone) uiConfirm('Удалить «'+(w.name||'Тренировка')+'» за '+dateLabel(ds)+'? Вся история этой тренировки будет потеряна.', doRemove);
   else doRemove();
 }
 function startOnDate(ds) {

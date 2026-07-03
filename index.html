@@ -2437,12 +2437,13 @@ function platesBreakdown(totalKg) {
   }
   return {plates:used, leftover:remaining};
 }
+function fmtPlate(v) { return (Math.round(v*100)/100).toString().replace('.',','); }
 function platesText(totalKg) {
   var b = platesBreakdown(totalKg);
   if (!b) return 'гриф '+BAR_KG+' кг';
   if (!b.plates.length) return 'гриф '+BAR_KG+' кг';
-  var txt = '🔵 '+b.plates.map(nf).join(' + ')+' с каждой стороны';
-  if (b.leftover > 0.01) txt += ' <span style="color:var(--red)">(+'+nf(b.leftover)+' не набрать)</span>';
+  var txt = '🔵 '+b.plates.map(fmtPlate).join(' + ')+' с каждой стороны';
+  if (b.leftover > 0.01) txt += ' <span style="color:var(--red)">(+'+fmtPlate(b.leftover)+' не набрать)</span>';
   return txt;
 }
 function getInputMode() { return (ST.cfg && ST.cfg.inputMode === 'manual') ? 'manual' : 'drum'; }

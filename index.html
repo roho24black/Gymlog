@@ -2397,6 +2397,28 @@ function shUpdateDisplay() {
   var unitEl = document.getElementById('sh-val-unit');
   var unit = unitEl ? unitEl.textContent : '';
   document.getElementById('sh-val-display').innerHTML = (SH_FMT||nf)(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+unit+'</span>';
+  var platesEl = document.getElementById('sh-plates');
+  if (platesEl) platesEl.innerHTML = (SH_MODE && SH_MODE.field === 'w' && isBarbell(SH_MODE.name)) ? platesText(SH_VAL) : '';
+}
+var BAR_KG = 20, PLATE_SET = [25,20,15,10,5,2.5,1.25];
+function isBarbell(name) { return /штанг/i.test(name||'') || name === 'Становая тяга' || name === 'Румынская тяга'; }
+function platesBreakdown(totalKg) {
+  var perSide = (totalKg - BAR_KG) / 2;
+  if (perSide <= 0) return null;
+  var remaining = Math.round(perSide*100)/100, used = [];
+  for (var i = 0; i < PLATE_SET.length; i++) {
+    var p = PLATE_SET[i];
+    while (remaining + 1e-6 >= p) { used.push(p); remaining = Math.round((remaining-p)*100)/100; }
+  }
+  return {plates:used, leftover:remaining};
+}
+function platesText(totalKg) {
+  var b = platesBreakdown(totalKg);
+  if (!b) return 'гриф '+BAR_KG+' кг';
+  if (!b.plates.length) return 'гриф '+BAR_KG+' кг';
+  var txt = '🔵 '+b.plates.map(nf).join(' + ')+' с каждой стороны';
+  if (b.leftover > 0.01) txt += ' <span style="color:var(--red)">(+'+nf(b.leftover)+' не набрать)</span>';
+  return txt;
 }
 function getInputMode() { return (ST.cfg && ST.cfg.inputMode === 'manual') ? 'manual' : 'drum'; }
 function setInputMode(mode) {

@@ -151,9 +151,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
   font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .12s}
 .add-ex-btn:active{opacity:.6}
 .rm-ex-btn{width:100%;min-height:44px;padding:0 8px;background:none;border:1px solid rgba(255,255,255,0.06);
-  border-radius:10px;color:var(--red);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:8px;
+  border-radius:10px;color:var(--red);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;
   transition:opacity .12s}
 .rm-ex-btn:active{opacity:.6}
+.ex-move-row{display:flex;gap:8px;margin-top:8px}
+.ex-move-btn{width:44px;min-height:44px;flex-shrink:0;background:none;border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;color:var(--sub);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .12s}
+.ex-move-btn:active{opacity:.6}
+.ex-move-btn:disabled{opacity:.25;cursor:default}
 .ex-hist{display:flex;gap:14px;padding:0 2px 8px;font-size:12px;color:var(--sub)}
 .ex-hist-val{color:var(--txt);font-weight:700}
 .ex-hist-pr{color:var(--ylw);font-weight:700}

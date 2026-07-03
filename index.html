@@ -3034,8 +3034,10 @@ function pWeekLabel(ds) {
   return d.getDate()+'.'+pad(d.getMonth()+1);
 }
 function computeProgressData() {
-  var byExName = {}, dailyVol = {}, workoutDays = {}, groupSets30 = {};
+  var byExName = {}, byCardioName = {}, bySwimName = {}, byStaticName = {};
+  var dailyVol = {}, workoutDays = {}, groupSets30 = {};
   var totalWkts = 0, totalSets = 0, totalVolAll = 0;
+  var totalCardioKm = 0, totalCardioMins = 0, totalSwimM = 0, totalStaticSec = 0;
   var cutoff30 = dateOffset(-30);
   Object.keys(ST.w).sort().forEach(function(ds) {
     var day = ST.w[ds];
@@ -3048,11 +3050,24 @@ function computeProgressData() {
       workoutDays[ds] = true;
       (w.exercises||[]).forEach(function(ex) {
         var grp = exGroup(ex.name);
+        var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
         (ex.sets||[]).forEach(function(s) {
           if (!s.done) return;
           totalSets++;
           if (grp && ds >= cutoff30) groupSets30[grp] = (groupSets30[grp]||0)+1;
-          if ((s.w||0) > 0) {
+          if (cardio) {
+            totalCardioKm += s.dist||0; totalCardioMins += s.mins||0;
+            if (!byCardioName[ex.name]) byCardioName[ex.name] = [];
+            byCardioName[ex.name].push({ds:ds, dist:s.dist||0, mins:s.mins||0});
+          } else if (swim) {
+            totalSwimM += s.dist||0;
+            if (!bySwimName[ex.name]) bySwimName[ex.name] = [];
+            bySwimName[ex.name].push({ds:ds, dist:s.dist||0, secs:s.secs||0});
+          } else if (stat) {
+            totalStaticSec += s.secs||0;
+            if (!byStaticName[ex.name]) byStaticName[ex.name] = [];
+            byStaticName[ex.name].push({ds:ds, secs:s.secs||0});
+          } else if ((s.w||0) > 0) {
             var vol = s.w * (s.r||0);
             totalVolAll += vol;
             dailyVol[ds] = (dailyVol[ds]||0) + vol;
@@ -3063,7 +3078,10 @@ function computeProgressData() {
       });
     });
   });
-  return {byExName:byExName, dailyVol:dailyVol, workoutDays:workoutDays, groupSets30:groupSets30, totalWkts:totalWkts, totalSets:totalSets, totalVolAll:totalVolAll};
+  return {byExName:byExName, byCardioName:byCardioName, bySwimName:bySwimName, byStaticName:byStaticName,
+    dailyVol:dailyVol, workoutDays:workoutDays, groupSets30:groupSets30,
+    totalWkts:totalWkts, totalSets:totalSets, totalVolAll:totalVolAll,
+    totalCardioKm:totalCardioKm, totalCardioMins:totalCardioMins, totalSwimM:totalSwimM, totalStaticSec:totalStaticSec};
 }
 function computeStreak(workoutDays) {
   var streak = 0, ds = todayStr();

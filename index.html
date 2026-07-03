@@ -3337,6 +3337,25 @@ function computeStreak(workoutDays) {
   while (workoutDays[ds]) { streak++; ds = dateAdd(ds, -1); }
   return streak;
 }
+function computeBestStreak(workoutDays) {
+  var days = Object.keys(workoutDays).sort();
+  var best = 0, cur = 0, prev = null;
+  days.forEach(function(ds) {
+    cur = (prev && dateAdd(prev, 1) === ds) ? cur+1 : 1;
+    if (cur > best) best = cur;
+    prev = ds;
+  });
+  return best;
+}
+function computeWeekdayPattern(workoutDays) {
+  var counts = [0,0,0,0,0,0,0]; // Пн..Вс
+  Object.keys(workoutDays).forEach(function(ds){
+    var d = new Date(ds+'T12:00:00');
+    var dow = (d.getDay()+6)%7;
+    counts[dow]++;
+  });
+  return counts;
+}
 function computeWeeklyVolume(dailyVol, weeks) {
   var res = [], curWeekStart = pStartOfWeek(todayStr());
   for (var i = weeks-1; i >= 0; i--) {

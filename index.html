@@ -1177,6 +1177,21 @@ function getRecommendation() {
   }
   return { tired: tired, rested: MAIN.filter(function(g){ return tired[g] === undefined; }), score: score };
 }
+function daysSinceLastWorkout() {
+  for (var i = 1; i <= 60; i++) {
+    var ws = getWorkouts(dateOffset(-i));
+    var any = ws.some(function(w){ return !w.planned && (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); }); });
+    if (any) return i;
+  }
+  return null;
+}
+function inactivityBannerHtml() {
+  var days = daysSinceLastWorkout();
+  if (days == null || days < 3) return '';
+  var word = (days%10===1 && days%100!==11) ? 'день' : (days%10>=2 && days%10<=4 && (days%100<10||days%100>=20)) ? 'дня' : 'дней';
+  return '<div style="background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.28);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--sub)">' +
+    '⏳ Не тренировался уже <b style="color:var(--red)">'+days+' '+word+'</b>. Возвращайся в форму 💪</div>';
+}
 function buildRecBlock() {
   var MAIN = ['Ноги','Грудь','Спина','Плечи','Руки'];
   var hasHistory = false;

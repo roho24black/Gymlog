@@ -3198,6 +3198,11 @@ function progSetExN(n) {
   document.getElementById('prog-exn-chips').innerHTML = chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN');
   if (sel) renderProgChart(sel.value);
 }
+function progSetCardioMode(mode) {
+  PROG_CARDIO_MODE = mode;
+  var sel = document.getElementById('prog-ex-sel');
+  if (sel) renderProgChart(sel.value);
+}
 function exSelectOptions(names) {
   var byGroup = {};
   names.forEach(function(n) {

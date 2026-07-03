@@ -1072,6 +1072,12 @@ function fmtRem(ms) {
   var m = Math.floor((ms % 3600000) / 60000);
   return h > 0 ? h + ' ч ' + m + ' мин' : m + ' мин';
 }
+function fmtClock(ts) {
+  var d = new Date(ts), now = new Date();
+  var sameDay = d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+  var time = pad(d.getHours())+':'+pad(d.getMinutes());
+  return sameDay ? 'до '+time : 'до '+time+' ('+d.getDate()+' '+MONTHS_RU[d.getMonth()]+')';
+}
 
 function renderRecoveryCard() {
   if (!ST.recovery || !ST.recovery.groups) return '';

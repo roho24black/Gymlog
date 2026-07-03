@@ -3528,6 +3528,121 @@ function renderStaticChart(el, name, pd) {
 
 // ═══════════════════════ PROFILE ═══════════════════════
 
+// ═══════════════════════ MY MOUNTAIN ROUTES ═══════════════════════
+var MTN_ROUTES = [
+  {id:'low', name:'LOW', label:'Низкий', maxGrade:20, color:'#22c55e',
+   stages:[
+     {n:'Разгон',           km:0.30, g:5,  t:3},
+     {n:'Начало подъёма',   km:0.45, g:12, t:5},
+     {n:'Пик HIGH',         km:0.50, g:20, t:6},
+     {n:'Спуск',            km:0.40, g:10, t:4},
+     {n:'Долина LOW',       km:0.40, g:7,  t:4},
+     {n:'Горки MIDDLE',     km:0.95, g:12, t:9}
+   ]},
+  {id:'middle', name:'MIDDLE', label:'Средний', maxGrade:35, color:'#f59e0b',
+   stages:[
+     {n:'Разгон',           km:0.30, g:8,  t:3},
+     {n:'Начало подъёма',   km:0.45, g:22, t:5},
+     {n:'Пик HIGH',         km:0.50, g:35, t:7},
+     {n:'Спуск',            km:0.40, g:18, t:4},
+     {n:'Долина LOW',       km:0.35, g:10, t:4},
+     {n:'Горки MIDDLE',     km:1.00, g:25, t:11}
+   ]},
+  {id:'high', name:'HIGH', label:'Высокий', maxGrade:50, color:'#f43f5e',
+   stages:[
+     {n:'Разгон',           km:0.25, g:10, t:2},
+     {n:'Подъём к вершине', km:0.50, g:35, t:6},
+     {n:'Пик HIGH',         km:0.45, g:50, t:7},
+     {n:'Спуск',            km:0.45, g:25, t:5},
+     {n:'Долина LOW',       km:0.35, g:10, t:4},
+     {n:'Горки MIDDLE',     km:1.00, g:30, t:11}
+   ]}
+];
+var MTN_STATE = null; // {routeId, checked:[bool...]}
+function mtnRoute(id) { return MTN_ROUTES.filter(function(r){ return r.id===id; })[0]; }
+function mtnTotals(route) {
+  var km=0, t=0;
+  route.stages.forEach(function(s){ km+=s.km; t+=s.t; });
+  return {km:Math.round(km*100)/100, t:t};
+}
+function mtnProfileSvg(route, w, h) {
+  var stages = route.stages;
+  var totalKm = stages.reduce(function(a,s){ return a+s.km; }, 0);
+  var maxG = Math.max.apply(null, stages.map(function(s){ return s.g; }));
+  var pts = [[0,0]], x = 0;
+  stages.forEach(function(s){ x += s.km; pts.push([x, s.g]); });
+  var pad = 4;
+  var xs = pts.map(function(p){ return pad + (p[0]/totalKm)*(w-2*pad); });
+  var ys = pts.map(function(p){ return h-pad - (p[1]/maxG)*(h-2*pad); });
+  var d = xs.map(function(x,i){ return (i===0?'M':'L')+x.toFixed(1)+' '+ys[i].toFixed(1); }).join(' ');
+  var fillD = d+' L'+xs[xs.length-1].toFixed(1)+' '+h+' L'+xs[0].toFixed(1)+' '+h+' Z';
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" style="display:block">' +
+    '<path d="'+fillD+'" fill="'+route.color+'" opacity="0.15"/>' +
+    '<path d="'+d+'" fill="none" stroke="'+route.color+'" stroke-width="2" stroke-linejoin="round"/>' +
+    '</svg>';
+}
+function renderRoutes() {
+  var body = document.getElementById('routes-body');
+  if (MTN_STATE) { renderMtnActive(body); return; }
+  var h = '<div class="sec-badge">My Mountain</div><div class="sec-title" style="margin-bottom:14px">Маршруты</div>';
+  MTN_ROUTES.forEach(function(r) {
+    var tot = mtnTotals(r);
+    h += '<div class="chart-box" style="cursor:pointer" onclick="mtnStartRoute(\''+r.id+'\')">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<div style="font-size:15px;font-weight:800;color:'+r.color+'">'+r.name+' <span style="font-size:11px;color:var(--mut);font-weight:600">· '+r.label+'</span></div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--mut)">MAX '+r.maxGrade+'%</div>' +
+      '</div>' +
+      mtnProfileSvg(r, 320, 60) +
+      '<div style="display:flex;gap:14px;margin-top:10px">' +
+        '<div style="font-size:13px;color:var(--sub)"><b style="color:var(--txt)">'+nf(tot.km)+'</b> км</div>' +
+        '<div style="font-size:13px;color:var(--sub)"><b style="color:var(--txt)">'+tot.t+'</b> мин</div>' +
+        '<div style="font-size:13px;color:var(--sub)"><b style="color:var(--txt)">'+r.stages.length+'</b> стадий</div>' +
+      '</div>' +
+    '</div>';
+  });
+  body.innerHTML = h;
+}
+function mtnStartRoute(id) {
+  MTN_STATE = {routeId:id, checked:[]};
+  renderRoutes();
+}
+function mtnToggleStage(i) {
+  if (!MTN_STATE) return;
+  MTN_STATE.checked[i] = !MTN_STATE.checked[i];
+  renderRoutes();
+}
+function mtnReset() {
+  MTN_STATE = null;
+  renderRoutes();
+}
+function renderMtnActive(body) {
+  var r = mtnRoute(MTN_STATE.routeId);
+  var tot = mtnTotals(r);
+  var doneCount = MTN_STATE.checked.filter(Boolean).length;
+  var h = '<div class="sec-badge" style="color:'+r.color+'">My Mountain · '+r.name+'</div>' +
+    '<div class="sec-title" style="margin-bottom:14px">'+r.label+' · '+doneCount+'/'+r.stages.length+'</div>';
+  h += '<div class="chart-box"><div style="display:flex;gap:14px">' +
+    '<div style="font-size:13px;color:var(--sub)"><b style="color:var(--txt)">'+nf(tot.km)+'</b> км</div>' +
+    '<div style="font-size:13px;color:var(--sub)"><b style="color:var(--txt)">'+tot.t+'</b> мин</div>' +
+    '<div style="font-size:13px;color:var(--sub)"><b style="color:var(--txt)">MAX '+r.maxGrade+'%</b></div>' +
+  '</div></div>';
+  r.stages.forEach(function(s, i) {
+    var on = !!MTN_STATE.checked[i];
+    h += '<div class="chart-box" style="display:flex;align-items:center;gap:12px;cursor:pointer;'+(on?'opacity:.55':'')+'" onclick="mtnToggleStage('+i+')">' +
+      '<div style="width:26px;height:26px;border-radius:50%;border:2px solid '+(on?r.color:'var(--brd2)')+';background:'+(on?r.color:'none')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+        (on?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>':'') +
+      '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:14px;font-weight:700'+(on?';text-decoration:line-through':'')+'">'+s.n+'</div>' +
+        '<div style="font-size:12px;color:var(--mut);margin-top:2px">'+nf(s.km)+' км · '+s.t+' мин</div>' +
+      '</div>' +
+      '<div style="font-size:15px;font-weight:800;color:'+r.color+'">'+s.g+'%</div>' +
+    '</div>';
+  });
+  h += '<button class="btn btn-sm" style="width:100%;margin-top:6px" onclick="mtnReset()">← К маршрутам</button>';
+  body.innerHTML = h;
+}
+
 // ═══════════════════════ INIT ═══════════════════════
 loadST();
 renderTopbar();

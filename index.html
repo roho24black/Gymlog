@@ -3388,6 +3388,7 @@ function renderProgress() {
 
   if (!pd.totalWkts) {
     h += '<div class="empty"><div class="empty-ico">📈</div><div class="empty-msg">Данные появятся после тренировок</div></div>';
+    h += bwSectionHtml();
     h += dataBackupBoxHtml();
     body.innerHTML = h;
     return;
@@ -3400,6 +3401,8 @@ function renderProgress() {
     statCard(pd.totalSets, 'Подходов', null, 'var(--blu)') +
     statCard(streak, streak===1?'День подряд':streak<5?'Дня подряд':'Дней подряд', null, 'var(--pur)') +
   '</div>';
+
+  h += bwSectionHtml();
 
   if (pd.totalCardioKm > 0 || pd.totalCardioMins > 0) {
     h += '<div class="chart-box"><div class="chart-title">Кардио</div><div style="display:flex;gap:10px">' +

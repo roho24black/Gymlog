@@ -2423,12 +2423,21 @@ function shUpdateDisplay() {
   var unit = unitEl ? unitEl.textContent : '';
   document.getElementById('sh-val-display').innerHTML = (SH_FMT||nf)(SH_VAL)+' <span class="sh-val-unit" id="sh-val-unit">'+unit+'</span>';
   var platesEl = document.getElementById('sh-plates');
-  if (platesEl) platesEl.innerHTML = (SH_MODE && SH_MODE.field === 'w' && isBarbell(SH_MODE.name)) ? platesText(SH_VAL) : '';
+  if (platesEl) {
+    var pb = (SH_MODE && SH_MODE.field === 'w') ? plateBaseFor(SH_MODE.name) : null;
+    platesEl.innerHTML = pb ? platesText(SH_VAL, pb.base, pb.label) : '';
+  }
 }
 var BAR_KG = 20, PLATE_SET = [25,20,15,10,5,2.5,1.25];
+var PLATE_BASE = {'Жим ногами 45°': 64};
 function isBarbell(name) { return /штанг/i.test(name||'') || name === 'Становая тяга' || name === 'Румынская тяга'; }
-function platesBreakdown(totalKg) {
-  var perSide = (totalKg - BAR_KG) / 2;
+function plateBaseFor(name) {
+  if (PLATE_BASE.hasOwnProperty(name)) return {base:PLATE_BASE[name], label:'платформа'};
+  if (isBarbell(name)) return {base:BAR_KG, label:'гриф'};
+  return null;
+}
+function platesBreakdown(totalKg, base) {
+  var perSide = (totalKg - base) / 2;
   if (perSide <= 0) return null;
   var remaining = Math.round(perSide*100)/100, used = [];
   for (var i = 0; i < PLATE_SET.length; i++) {
@@ -2438,10 +2447,9 @@ function platesBreakdown(totalKg) {
   return {plates:used, leftover:remaining};
 }
 function fmtPlate(v) { return (Math.round(v*100)/100).toString().replace('.',','); }
-function platesText(totalKg) {
-  var b = platesBreakdown(totalKg);
-  if (!b) return 'гриф '+BAR_KG+' кг';
-  if (!b.plates.length) return 'гриф '+BAR_KG+' кг';
+function platesText(totalKg, base, label) {
+  var b = platesBreakdown(totalKg, base);
+  if (!b || !b.plates.length) return label+' '+base+' кг';
   var txt = '🔵 '+b.plates.map(fmtPlate).join(' + ')+' с каждой стороны';
   if (b.leftover > 0.01) txt += ' <span style="color:var(--red)">(+'+fmtPlate(b.leftover)+' не набрать)</span>';
   return txt;

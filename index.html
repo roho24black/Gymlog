@@ -3409,6 +3409,8 @@ function statCard(num, lbl, unit, color) {
 var PROG_WEEKS = 8;
 var PROG_EX_N = 12;
 var PROG_CARDIO_MODE = 'dist';
+var PROG_PR_ALL = false;
+function progTogglePRs() { PROG_PR_ALL = !PROG_PR_ALL; renderProgress(); }
 function weeklyBarsHtml(weeks) {
   var max = Math.max.apply(null, weeks.map(function(w){ return w.kg; }).concat([1]));
   var n = weeks.length, svgW = 340, barH_max = 72, topPad = 20, botPad = 22;
@@ -3618,7 +3620,8 @@ function renderProgress() {
   }
 
   var recentPRs = countRecentPRs(pd.byExName, dateOffset(-30));
-  var prs = computePRList(pd.byExName).slice(0, 6);
+  var allPRs = computePRList(pd.byExName);
+  var prs = PROG_PR_ALL ? allPRs : allPRs.slice(0, 6);
   if (prs.length) {
     h += '<div class="chart-box"><div class="chart-title">Последние рекорды'+(recentPRs>0?' · '+recentPRs+' за 30 дней':'')+'</div>';
     prs.forEach(function(p) {
@@ -3626,6 +3629,9 @@ function renderProgress() {
         '<div class="pr-info"><div class="pr-name">'+esc(p.name)+'</div><div class="pr-date">'+dateLabel(p.ds)+'</div></div>' +
         '<div class="pr-val">'+nf(p.w)+' кг <span style="font-size:11px;color:var(--mut);font-weight:600">× '+p.r+'</span></div></div>';
     });
+    if (allPRs.length > 6) {
+      h += '<button class="btn btn-sm" style="width:100%;margin-top:8px" onclick="progTogglePRs()">'+(PROG_PR_ALL?'Свернуть':'Показать все ('+allPRs.length+')')+'</button>';
+    }
     h += '</div>';
   }
 

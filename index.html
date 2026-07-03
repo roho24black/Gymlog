@@ -1757,7 +1757,11 @@ function renderPlanView(wkt) {
     });
     h += '<div class="add-row"><button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
       (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') + '</div>';
-    h += '<button class="rm-ex-btn" onclick="removeEx('+ei+')">Удалить упражнение</button>';
+    h += '<div class="ex-move-row">' +
+      '<button class="ex-move-btn" onclick="moveEx('+ei+',-1)"'+(ei===0?' disabled':'')+'>↑</button>' +
+      '<button class="ex-move-btn" onclick="moveEx('+ei+',1)"'+(ei===exs.length-1?' disabled':'')+'>↓</button>' +
+      '<button class="rm-ex-btn" style="flex:1;margin-top:0" onclick="removeEx('+ei+')">Удалить упражнение</button>' +
+      '</div>';
     h += '</div></div>';
   });
 

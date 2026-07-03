@@ -3120,6 +3120,8 @@ function statCard(num, lbl, unit, color) {
   return '<div class="stat-box"><div class="stat-num" style="color:'+color+'">'+num+(unit?'<span style="font-size:13px;color:var(--mut);font-weight:700"> '+unit+'</span>':'')+'</div>' +
     '<div class="stat-lbl">'+lbl+'</div></div>';
 }
+var PROG_WEEKS = 8;
+var PROG_EX_N = 12;
 function weeklyBarsHtml(weeks) {
   var max = Math.max.apply(null, weeks.map(function(w){ return w.kg; }).concat([1]));
   var n = weeks.length, svgW = 340, barH_max = 72, topPad = 20, botPad = 22;
@@ -3133,10 +3135,28 @@ function weeklyBarsHtml(weeks) {
     var val = w.kg >= 1000 ? (Math.round(w.kg/100)/10)+'k' : (w.kg||'');
     var lbl = pWeekLabel(w.start);
     return '<rect x="'+x+'" y="'+by+'" width="'+barW+'" height="'+bh+'" rx="5" fill="'+fill+'"/>' +
-      (w.kg > 0 ? '<text x="'+(x+barW/2)+'" y="'+(by-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="'+(w.isCur?'#22c55e':'rgba(255,255,255,.38)')+'">'+val+'</text>' : '') +
+      (w.kg > 0 && barW > 20 ? '<text x="'+(x+barW/2)+'" y="'+(by-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="'+(w.isCur?'#22c55e':'rgba(255,255,255,.38)')+'">'+val+'</text>' : '') +
       '<text x="'+(x+barW/2)+'" y="'+(svgH-5)+'" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.3)" font-weight="600">'+lbl+'</text>';
   }).join('');
   return '<svg viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="display:block">'+rects+'</svg>';
+}
+function chipsHtml(cls, opts, cur, onclick) {
+  return '<div style="display:flex;gap:6px;margin-bottom:10px">' + opts.map(function(o) {
+    var on = cur === o[0];
+    return '<button class="'+cls+'" onclick="'+onclick+'('+o[0]+')" style="padding:5px 10px;border-radius:100px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?'var(--acc)':'var(--brd2)')+';background:'+(on?'rgba(34,197,94,.12)':'none')+';color:'+(on?'var(--acc)':'var(--sub)')+'">'+o[1]+'</button>';
+  }).join('') + '</div>';
+}
+function progSetWeeks(n) {
+  PROG_WEEKS = n;
+  var pd = window._progData; if (!pd) return;
+  document.getElementById('prog-weeks-chips').innerHTML = chipsHtml('prog-chip', [[8,'8 нед'],[12,'12 нед'],[26,'26 нед']], PROG_WEEKS, 'progSetWeeks');
+  document.getElementById('prog-weeks-chart').innerHTML = weeklyBarsHtml(computeWeeklyVolume(pd.dailyVol, PROG_WEEKS));
+}
+function progSetExN(n) {
+  PROG_EX_N = n;
+  var sel = document.getElementById('prog-ex-sel');
+  document.getElementById('prog-exn-chips').innerHTML = chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN');
+  if (sel) renderProgChart(sel.value);
 }
 function exSelectOptions(names) {
   var byGroup = {};
@@ -3148,6 +3168,58 @@ function exSelectOptions(names) {
   return Object.keys(byGroup).sort().map(function(g) {
     return '<optgroup label="'+g+'">' + byGroup[g].map(function(n){ return '<option>'+esc(n)+'</option>'; }).join('') + '</optgroup>';
   }).join('');
+}
+function trendHeader(cards) {
+  return '<div style="display:flex;gap:0;margin-bottom:14px">' + cards.map(function(c,i) {
+    return '<div style="flex:1'+(i===cards.length-1?';text-align:right':'')+'">' +
+      '<div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:'+c.color+'">'+c.val+(c.unit?'<span style="font-size:12px;font-weight:600;color:var(--mut)"> '+c.unit+'</span>':'')+'</div>' +
+      '<div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">'+c.lbl+'</div></div>';
+  }).join('') + '</div>';
+}
+function svgLineChart(vals, dsArr, fmt) {
+  var n = vals.length;
+  var maxV = Math.max.apply(null, vals), minV = Math.min.apply(null, vals);
+  var pad = Math.max((maxV-minV)*0.2, maxV*0.08, 0.5);
+  var yMax = maxV+pad, yMin = Math.max(0, minV-pad);
+  var range = Math.max(1e-6, yMax-yMin);
+  var W=320, H=130, lp=6, rp=6, tp=28, bp=24;
+  var cW=W-lp-rp, cH=H-tp-bp;
+  var xs = vals.map(function(v,i){ return lp+(n===1?cW/2:i*cW/(n-1)); });
+  var ys = vals.map(function(v){ return tp+cH-((v-yMin)/range)*cH; });
+  var pathD = xs.map(function(x,i){ return (i===0?'M':'L')+x.toFixed(1)+' '+ys[i].toFixed(1); }).join(' ');
+  var fillD = pathD+' L'+xs[n-1].toFixed(1)+' '+(tp+cH)+' L'+lp+' '+(tp+cH)+' Z';
+
+  var gridVals = [yMin, (yMin+yMax)/2, yMax];
+  var grid = gridVals.map(function(v) {
+    var gy = (tp+cH-((v-yMin)/range)*cH).toFixed(1);
+    return '<line x1="'+lp+'" y1="'+gy+'" x2="'+(W-rp)+'" y2="'+gy+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>' +
+      '<text x="'+(W-rp)+'" y="'+(+gy-3)+'" text-anchor="end" font-size="8" fill="rgba(255,255,255,.28)" font-weight="600">'+fmt(v)+'</text>';
+  }).join('');
+
+  var dateLbls = n > 1
+    ? '<text x="'+xs[0].toFixed(1)+'" y="'+(H-6)+'" text-anchor="start" font-size="8.5" fill="rgba(255,255,255,.3)">'+dateLabel(dsArr[0])+'</text>' +
+      '<text x="'+xs[n-1].toFixed(1)+'" y="'+(H-6)+'" text-anchor="end" font-size="8.5" fill="rgba(255,255,255,.3)">'+dateLabel(dsArr[n-1])+'</text>'
+    : '';
+
+  var dots = xs.map(function(x,i) {
+    var isLast = i===n-1, y = ys[i].toFixed(1);
+    return '<circle cx="'+x.toFixed(1)+'" cy="'+y+'" r="'+(isLast?5:3)+'" fill="#22c55e"'+(isLast?' stroke="rgba(0,0,0,.7)" stroke-width="2"':'')+'/>' +
+      (isLast?'<text x="'+x.toFixed(1)+'" y="'+(+y-9)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#22c55e">'+fmt(vals[i])+'</text>':'');
+  }).join('');
+
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;overflow:visible">' +
+    '<defs><linearGradient id="pgg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e" stop-opacity=".22"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs>' +
+    grid +
+    '<path d="'+fillD+'" fill="url(#pgg)"/>' +
+    '<path d="'+pathD+'" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+    dots + dateLbls +
+    '</svg>';
+}
+function fmtPace(minsPerKm) {
+  if (!minsPerKm || !isFinite(minsPerKm)) return '–';
+  var m = Math.floor(minsPerKm), s = Math.round((minsPerKm-m)*60);
+  if (s===60) { s=0; m++; }
+  return m+':'+(s<10?'0':'')+s;
 }
 function renderProgress() {
   var body = document.getElementById('prog-body');
@@ -3169,8 +3241,27 @@ function renderProgress() {
     statCard(streak, streak===1?'День подряд':streak<5?'Дня подряд':'Дней подряд', null, 'var(--pur)') +
   '</div>';
 
-  var weeks = computeWeeklyVolume(pd.dailyVol, 8);
-  h += '<div class="chart-box"><div class="chart-title">Объём по неделям</div>' + weeklyBarsHtml(weeks) + '</div>';
+  if (pd.totalCardioKm > 0 || pd.totalCardioMins > 0) {
+    h += '<div class="chart-box"><div class="chart-title">Кардио</div><div style="display:flex;gap:10px">' +
+      statCard(nf(pd.totalCardioKm), 'Дистанция', 'км', 'var(--blu)') +
+      statCard(Math.round(pd.totalCardioMins), 'Время', 'мин', 'var(--acc)') +
+    '</div></div>';
+  }
+  if (pd.totalSwimM > 0) {
+    h += '<div class="chart-box"><div class="chart-title">Бассейн</div><div style="display:flex;gap:10px">' +
+      statCard(pd.totalSwimM, 'Дистанция', 'м', 'var(--blu)') +
+    '</div></div>';
+  }
+  if (pd.totalStaticSec > 0) {
+    h += '<div class="chart-box"><div class="chart-title">Статика</div><div style="display:flex;gap:10px">' +
+      statCard(fmtTime(pd.totalStaticSec), 'Общее время', null, 'var(--red)') +
+    '</div></div>';
+  }
+
+  var weeks = computeWeeklyVolume(pd.dailyVol, PROG_WEEKS);
+  h += '<div class="chart-box"><div class="chart-title">Объём по неделям</div>' +
+    '<div id="prog-weeks-chips">' + chipsHtml('prog-chip', [[8,'8 нед'],[12,'12 нед'],[26,'26 нед']], PROG_WEEKS, 'progSetWeeks') + '</div>' +
+    '<div id="prog-weeks-chart">' + weeklyBarsHtml(weeks) + '</div></div>';
 
   var groups = Object.keys(pd.groupSets30).sort(function(a,b){ return pd.groupSets30[b]-pd.groupSets30[a]; });
   if (groups.length) {
@@ -3197,10 +3288,11 @@ function renderProgress() {
     h += '</div>';
   }
 
-  var names = Object.keys(pd.byExName).sort();
+  var names = Object.keys(pd.byExName).concat(Object.keys(pd.byCardioName), Object.keys(pd.bySwimName), Object.keys(pd.byStaticName)).sort();
   if (names.length) {
     h += '<div class="chart-title" style="margin:4px 2px 8px">История по упражнению</div>';
     h += '<select class="prog-sel" id="prog-ex-sel" onchange="renderProgChart(this.value)">' + exSelectOptions(names) + '</select>';
+    h += '<div id="prog-exn-chips">' + chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN') + '</div>';
     h += '<div id="prog-chart"></div>';
   }
 
@@ -3210,67 +3302,97 @@ function renderProgress() {
 function renderProgChart(name) {
   var pd = window._progData || computeProgressData();
   var el = document.getElementById('prog-chart'); if (!el) return;
-  var raw = (pd.byExName[name]||[]).slice(-20);
+  if (pd.byCardioName[name]) return renderCardioChart(el, name, pd);
+  if (pd.bySwimName[name]) return renderSwimChart(el, name, pd);
+  if (pd.byStaticName[name]) return renderStaticChart(el, name, pd);
+  renderStrengthChart(el, name, pd);
+}
+function renderStrengthChart(el, name, pd) {
+  var raw = pd.byExName[name]||[];
   if (!raw.length) { el.innerHTML = ''; return; }
-  // deduplicate dates — keep max weight per day
+  // dedupe by date, keeping the set with the best effective 1RM that day
   var byDate = {};
-  raw.forEach(function(d){ if (!byDate[d.ds] || d.w > byDate[d.ds].w) byDate[d.ds] = d; });
-  var data = Object.keys(byDate).sort().map(function(ds){ return byDate[ds]; }).slice(-12);
+  raw.forEach(function(d) {
+    var e = e1RM(d.w, d.r);
+    if (!byDate[d.ds] || e > byDate[d.ds]._e) { d._e = e; byDate[d.ds] = d; }
+  });
+  var data = Object.keys(byDate).sort().map(function(ds){ return byDate[ds]; }).slice(-PROG_EX_N);
   var n = data.length;
+  var vals = data.map(function(d){ return d.w; });
+  var dsArr = data.map(function(d){ return d.ds; });
 
-  var maxW = Math.max.apply(null, data.map(function(d){ return d.w; }));
-  var minW = Math.min.apply(null, data.map(function(d){ return d.w; }));
-  var pad = Math.max(2.5, (maxW-minW)*0.2);
-  var yMax = maxW+pad, yMin = Math.max(0, minW-pad);
-  var range = Math.max(1, yMax-yMin);
-
-  var W=320, H=130, lp=6, rp=6, tp=28, bp=24;
-  var cW=W-lp-rp, cH=H-tp-bp;
-  var xs=data.map(function(d,i){ return lp+(n===1?cW/2:i*cW/(n-1)); });
-  var ys=data.map(function(d){ return tp+cH-((d.w-yMin)/range)*cH; });
-  var pathD=xs.map(function(x,i){ return (i===0?'M':'L')+x.toFixed(1)+' '+ys[i].toFixed(1); }).join(' ');
-  var fillD=pathD+' L'+xs[n-1].toFixed(1)+' '+(tp+cH)+' L'+lp+' '+(tp+cH)+' Z';
-
-  // grid lines at min, mid, max
-  var gridVals = [Math.round(yMin*2)/2, Math.round((yMin+yMax)/2*2)/2, Math.round(yMax*2)/2];
-  var grid = gridVals.map(function(v) {
-    var gy = (tp+cH-((v-yMin)/range)*cH).toFixed(1);
-    return '<line x1="'+lp+'" y1="'+gy+'" x2="'+(W-rp)+'" y2="'+gy+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>' +
-      '<text x="'+(W-rp)+'" y="'+(+gy-3)+'" text-anchor="end" font-size="8" fill="rgba(255,255,255,.28)" font-weight="600">'+nf(v)+'</text>';
-  }).join('');
-
-  // date labels first/last
-  var dateLbls = n > 1
-    ? '<text x="'+xs[0].toFixed(1)+'" y="'+(H-6)+'" text-anchor="start" font-size="8.5" fill="rgba(255,255,255,.3)">'+dateLabel(data[0].ds)+'</text>' +
-      '<text x="'+xs[n-1].toFixed(1)+'" y="'+(H-6)+'" text-anchor="end" font-size="8.5" fill="rgba(255,255,255,.3)">'+dateLabel(data[n-1].ds)+'</text>'
-    : '';
-
-  // dots + last value label
-  var dots = xs.map(function(x,i) {
-    var isLast = i===n-1, y = ys[i].toFixed(1);
-    return '<circle cx="'+x.toFixed(1)+'" cy="'+y+'" r="'+(isLast?5:3)+'" fill="#22c55e"'+(isLast?' stroke="rgba(0,0,0,.7)" stroke-width="2"':'')+'/>' +
-      (isLast?'<text x="'+x.toFixed(1)+'" y="'+(+y-9)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#22c55e">'+nf(data[i].w)+'</text>':'');
-  }).join('');
-
-  var first=data[0].w, last=data[n-1].w, diff=Math.round((last-first)*10)/10;
+  var first = vals[0], last = vals[n-1], diff = Math.round((last-first)*10)/10;
   var trendClr = diff>0?'#22c55e':diff<0?'#f43f5e':'rgba(255,255,255,.4)';
   var st = getExStats(name);
   var pr = st ? Math.max(st.pr, last) : last;
 
-  var hdr = '<div style="display:flex;gap:0;margin-bottom:14px">' +
-    '<div style="flex:1"><div style="font-size:20px;font-weight:800;letter-spacing:-.5px">'+nf(last)+'<span style="font-size:12px;font-weight:600;color:var(--mut)"> кг</span></div><div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Последний</div></div>' +
-    '<div style="flex:1"><div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--ylw)">'+nf(pr)+'<span style="font-size:12px;font-weight:600;color:var(--mut)"> кг</span></div><div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Рекорд</div></div>' +
-    '<div style="flex:1;text-align:right"><div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:'+trendClr+'">'+(diff>0?'+':'')+nf(diff)+'<span style="font-size:12px;font-weight:600;color:var(--mut)"> кг</span></div><div style="font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-top:2px">За период</div></div>' +
-  '</div>';
+  var hdr = trendHeader([
+    {val:nf(last), unit:'кг', lbl:'Последний', color:'var(--txt)'},
+    {val:nf(pr), unit:'кг', lbl:'Рекорд', color:'var(--ylw)'},
+    {val:(diff>0?'+':'')+nf(diff), unit:'кг', lbl:'За период', color:trendClr}
+  ]);
+  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, nf) + '</div>';
+}
+function renderCardioChart(el, name, pd) {
+  var raw = pd.byCardioName[name]||[];
+  if (!raw.length) { el.innerHTML = ''; return; }
+  var byDate = {};
+  raw.forEach(function(d) {
+    if (!byDate[d.ds]) byDate[d.ds] = {ds:d.ds, dist:0, mins:0};
+    byDate[d.ds].dist += d.dist; byDate[d.ds].mins += d.mins;
+  });
+  var data = Object.keys(byDate).sort().map(function(ds){ return byDate[ds]; }).slice(-PROG_EX_N);
+  var n = data.length;
+  var vals = data.map(function(d){ return d.dist; });
+  var dsArr = data.map(function(d){ return d.ds; });
+  var last = data[n-1], best = data.reduce(function(a,b){ return b.dist>a.dist?b:a; });
+  var pace = last.dist>0 ? last.mins/last.dist : 0;
 
-  el.innerHTML = '<div class="chart-box">' + hdr +
-    '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;overflow:visible">' +
-    '<defs><linearGradient id="pgg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e" stop-opacity=".22"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs>' +
-    grid +
-    '<path d="'+fillD+'" fill="url(#pgg)"/>' +
-    '<path d="'+pathD+'" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-    dots + dateLbls +
-    '</svg></div>';
+  var hdr = trendHeader([
+    {val:nf(last.dist), unit:'км', lbl:'Последний', color:'var(--txt)'},
+    {val:nf(best.dist), unit:'км', lbl:'Лучший', color:'var(--ylw)'},
+    {val:fmtPace(pace), unit:'/км', lbl:'Темп', color:'var(--blu)'}
+  ]);
+  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, nf) + '</div>';
+}
+function renderSwimChart(el, name, pd) {
+  var raw = pd.bySwimName[name]||[];
+  if (!raw.length) { el.innerHTML = ''; return; }
+  var byDate = {};
+  raw.forEach(function(d) {
+    if (!byDate[d.ds]) byDate[d.ds] = {ds:d.ds, dist:0, secs:0};
+    byDate[d.ds].dist += d.dist; byDate[d.ds].secs += d.secs;
+  });
+  var data = Object.keys(byDate).sort().map(function(ds){ return byDate[ds]; }).slice(-PROG_EX_N);
+  var n = data.length;
+  var vals = data.map(function(d){ return d.dist; });
+  var dsArr = data.map(function(d){ return d.ds; });
+  var last = data[n-1], best = data.reduce(function(a,b){ return b.dist>a.dist?b:a; });
+  var total = data.reduce(function(a,d){ return a+d.dist; }, 0);
+
+  var hdr = trendHeader([
+    {val:last.dist, unit:'м', lbl:'Последний', color:'var(--txt)'},
+    {val:best.dist, unit:'м', lbl:'Лучший', color:'var(--ylw)'},
+    {val:total, unit:'м', lbl:'Всего', color:'var(--blu)'}
+  ]);
+  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, Math.round) + '</div>';
+}
+function renderStaticChart(el, name, pd) {
+  var raw = pd.byStaticName[name]||[];
+  if (!raw.length) { el.innerHTML = ''; return; }
+  var byDate = {};
+  raw.forEach(function(d){ byDate[d.ds] = (byDate[d.ds]||0) + d.secs; });
+  var dsArr = Object.keys(byDate).sort().slice(-PROG_EX_N);
+  var vals = dsArr.map(function(ds){ return byDate[ds]; });
+  var n = vals.length;
+  var last = vals[n-1], best = Math.max.apply(null, vals), total = vals.reduce(function(a,v){ return a+v; }, 0);
+
+  var hdr = trendHeader([
+    {val:fmtTime(last), unit:'', lbl:'Последний', color:'var(--txt)'},
+    {val:fmtTime(best), unit:'', lbl:'Рекорд', color:'var(--ylw)'},
+    {val:fmtTime(total), unit:'', lbl:'Всего', color:'var(--blu)'}
+  ]);
+  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, function(v){ return fmtTime(Math.round(v)); }) + '</div>';
 }
 
 // ═══════════════════════ PROFILE ═══════════════════════

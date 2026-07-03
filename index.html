@@ -3377,8 +3377,44 @@ function renderProgress() {
     h += '<div id="prog-chart"></div>';
   }
 
+  h += dataBackupBoxHtml();
+
   body.innerHTML = h;
   if (names.length) renderProgChart(names[0]);
+}
+function dataBackupBoxHtml() {
+  return '<div class="chart-box"><div class="chart-title">Данные</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-sm" style="flex:1" onclick="exportData()">⬇️ Экспорт</button>' +
+    '<button class="btn btn-sm" style="flex:1" onclick="document.getElementById(\'import-file-input\').click()">⬆️ Импорт</button>' +
+    '</div>' +
+    '<input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="importDataFile(this)">' +
+    '</div>';
+}
+function exportData() {
+  var blob = new Blob([JSON.stringify(ST)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'gymlog-backup-'+todayStr()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function importDataFile(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data || typeof data.w !== 'object') { uiToast('Некорректный файл'); return; }
+      if (!confirm('Заменить текущие данные данными из файла? Текущий прогресс будет перезаписан.')) return;
+      ST = data;
+      saveST();
+      location.reload();
+    } catch (err) { uiToast('Не удалось прочитать файл'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 function renderProgChart(name) {
   var pd = window._progData || computeProgressData();

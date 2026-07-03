@@ -3427,6 +3427,24 @@ function weeklyBarsHtml(weeks) {
   }).join('');
   return '<svg viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="display:block">'+rects+'</svg>';
 }
+function weekdayPatternHtml(counts) {
+  var labels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  var max = Math.max.apply(null, counts.concat([1]));
+  var n = 7, svgW = 340, barH_max = 60, topPad = 18, botPad = 20;
+  var barW = Math.floor((svgW - (n+1)*7) / n);
+  var svgH = topPad + barH_max + botPad;
+  var rects = counts.map(function(c, i) {
+    var x = 7 + i*(barW+7);
+    var isMax = c > 0 && c === max;
+    var bh = c > 0 ? Math.max(5, Math.round(c/max*barH_max)) : 3;
+    var by = topPad + (barH_max - bh);
+    var fill = isMax ? '#22c55e' : 'rgba(34,197,94,0.22)';
+    return '<rect x="'+x+'" y="'+by+'" width="'+barW+'" height="'+bh+'" rx="5" fill="'+fill+'"/>' +
+      (c > 0 ? '<text x="'+(x+barW/2)+'" y="'+(by-5)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="'+(isMax?'#22c55e':'rgba(255,255,255,.38)')+'">'+c+'</text>' : '') +
+      '<text x="'+(x+barW/2)+'" y="'+(svgH-5)+'" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.3)" font-weight="600">'+labels[i]+'</text>';
+  }).join('');
+  return '<svg viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="display:block">'+rects+'</svg>';
+}
 function chipsHtml(cls, opts, cur, onclick) {
   return '<div style="display:flex;gap:6px;margin-bottom:10px">' + opts.map(function(o) {
     var on = cur === o[0];

@@ -2741,6 +2741,17 @@ function renderCalDetail() {
         (canRepeat ? '<button onclick="repeatWorkout(\''+SEL_DATE+'\','+w.id+')" title="Повторить на другую дату" style="'+icoStyle+'">🔁</button>' : '') +
         '<button onclick="removeCalWorkout(\''+SEL_DATE+'\','+wi+')" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:1px solid rgba(244,63,94,0.25);white-space:nowrap;flex-shrink:0">Удалить</button>' +
         '</div>';
+      var wSets = 0, wVol = 0;
+      (w.exercises||[]).forEach(function(ex){
+        (ex.sets||[]).forEach(function(s){
+          if (!s.done) return;
+          wSets++;
+          if ((s.w||0)>0) wVol += s.w*(s.r||0);
+        });
+      });
+      if (wSets) {
+        h += '<div style="font-size:11.5px;color:var(--mut);margin:-2px 0 6px 2px">'+wSets+' подх.'+(wVol>0?' · '+fmtVol(Math.round(wVol))+' кг':'')+'</div>';
+      }
       (w.exercises||[]).forEach(function(ex){
         var done = ex.sets.filter(function(s){return s.done;}).length;
         var maxW = 0; ex.sets.forEach(function(s){ if((s.w||0)>maxW) maxW=s.w||0; });

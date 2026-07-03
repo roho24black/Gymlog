@@ -1545,6 +1545,13 @@ function uiToast(message) {
   document.body.appendChild(t);
   setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){ if(t.parentNode) t.remove(); },300); }, 2200);
 }
+function uiPrToast(name, w) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.08));color:var(--ylw);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;z-index:9600;max-width:82%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.5)';
+  t.innerHTML = '🔥 Новый рекорд! <span style="color:var(--txt)">'+esc(name)+' · '+nf(w)+' кг</span>';
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){ if(t.parentNode) t.remove(); },300); }, 2800);
+}
 
 function deletePlan(date, wid) {
   uiConfirm('Удалить тренировку?', function(){
@@ -2068,8 +2075,15 @@ function toggleSetDone(ei, si) {
 function recordSet(ei, si) {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
-  wkt.exercises[ei].sets[si].done = true;
+  var ex = wkt.exercises[ei], s = ex.sets[si];
+  var isPR = false;
+  if (!isCardio(ex.name) && !isSwim(ex.name) && !isStatic(ex.name) && (s.w||0) > 0) {
+    var st = getExStats(ex.name);
+    if (st && s.w > st.pr) isPR = true;
+  }
+  s.done = true;
   saveST(); startRest(45); updateVolBar(); renderWorkout();
+  if (isPR) uiPrToast(ex.name, s.w);
 }
 
 function addSet(ei) {

@@ -3539,11 +3539,13 @@ function renderProgress() {
   }
 
   var streak = computeStreak(pd.workoutDays);
+  var bestStreak = computeBestStreak(pd.workoutDays);
+  var streakLbl = (streak===1?'День подряд':streak<5?'Дня подряд':'Дней подряд') + (bestStreak>streak ? ' · рекорд '+bestStreak : '');
   h += '<div class="prog-overview">' +
     statCard(pd.totalWkts, pd.totalWkts===1?'Тренировка':pd.totalWkts<5?'Тренировки':'Тренировок', null, 'var(--acc)') +
     statCard(fmtVol(pd.totalVolAll), 'Общий объём', 'кг', 'var(--ylw)') +
     statCard(pd.totalSets, 'Подходов', null, 'var(--blu)') +
-    statCard(streak, streak===1?'День подряд':streak<5?'Дня подряд':'Дней подряд', null, 'var(--pur)') +
+    statCard(streak, streakLbl, null, 'var(--pur)') +
   '</div>';
 
   h += bwSectionHtml();

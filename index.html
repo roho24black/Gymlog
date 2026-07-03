@@ -3324,10 +3324,11 @@ function renderProgress() {
       var clr = muscleGroupColor(g);
       var lastDs = pd.groupLastDs[g];
       var daysAgo = lastDs ? daysBetween(lastDs, todayStr()) : null;
-      var neglect = (daysAgo != null && daysAgo >= 10) ? '<span style="font-size:10px;font-weight:700;color:var(--red);margin-left:6px">· '+daysAgo+' дн назад</span>' : '';
-      h += '<div class="msplit-row"><div class="msplit-lbl" style="color:'+clr+'">'+g+neglect+'</div>' +
+      var neglect = (daysAgo != null && daysAgo >= 10)
+        ? '<div style="font-size:10px;font-weight:700;color:var(--red);margin:1px 0 8px 86px">'+daysAgo+' дн без тренировки</div>' : '';
+      h += '<div class="msplit-row"><div class="msplit-lbl" style="color:'+clr+'">'+g+'</div>' +
         '<div class="msplit-bar-wrap"><div class="msplit-bar-fill" style="width:'+pct+'%;background:'+clr+'"></div></div>' +
-        '<div class="msplit-pct">'+pct+'%</div></div>';
+        '<div class="msplit-pct">'+pct+'%</div></div>' + neglect;
     });
     h += '</div>';
   }

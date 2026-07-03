@@ -3297,6 +3297,7 @@ function renderProgress() {
 
   if (!pd.totalWkts) {
     h += '<div class="empty"><div class="empty-ico">📈</div><div class="empty-msg">Данные появятся после тренировок</div></div>';
+    h += dataBackupBoxHtml();
     body.innerHTML = h;
     return;
   }

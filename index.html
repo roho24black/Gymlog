@@ -3121,6 +3121,25 @@ function computePRList(byExName) {
   list.sort(function(a,b){ return b.ds.localeCompare(a.ds); });
   return list;
 }
+function countRecentPRs(byExName, cutoffDs) {
+  var count = 0;
+  Object.keys(byExName).forEach(function(name) {
+    var list = byExName[name].slice().sort(function(a,b){ return a.ds.localeCompare(b.ds); });
+    var best = 0;
+    list.forEach(function(s) {
+      var e = e1RM(s.w, s.r);
+      if (e > best) {
+        if (s.ds >= cutoffDs) count++;
+        best = e;
+      }
+    });
+  });
+  return count;
+}
+function daysBetween(ds1, ds2) {
+  var d1 = new Date(ds1+'T12:00:00'), d2 = new Date(ds2+'T12:00:00');
+  return Math.round((d2-d1)/86400000);
+}
 function fmtVol(kg) {
   kg = Math.round(kg);
   return kg >= 1000 ? (Math.round(kg/100)/10).toString().replace('.',',')+'k' : kg;

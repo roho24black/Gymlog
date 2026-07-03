@@ -1434,6 +1434,21 @@ function shareWorkout(date, wid) {
     uiShareLink(url);
   }
 }
+function savePlanAsTemplate() {
+  if (!PLAN_WKT) return;
+  var wkt = getWkt(PLAN_WKT.date, PLAN_WKT.wid);
+  if (!wkt || !(wkt.exercises||[]).length) { uiToast('Добавь упражнения'); return; }
+  var exs = wkt.exercises.map(function(ex){
+    var s0 = (ex.sets||[])[0] || {};
+    var o = {name:ex.name, sets:(ex.sets||[]).length||1, reps:(s0.r||s0.mins||s0.dist||s0.secs||12), weight:s0.w||0};
+    if (ex.style) o.style = ex.style;
+    return o;
+  });
+  EDITOR_TPL = {name:wkt.name||'', loc:wkt.loc||'gym', exs:exs};
+  EDITOR_IDX = -1;
+  goTab('templates');
+  openEditor();
+}
 function uiShareLink(url) {
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:center;justify-content:center;padding:24px';

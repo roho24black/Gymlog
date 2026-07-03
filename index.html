@@ -2870,6 +2870,7 @@ function renderTemplates() {
           (recScore > 0 ? '<span class="tpl-badge" style="background:rgba(34,197,94,0.12);color:var(--acc)">⚡ Сегодня</span>' : '') +
         '</div>' +
       '</div>' +
+      '<button onclick="event.stopPropagation();dupBuiltIn(\''+tpl.id+'\')" title="Дублировать в «Мои шаблоны»" style="background:none;border:none;color:var(--sub);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0">⧉</button>' +
       '<svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="var(--dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
       '</div>';
   });

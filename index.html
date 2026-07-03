@@ -2030,7 +2030,11 @@ function renderWorkout() {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>' +
         'Записать подход · '+target+'</button>';
     }
-    h += '<button class="rm-ex-btn" onclick="removeEx('+ei+')">Удалить упражнение</button>';
+    h += '<div class="ex-move-row">' +
+      '<button class="ex-move-btn" onclick="moveEx('+ei+',-1)"'+(ei===0?' disabled':'')+'>↑</button>' +
+      '<button class="ex-move-btn" onclick="moveEx('+ei+',1)"'+(ei===exs.length-1?' disabled':'')+'>↓</button>' +
+      '<button class="rm-ex-btn" style="flex:1;margin-top:0" onclick="removeEx('+ei+')">Удалить упражнение</button>' +
+      '</div>';
     h += '</div>';
     h += '</div>';
   });

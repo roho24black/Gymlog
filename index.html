@@ -2156,7 +2156,7 @@ function removeEx(ei) {
     saveST(); renderWorkout();
   };
   var hasDone = ex && (ex.sets||[]).some(function(s){ return s.done; });
-  if (hasDone) uiConfirm('Удалить «'+esc(exTitle(ex))+'»? Записанные подходы будут потеряны.', doRemove);
+  if (hasDone) uiConfirm('Удалить «'+exTitle(ex)+'»? Записанные подходы будут потеряны.', doRemove);
   else doRemove();
 }
 function moveEx(ei, dir) {

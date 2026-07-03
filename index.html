@@ -3564,32 +3564,24 @@ function renderStaticChart(el, name, pd) {
 
 // ═══════════════════════ MY MOUNTAIN ROUTES ═══════════════════════
 var MTN_ROUTES = [
-  {id:'low', name:'LOW', label:'Низкий', maxGrade:20, color:'#22c55e',
+  {id:'low', name:'LOW', label:'Низкий', maxGrade:19, color:'#22c55e',
    stages:[
-     {n:'Разгон',           km:0.30, g:5,  t:3},
-     {n:'Начало подъёма',   km:0.45, g:12, t:5},
-     {n:'Пик HIGH',         km:0.50, g:20, t:6},
-     {n:'Спуск',            km:0.40, g:10, t:4},
-     {n:'Долина LOW',       km:0.40, g:7,  t:4},
-     {n:'Горки MIDDLE',     km:0.95, g:12, t:9}
+     {n:'Разгон',   km:1.644, g:15, t:16.4},
+     {n:'Пик LOW',  km:0.262, g:19, t:2.8}
    ]},
   {id:'middle', name:'MIDDLE', label:'Средний', maxGrade:35, color:'#f59e0b',
    stages:[
-     {n:'Разгон',           km:0.30, g:8,  t:3},
-     {n:'Начало подъёма',   km:0.45, g:22, t:5},
-     {n:'Пик HIGH',         km:0.50, g:35, t:7},
-     {n:'Спуск',            km:0.40, g:18, t:4},
-     {n:'Долина LOW',       km:0.35, g:10, t:4},
-     {n:'Горки MIDDLE',     km:1.00, g:25, t:11}
+     {n:'Подъём к пику',   km:1.229, g:35, t:8.2},
+     {n:'Спуск',           km:0.824, g:20, t:7.7},
+     {n:'Горка',           km:0.267, g:26, t:2.8},
+     {n:'Провал',          km:0.073, g:15, t:0.7},
+     {n:'Горка 2',         km:0.207, g:28, t:1.5},
+     {n:'Спуск к финишу',  km:0.349, g:23, t:2.6}
    ]},
   {id:'high', name:'HIGH', label:'Высокий', maxGrade:50, color:'#f43f5e',
    stages:[
-     {n:'Разгон',           km:0.25, g:10, t:2},
-     {n:'Подъём к вершине', km:0.50, g:35, t:6},
-     {n:'Пик HIGH',         km:0.45, g:50, t:7},
-     {n:'Спуск',            km:0.45, g:25, t:5},
-     {n:'Долина LOW',       km:0.35, g:10, t:4},
-     {n:'Горки MIDDLE',     km:1.00, g:30, t:11}
+     {n:'Подъём к вершине', km:1.175, g:40, t:8.8},
+     {n:'Пик HIGH',         km:0.141, g:50, t:1.1}
    ]}
 ];
 var MTN_STATE = null; // {routeId, checked:[bool...]}

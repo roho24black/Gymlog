@@ -2769,11 +2769,14 @@ function dbPick(name) {
   DB_CB(name);
 }
 function dbRender() {
-  var q = (document.getElementById('db-search').value||'').toLowerCase().trim();
+  var qRaw = (document.getElementById('db-search').value||'').trim();
+  var q = qRaw.toLowerCase();
   var list = document.getElementById('db-list');
   var html = '';
+  var exactMatch = false;
 
   function renderEx(ex) {
+    if (ex.name.toLowerCase() === q) exactMatch = true;
     return '<div class="db-item" onclick="dbPick(\''+ex.name.replace(/'/g,"\\'")+'\')">'+
       '<div class="db-item-name">'+esc(ex.name)+'</div>'+
       '<span style="font-size:16px">'+ex.icon+'</span></div>';
@@ -2800,7 +2803,34 @@ function dbRender() {
     });
     if (!html) html = '<div class="empty" style="padding:20px">Ничего не найдено</div>';
   }
+  if (qRaw && !exactMatch) {
+    html += '<div class="db-item" style="opacity:.85" onclick="showAddCustomEx(\''+qRaw.replace(/'/g,"\\'")+'\')">'+
+      '<div class="db-item-name">+ Добавить «'+esc(qRaw)+'» как новое</div>'+
+      '<span style="font-size:16px">➕</span></div>';
+  }
   list.innerHTML = html;
+}
+function showAddCustomEx(name) {
+  var ov = document.createElement('div');
+  ov.id = 'custom-ex-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9700;display:flex;align-items:center;justify-content:center;padding:24px';
+  var chips = DB_MUSCLE_FILTERS.map(function(f){
+    return '<button onclick="addCustomEx(\''+name.replace(/'/g,"\\'")+'\',\''+f.key+'\')" style="padding:10px 14px;border-radius:12px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">'+f.icon+' '+f.label+'</button>';
+  }).join('');
+  ov.innerHTML = '<div style="background:var(--card);border-radius:18px;max-width:340px;width:100%;padding:20px;box-sizing:border-box;border:1px solid var(--brd2)">' +
+    '<div style="font-size:15px;font-weight:700;margin-bottom:4px">Добавить «'+esc(name)+'»</div>' +
+    '<div style="font-size:12.5px;color:var(--sub);margin-bottom:14px">Выбери группу</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">'+chips+'</div>' +
+    '<button onclick="document.getElementById(\'custom-ex-ov\').remove()" style="width:100%;height:42px;border-radius:12px;background:none;border:1px solid var(--brd2);color:var(--sub);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:14px">Отмена</button>' +
+    '</div>';
+  document.body.appendChild(ov);
+}
+function addCustomEx(name, groupKey) {
+  if (!ST.customEx) ST.customEx = [];
+  if (!ST.customEx.some(function(e){ return e.name===name; })) ST.customEx.push({name:name, group:groupKey});
+  saveST();
+  var ov = document.getElementById('custom-ex-ov'); if (ov) ov.remove();
+  dbPick(name);
 }
 
 // ═══════════════════════ CALENDAR ═══════════════════════

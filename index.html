@@ -921,7 +921,7 @@ function bestE1RM(name) {
       (wkt.exercises || []).forEach(function(ex) {
         if (ex.name !== name) return;
         (ex.sets || []).forEach(function(s) {
-          if (!s.done) return;
+          if (!s.done || s.warmup) return;
           var e = e1RM(s.w || 0, s.r || 0);
           if (e > best) best = e;
         });

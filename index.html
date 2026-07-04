@@ -2836,6 +2836,12 @@ function addCustomEx(name, groupKey) {
   var ov = document.getElementById('custom-ex-ov'); if (ov) ov.remove();
   dbPick(name);
 }
+function delCustomEx(name) {
+  uiConfirm('Удалить своё упражнение «'+name+'» из базы? Уже записанная история с ним останется.', function(){
+    ST.customEx = (ST.customEx||[]).filter(function(e){ return e.name!==name; });
+    saveST(); dbRender();
+  });
+}
 
 // ═══════════════════════ CALENDAR ═══════════════════════
 function renderCal() {

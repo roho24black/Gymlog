@@ -1065,6 +1065,12 @@ function clearRecovery() {
   if (RCV_TIMER_ID) { clearInterval(RCV_TIMER_ID); RCV_TIMER_ID = null; }
   renderWorkout();
 }
+function dismissRecoveryGroup(g) {
+  if (!ST.recovery || !ST.recovery.groups) return;
+  delete ST.recovery.groups[g];
+  if (!Object.keys(ST.recovery.groups).length) { clearRecovery(); return; }
+  saveST(); renderWorkout();
+}
 
 function startRecoveryTimer() {
   if (RCV_TIMER_ID) return;

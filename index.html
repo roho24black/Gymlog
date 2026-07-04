@@ -2755,6 +2755,9 @@ function dbExsForGroup(groupKey) {
     var exs = sec.groups[dbGroup];
     if (exs) exs.forEach(function(name){ results.push({name:name, icon:sec.icon}); });
   });
+  (ST.customEx||[]).forEach(function(e){
+    if (e.group === groupKey) results.push({name:e.name, icon:'⭐'});
+  });
   return results;
 }
 

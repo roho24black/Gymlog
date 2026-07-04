@@ -2072,7 +2072,7 @@ function renderWorkout() {
     var color = exTileColor(ex.name);
     var group = exGroup(ex.name);
     var exVol = 0;
-    ex.sets.forEach(function(s){ if(s.done) exVol += (s.w||0)*(s.r||1); });
+    ex.sets.forEach(function(s){ if(s.done && !s.warmup) exVol += (s.w||0)*(s.r||1); });
 
     h += '<div class="ex-card">';
     h += '<div class="ex-card-hd">' +

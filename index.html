@@ -1754,6 +1754,10 @@ function renderPlanView(wkt) {
     '<button class="plan-loc-btn'+(wkt.loc==='pool'?' on-pool':'')+'" onclick="setPlanLoc(\'pool\')">🌊 Бассейн</button>' +
   '</div>';
 
+  h += '<div style="padding:8px 14px 2px">' +
+    '<input type="text" class="wkt-note-input" value="'+esc(wkt.note||'')+'" placeholder="+ заметка к тренировке" oninput="updateWktNote(this.value)" />' +
+    '</div>';
+
   var exs = wkt.exercises || [];
 
   // Empty state

@@ -3361,8 +3361,9 @@ function computeProgressData() {
             byCardioName[ex.name].push({ds:ds, dist:s.dist||0, mins:s.mins||0});
           } else if (swim) {
             totalSwimM += s.dist||0;
-            if (!bySwimName[ex.name]) bySwimName[ex.name] = [];
-            bySwimName[ex.name].push({ds:ds, dist:s.dist||0, secs:s.secs||0});
+            var swimKey = (isStyleDrill(ex.name) && ex.style) ? ex.name+' · '+ex.style : ex.name;
+            if (!bySwimName[swimKey]) bySwimName[swimKey] = [];
+            bySwimName[swimKey].push({ds:ds, dist:s.dist||0, secs:s.secs||0});
           } else if (stat) {
             totalStaticSec += s.secs||0;
             if (!byStaticName[ex.name]) byStaticName[ex.name] = [];

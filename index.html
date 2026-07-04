@@ -2165,6 +2165,13 @@ function toggleSetDone(ei, si) {
   wkt.exercises[ei].sets[si].done = !wkt.exercises[ei].sets[si].done;
   saveST(); updateVolBar(); renderWorkout();
 }
+function toggleWarmup(ei, si) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var s = wkt.exercises[ei].sets[si];
+  s.warmup = !s.warmup;
+  saveST(); updateVolBar(); renderWorkout();
+}
 
 function recordSet(ei, si) {
   if (!ACTIVE_WKT) return;

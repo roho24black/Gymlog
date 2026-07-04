@@ -1894,6 +1894,19 @@ function startWorkout(fromTpl) {
   goTab('workout');
 }
 
+function cancelWorkout() {
+  if (!ACTIVE_WKT) return;
+  var ref = ACTIVE_WKT;
+  if (ST.w[ref.date]) {
+    ST.w[ref.date].workouts = (ST.w[ref.date].workouts||[]).filter(function(w){ return w.id !== ref.wid; });
+    if (!ST.w[ref.date].workouts.length && ST.w[ref.date].type !== 'rest') delete ST.w[ref.date];
+  }
+  ACTIVE_WKT = null; WKT_START = null;
+  if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
+  restStop();
+  saveST();
+  renderTopbar(); renderWorkout();
+}
 function finishWorkout() {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);

@@ -3538,7 +3538,7 @@ function progSetCardioMode(mode) {
 function exSelectOptions(names) {
   var byGroup = {};
   names.forEach(function(n) {
-    var g = exGroup(n) || 'Другое';
+    var g = exGroup(n.split(' · ')[0]) || 'Другое';
     if (!byGroup[g]) byGroup[g] = [];
     byGroup[g].push(n);
   });

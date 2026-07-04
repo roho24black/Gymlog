@@ -1899,6 +1899,7 @@ function finishWorkout() {
   var summary = wkt ? buildWorkoutSummary(wkt) : null;
   ACTIVE_WKT = null; WKT_START = null;
   if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
+  restStop();
   renderTopbar(); renderWorkout();
   if (summary && summary.sets > 0) showWorkoutSummary(summary);
 }

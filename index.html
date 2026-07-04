@@ -691,11 +691,18 @@ function makeExFromEntry(e) {
 }
 var STATIC_EX  = ['Планка','Планка на вытянутых руках','Боковая планка (левая)','Боковая планка (правая)','Планка с подъёмом руки','Планка с подъёмом ноги','Стул у стены','Изометрический выпад — удержание','Удержание в нижней точке приседа','Вакуум','Полое тело (hollow hold)','Лодочка — удержание','Супермен — удержание','Мёртвый жук','Птица-собака','Удержание угла (L-sit)','Удержание ног (подъём лёжа)','Мёртвый вис на турнике','Уголок в висе — удержание','Удержание в верхней точке подтягивания','Удержание в нижней точке отжимания','Фермерское удержание','Ягодичный мост — удержание','Стойка на руках у стены — удержание'];
 
-function isCardio(name) { return CARDIO_EX.indexOf(name) !== -1; }
-function isSwim(name)   { return SWIM_EX.indexOf(name) !== -1; }
-function isStatic(name) { return STATIC_EX.indexOf(name) !== -1; }
+function customExGroup(name) {
+  if (!ST.customEx) return null;
+  var e = ST.customEx.filter(function(x){ return x.name===name; })[0];
+  return e ? e.group : null;
+}
+function isCardio(name) { return CARDIO_EX.indexOf(name) !== -1 || customExGroup(name)==='Кардио'; }
+function isSwim(name)   { return SWIM_EX.indexOf(name) !== -1 || customExGroup(name)==='Плавание'; }
+function isStatic(name) { return STATIC_EX.indexOf(name) !== -1 || customExGroup(name)==='Статика'; }
 
 function exMeta(name) {
+  var cg = customExGroup(name);
+  if (cg) return {group: cg==='Плавание'?'Стили':cg, color:'#71717a', icon:'⭐', key:'custom'};
   for (var s = 0; s < DB_SECTIONS.length; s++) {
     var sec = DB_SECTIONS[s];
     for (var g in sec.groups) {

@@ -3296,7 +3296,7 @@ function computeProgressData() {
         var grp = exGroup(ex.name);
         var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
         (ex.sets||[]).forEach(function(s) {
-          if (!s.done) return;
+          if (!s.done || s.warmup) return;
           totalSets++;
           if (grp) {
             if (ds >= cutoff30) groupSets30[grp] = (groupSets30[grp]||0)+1;

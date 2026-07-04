@@ -868,7 +868,10 @@ function renderTopbar() {
   var r = document.getElementById('topbar-right');
   if (CUR_TAB === 'workout') {
     if (ACTIVE_WKT) {
+      var awkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+      var hasProgress = awkt && (awkt.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); });
       r.innerHTML = '<span class="wkt-timer" id="wkt-elapsed">0:00</span>' +
+        (!hasProgress ? '<button class="btn btn-sm" style="color:var(--sub)" onclick="cancelWorkout()">Отменить</button>' : '') +
         '<button class="btn btn-red btn-sm" onclick="finishWorkout()">Завершить</button>';
     } else if (PLAN_WKT) {
       r.innerHTML = '';

@@ -890,7 +890,7 @@ function getExStats(name) {
     day.workouts.forEach(function(wkt) {
       (wkt.exercises || []).forEach(function(ex) {
         if (ex.name !== name) return;
-        var done = (ex.sets || []).filter(function(s){ return s.done && (s.w||0) > 0; });
+        var done = (ex.sets || []).filter(function(s){ return s.done && !s.warmup && (s.w||0) > 0; });
         if (!done.length) return;
         var mx = Math.max.apply(null, done.map(function(s){ return s.w||0; }));
         if (mx > pr) pr = mx;

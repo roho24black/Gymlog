@@ -1150,6 +1150,7 @@ function renderRecoveryCard() {
         ? '<span style="color:var(--acc);font-weight:700">✓ Готов</span>'
         : fmtRem(gRem)
       )+'</div>' +
+      (done ? '<div></div>' : '<button onclick="dismissRecoveryGroup(\''+g+'\')" title="Тренировать эту группу сейчас" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:2px;line-height:1">✕</button>') +
     '</div>';
   });
 

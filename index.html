@@ -1936,7 +1936,7 @@ function updateVolBar() {
   if (!wkt) return;
   var kg = 0, sets = 0;
   (wkt.exercises||[]).forEach(function(ex) {
-    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; kg += (s.w||0)*(s.r||1); } });
+    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; if(!s.warmup) kg += (s.w||0)*(s.r||1); } });
   });
   var vkg = document.getElementById('vol-kg'); if (vkg) vkg.textContent = kg;
   var vs = document.getElementById('vol-sets'); if (vs) vs.textContent = sets;
@@ -2029,7 +2029,7 @@ function renderWorkout() {
   var elapsed = WKT_START ? fmtTime(Math.floor((Date.now()-WKT_START)/1000)) : '0:00';
   var kg = 0, sets = 0;
   (wkt.exercises||[]).forEach(function(ex) {
-    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; kg += (s.w||0)*(s.r||1); } });
+    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; if(!s.warmup) kg += (s.w||0)*(s.r||1); } });
   });
 
   var h = '<div class="wkt-head">' +

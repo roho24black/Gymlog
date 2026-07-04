@@ -2170,7 +2170,7 @@ function recordSet(ei, si) {
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   var ex = wkt.exercises[ei], s = ex.sets[si];
   var isPR = false;
-  if (!isCardio(ex.name) && !isSwim(ex.name) && !isStatic(ex.name) && (s.w||0) > 0) {
+  if (!isCardio(ex.name) && !isSwim(ex.name) && !isStatic(ex.name) && !s.warmup && (s.w||0) > 0) {
     var st = getExStats(ex.name);
     if (st && s.w > st.pr) isPR = true;
   }

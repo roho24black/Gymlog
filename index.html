@@ -1883,7 +1883,7 @@ function buildWorkoutSummary(wkt) {
     (ex.sets||[]).forEach(function(s){
       if (!s.done) return;
       sets++;
-      if ((s.w||0) > 0) {
+      if ((s.w||0) > 0 && !s.warmup) {
         vol += s.w*(s.r||0);
         if (isStrength && (!bestSet || s.w > bestSet.w)) bestSet = s;
       }

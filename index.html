@@ -1253,7 +1253,7 @@ function buildRecBlock() {
   h += '</div></div>';
   return h;
 }
-function getLastDoneSet(name) {
+function getLastDoneSet(name, style) {
   var today = todayStr(), lastDate = null, last = null;
   Object.keys(ST.w).sort().forEach(function(ds) {
     if (ds === today) return;
@@ -1262,6 +1262,7 @@ function getLastDoneSet(name) {
     day.workouts.forEach(function(wkt) {
       (wkt.exercises||[]).forEach(function(ex){
         if (ex.name !== name) return;
+        if (style && ex.style !== style) return;
         var done = (ex.sets||[]).filter(function(s){ return s.done; });
         if (!done.length) return;
         if (!lastDate || ds > lastDate) { lastDate = ds; last = done[done.length-1]; }

@@ -3925,6 +3925,12 @@ function renderProgCardio(pd) {
       statCard(Math.round(pd.totalCardioMins), 'Время', 'мин', 'var(--acc)') +
     '</div></div>';
   }
+  if (pd.totalStairFloors > 0) {
+    hasAny = true;
+    h += '<div class="chart-box"><div class="chart-title">Лестничный тренажёр</div><div style="display:flex;gap:10px">' +
+      statCard(Math.round(pd.totalStairFloors), 'Этажей', null, 'var(--blu)') +
+    '</div></div>';
+  }
   if (pd.totalSwimM > 0) {
     hasAny = true;
     h += '<div class="chart-box"><div class="chart-title">Бассейн</div><div style="display:flex;gap:10px">' +

@@ -3418,6 +3418,7 @@ function computeProgressData() {
   var totalWkts = 0, totalSets = 0, totalVolAll = 0;
   var totalCardioKm = 0, totalCardioMins = 0, totalSwimM = 0, totalStaticSec = 0;
   var totalDurationMs = 0, durationCount = 0;
+  var maxWorkoutVol = 0;
   var cutoff30 = dateOffset(-30);
   Object.keys(ST.w).sort().forEach(function(ds) {
     var day = ST.w[ds];
@@ -3432,6 +3433,7 @@ function computeProgressData() {
         totalDurationMs += (w.endTime - w.startTime);
         durationCount++;
       }
+      var wVol = 0;
       (w.exercises||[]).forEach(function(ex) {
         var grp = exGroup(ex.name);
         var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
@@ -3458,17 +3460,19 @@ function computeProgressData() {
           } else if ((s.w||0) > 0) {
             var vol = s.w * (s.r||0);
             totalVolAll += vol;
+            wVol += vol;
             dailyVol[ds] = (dailyVol[ds]||0) + vol;
             if (!byExName[ex.name]) byExName[ex.name] = [];
             byExName[ex.name].push({ds:ds, w:s.w, r:s.r||0});
           }
         });
       });
+      if (wVol > maxWorkoutVol) maxWorkoutVol = wVol;
     });
   });
   return {byExName:byExName, byCardioName:byCardioName, bySwimName:bySwimName, byStaticName:byStaticName,
     dailyVol:dailyVol, workoutDays:workoutDays, groupSets30:groupSets30, groupLastDs:groupLastDs,
-    totalWkts:totalWkts, totalSets:totalSets, totalVolAll:totalVolAll,
+    totalWkts:totalWkts, totalSets:totalSets, totalVolAll:totalVolAll, maxWorkoutVol:maxWorkoutVol,
     totalCardioKm:totalCardioKm, totalCardioMins:totalCardioMins, totalSwimM:totalSwimM, totalStaticSec:totalStaticSec,
     totalDurationMs:totalDurationMs, durationCount:durationCount};
 }

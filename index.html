@@ -3501,6 +3501,53 @@ function computeWeekdayPattern(workoutDays) {
   });
   return counts;
 }
+var ACHIEVEMENTS = [
+  {icon:'🥉', label:'10 тренировок',    check:function(pd){ return pd.totalWkts>=10; }},
+  {icon:'🥈', label:'50 тренировок',    check:function(pd){ return pd.totalWkts>=50; }},
+  {icon:'🥇', label:'100 тренировок',   check:function(pd){ return pd.totalWkts>=100; }},
+  {icon:'🔥', label:'7 дней подряд',    check:function(pd){ return computeBestStreak(pd.workoutDays)>=7; }},
+  {icon:'🌋', label:'30 дней подряд',   check:function(pd){ return computeBestStreak(pd.workoutDays)>=30; }},
+  {icon:'💪', label:'Тонна за тренировку', check:function(pd){ return pd.maxWorkoutVol>=1000; }},
+  {icon:'🏆', label:'100 тонн всего',   check:function(pd){ return pd.totalVolAll>=100000; }},
+  {icon:'⭐', label:'10 рекордов',      check:function(pd){ return computePRList(pd.byExName).length>=10; }}
+];
+function achievementsHtml(pd) {
+  return '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +
+    ACHIEVEMENTS.map(function(a){
+      var on = a.check(pd);
+      return '<div style="text-align:center;padding:10px 4px;border-radius:12px;background:'+(on?'rgba(34,197,94,.08)':'rgba(255,255,255,.03)')+';border:1px solid '+(on?'rgba(34,197,94,.3)':'var(--brd2)')+'">' +
+        '<div style="font-size:24px;opacity:'+(on?'1':'.25')+';filter:'+(on?'none':'grayscale(1)')+'">'+a.icon+'</div>' +
+        '<div style="font-size:9.5px;color:'+(on?'var(--txt)':'var(--dim)')+';font-weight:600;margin-top:4px;line-height:1.25">'+a.label+'</div>' +
+        '</div>';
+    }).join('') + '</div>';
+}
+function computeHeatmapDays(workoutDays, dailyVol, weeksBack) {
+  var days = [];
+  var end = new Date(todayStr()+'T12:00:00');
+  var totalDays = weeksBack*7;
+  for (var i = totalDays-1; i >= 0; i--) {
+    var d = new Date(end); d.setDate(d.getDate()-i);
+    var ds = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+    days.push({ds:ds, vol:dailyVol[ds]||0, has:!!workoutDays[ds]});
+  }
+  return days;
+}
+function heatmapHtml(days) {
+  var maxVol = Math.max.apply(null, days.map(function(d){ return d.vol; }).concat([1]));
+  var cols = Math.ceil(days.length/7);
+  var cell = 11, gap = 3;
+  var w = cols*(cell+gap), h = 7*(cell+gap);
+  var colors = ['rgba(255,255,255,.06)', 'rgba(34,197,94,.28)', 'rgba(34,197,94,.5)', 'rgba(34,197,94,.75)', '#22c55e'];
+  var rects = days.map(function(d,i){
+    var col = Math.floor(i/7), row = i%7;
+    var x = col*(cell+gap), y = row*(cell+gap);
+    var level = 0;
+    if (d.has) level = d.vol>0 ? Math.min(4, 1+Math.ceil(d.vol/maxVol*3)) : 1;
+    return '<rect x="'+x+'" y="'+y+'" width="'+cell+'" height="'+cell+'" rx="2.5" fill="'+colors[level]+'"/>';
+  }).join('');
+  return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">' +
+    '<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" style="display:block">'+rects+'</svg></div>';
+}
 function computeWeeklyVolume(dailyVol, weeks) {
   var res = [], curWeekStart = pStartOfWeek(todayStr());
   for (var i = weeks-1; i >= 0; i--) {

@@ -3760,6 +3760,10 @@ function renderProgress() {
     statCard(streak, streakLbl, null, 'var(--pur)') +
   '</div>';
 
+  h += '<div class="chart-box"><div class="chart-title">Достижения</div>' + achievementsHtml(pd) + '</div>';
+
+  h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
+
   h += bwSectionHtml();
 
   if (pd.totalCardioKm > 0 || pd.totalCardioMins > 0) {

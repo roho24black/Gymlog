@@ -1964,7 +1964,7 @@ function buildWorkoutSummary(wkt) {
     }
   });
   var durMs = (wkt.endTime && wkt.startTime) ? wkt.endTime - wkt.startTime : 0;
-  return {sets:sets, vol:vol, prs:prs, durMs:durMs};
+  return {sets:sets, vol:vol, prs:prs, durMs:durMs, name:wkt.name||'Тренировка'};
 }
 function showWorkoutSummary(sum) {
   var ov = document.createElement('div');

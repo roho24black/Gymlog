@@ -716,6 +716,8 @@ function customExGroup(name) {
 function isCardio(name) { return CARDIO_EX.indexOf(name) !== -1 || customExGroup(name)==='Кардио'; }
 function isSwim(name)   { return SWIM_EX.indexOf(name) !== -1 || customExGroup(name)==='Плавание'; }
 function isStatic(name) { return STATIC_EX.indexOf(name) !== -1 || customExGroup(name)==='Статика'; }
+function isStairs(name) { return name === 'Лестничный тренажёр (Stairmaster)'; }
+function distUnit(name) { return isStairs(name) ? 'этаж' : 'км'; }
 
 function exMeta(name) {
   var cg = customExGroup(name);

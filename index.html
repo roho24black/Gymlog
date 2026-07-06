@@ -3536,7 +3536,8 @@ function computeProgressData() {
             if (!groupLastDs[grp] || ds > groupLastDs[grp]) groupLastDs[grp] = ds;
           }
           if (cardio) {
-            totalCardioKm += s.dist||0; totalCardioMins += s.mins||0;
+            if (isStairs(ex.name)) totalStairFloors += s.dist||0; else totalCardioKm += s.dist||0;
+            totalCardioMins += s.mins||0;
             if (!byCardioName[ex.name]) byCardioName[ex.name] = [];
             byCardioName[ex.name].push({ds:ds, dist:s.dist||0, mins:s.mins||0});
           } else if (swim) {

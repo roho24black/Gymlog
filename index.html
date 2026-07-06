@@ -1311,7 +1311,7 @@ function makeEx(name) {
   var last = (cardio||swim||stat) ? getLastDoneSet(name, styleDefault) : null;
   for (var i = 0; i < n; i++) {
     if (swim) sets.push({dist:last?(last.dist||100):100, secs:last?(last.secs||0):0, done:false});
-    else if (cardio) sets.push({w:0, r:0, dist:last?(last.dist||3):3, mins:last?(last.mins||20):20, done:false});
+    else if (cardio) { var dDef = isStairs(name)?10:3; sets.push({w:0, r:0, dist:last?(last.dist||dDef):dDef, mins:last?(last.mins||20):20, done:false}); }
     else if (stat) sets.push({secs:last?(last.secs||60):60, done:false});
     else sets.push({w:w, r:r, done:false});
   }

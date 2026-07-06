@@ -2815,15 +2815,6 @@ function applyInputMode(focusIt) {
     if (disp) disp.style.display = 'block';
   }
 }
-function parseMMSS(str) {
-  str = String(str||'').trim();
-  if (str.indexOf(':') !== -1) {
-    var p = str.split(':');
-    return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0);
-  }
-  var n = parseFloat(str);
-  return isNaN(n) ? 0 : n;
-}
 function shManualInput() {
   var inp = document.getElementById('sh-manual-input');
   var v = parseFloat(inp.value);

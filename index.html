@@ -4101,6 +4101,17 @@ function renderCardioChart(el, name, pd) {
   var n = data.length;
   var dsArr = data.map(function(d){ return d.ds; });
   var last = data[n-1], best = data.reduce(function(a,b){ return b.dist>a.dist?b:a; });
+
+  if (isStairs(name)) {
+    var stairVals = data.map(function(d){ return d.dist; });
+    var stairHdr = trendHeader([
+      {val:Math.round(last.dist), unit:'этаж', lbl:'Последний', color:'var(--txt)'},
+      {val:Math.round(best.dist), unit:'этаж', lbl:'Лучший', color:'var(--ylw)'}
+    ]);
+    el.innerHTML = '<div class="chart-box">' + stairHdr + svgLineChart(stairVals, dsArr, Math.round) + '</div>';
+    return;
+  }
+
   var paceOf = function(d){ return d.dist>0 ? d.mins/d.dist : 0; };
   var bestPace = data.reduce(function(bp,d){ var p=paceOf(d); return (p>0 && (bp===0||p<bp)) ? p : bp; }, 0);
 

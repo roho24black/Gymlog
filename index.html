@@ -2826,9 +2826,13 @@ function parseMMSS(str) {
 }
 function shManualInput() {
   var inp = document.getElementById('sh-manual-input');
-  if (SH_MODE && SH_MODE.field === 'swimtime') { SH_VAL = parseMMSS(inp.value); return; }
   var v = parseFloat(inp.value);
   if (!isNaN(v)) SH_VAL = v;
+}
+function shManualTimeInput() {
+  var mIn = document.getElementById('sh-manual-min'), sIn = document.getElementById('sh-manual-sec');
+  var m = parseInt(mIn.value, 10)||0, s = parseInt(sIn.value, 10)||0;
+  SH_VAL = m*60 + s;
 }
 function drumScroll() {
   var drum = document.getElementById('sh-drum');

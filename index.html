@@ -3955,7 +3955,7 @@ function renderProgCardio(pd) {
   if (pd.totalStaticSec > 0) {
     hasAny = true;
     h += '<div class="chart-box"><div class="chart-title">Статика</div><div style="display:flex;gap:10px">' +
-      statCard(fmtTime(pd.totalStaticSec), 'Общее время', null, 'var(--red)') +
+      statCard(fmtDurLong(pd.totalStaticSec), 'Общее время', null, 'var(--red)') +
     '</div></div>';
   }
 

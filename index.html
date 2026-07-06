@@ -4184,9 +4184,9 @@ function renderStaticChart(el, name, pd) {
   var last = vals[n-1], best = Math.max.apply(null, vals), total = vals.reduce(function(a,v){ return a+v; }, 0);
 
   var hdr = trendHeader([
-    {val:fmtTime(last), unit:'', lbl:'Последний', color:'var(--txt)'},
-    {val:fmtTime(best), unit:'', lbl:'Рекорд', color:'var(--ylw)'},
-    {val:fmtTime(total), unit:'', lbl:'Всего', color:'var(--blu)'}
+    {val:fmtDurLong(last), unit:'', lbl:'Последний', color:'var(--txt)'},
+    {val:fmtDurLong(best), unit:'', lbl:'Рекорд', color:'var(--ylw)'},
+    {val:fmtDurLong(total), unit:'', lbl:'Всего', color:'var(--blu)'}
   ]);
   el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, function(v){ return fmtTime(Math.round(v)); }) + '</div>';
 }

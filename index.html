@@ -1985,9 +1985,14 @@ function showWorkoutSummary(sum) {
       '<div style="flex:1;background:var(--card2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--blu)">'+sum.sets+'</div><div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin-top:2px">Подходов</div></div>' +
     '</div>' +
     prsHtml +
-    '<button onclick="document.getElementById(\'wkt-summary-ov\').remove()" style="width:100%;height:48px;border-radius:14px;background:var(--acc);border:none;color:#0a0a0a;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:18px">Готово</button>' +
+    '<button id="wkt-share-card-btn" style="width:100%;height:46px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:14px">📸 Поделиться карточкой</button>' +
+    '<button onclick="document.getElementById(\'wkt-summary-ov\').remove()" style="width:100%;height:48px;border-radius:14px;background:var(--acc);border:none;color:#0a0a0a;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:10px">Готово</button>' +
     '</div>';
   document.body.appendChild(ov);
+  var shareBtn = document.getElementById('wkt-share-card-btn');
+  if (shareBtn) shareBtn.onclick = function(){ shareWorkoutCardImg(sum); };
+  fireConfetti();
+  if (navigator.vibrate) navigator.vibrate(sum.prs.length ? [25,40,25,40,25] : [20]);
 }
 
 function tickWktTimer() {

@@ -2264,6 +2264,7 @@ function recordSet(ei, si) {
     if (st && s.w > st.pr) isPR = true;
   }
   s.done = true;
+  if (navigator.vibrate) navigator.vibrate(12);
   saveST(); startRest(45); updateVolBar(); renderWorkout();
   if (isPR) uiPrToast(ex.name, s.w);
 }

@@ -1620,11 +1620,31 @@ function uiToast(message) {
   document.body.appendChild(t);
   setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){ if(t.parentNode) t.remove(); },300); }, 2200);
 }
+function fireConfetti() {
+  var colors = ['#22c55e','#fbbf24','#38bdf8','#f43f5e','#a78bfa'];
+  var n = 26;
+  for (var i = 0; i < n; i++) {
+    var p = document.createElement('div');
+    var size = 6 + Math.random()*6;
+    var left = Math.random()*100;
+    p.className = 'confetti-piece';
+    p.style.left = left+'vw';
+    p.style.width = size+'px';
+    p.style.height = (size*0.4)+'px';
+    p.style.background = colors[i%colors.length];
+    p.style.animationDelay = (Math.random()*0.25)+'s';
+    p.style.animationDuration = (1.1+Math.random()*0.6)+'s';
+    document.body.appendChild(p);
+    (function(el){ setTimeout(function(){ if (el.parentNode) el.remove(); }, 2200); })(p);
+  }
+}
 function uiPrToast(name, w) {
   var t = document.createElement('div');
   t.style.cssText = 'position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.08));color:var(--ylw);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;z-index:9600;max-width:82%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.5)';
   t.innerHTML = '🔥 Новый рекорд! <span style="color:var(--txt)">'+esc(name)+' · '+nf(w)+' кг</span>';
   document.body.appendChild(t);
+  fireConfetti();
+  if (navigator.vibrate) navigator.vibrate([25,40,25]);
   setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){ if(t.parentNode) t.remove(); },300); }, 2800);
 }
 

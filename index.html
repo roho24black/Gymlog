@@ -2086,6 +2086,13 @@ function tickWktTimer() {
   updateVolBar();
 }
 function fmtTime(sec) { return Math.floor(sec/60)+':'+pad(sec%60); }
+function fmtDurLong(sec) {
+  sec = Math.max(0, Math.round(sec||0));
+  var h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  if (h > 0) return h+'ч '+m+'мин';
+  if (m > 0) return m+'мин '+s+'с';
+  return s+'с';
+}
 
 function updateVolBar() {
   if (!ACTIVE_WKT) return;

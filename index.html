@@ -3597,11 +3597,19 @@ var ACHIEVEMENTS = [
   {icon:'🥉', label:'10 тренировок',    check:function(pd){ return pd.totalWkts>=10; }},
   {icon:'🥈', label:'50 тренировок',    check:function(pd){ return pd.totalWkts>=50; }},
   {icon:'🥇', label:'100 тренировок',   check:function(pd){ return pd.totalWkts>=100; }},
+  {icon:'👑', label:'200 тренировок',   check:function(pd){ return pd.totalWkts>=200; }},
   {icon:'🔥', label:'7 дней подряд',    check:function(pd){ return computeBestStreak(pd.workoutDays)>=7; }},
   {icon:'🌋', label:'30 дней подряд',   check:function(pd){ return computeBestStreak(pd.workoutDays)>=30; }},
   {icon:'💪', label:'Тонна за тренировку', check:function(pd){ return pd.maxWorkoutVol>=1000; }},
   {icon:'🏆', label:'100 тонн всего',   check:function(pd){ return pd.totalVolAll>=100000; }},
-  {icon:'⭐', label:'10 рекордов',      check:function(pd){ return computePRList(pd.byExName).length>=10; }}
+  {icon:'⭐', label:'10 рекордов',      check:function(pd){ return computePRList(pd.byExName).length>=10; }},
+  {icon:'🎯', label:'500 подходов',     check:function(pd){ return pd.totalSets>=500; }},
+  {icon:'🏃', label:'50 км кардио',     check:function(pd){ return pd.totalCardioKm>=50; }},
+  {icon:'🏊', label:'5 км в бассейне',  check:function(pd){ return pd.totalSwimM>=5000; }},
+  {icon:'🪜', label:'500 этажей',       check:function(pd){ return pd.totalStairFloors>=500; }},
+  {icon:'🧘', label:'30 мин статики',   check:function(pd){ return pd.totalStaticSec>=1800; }},
+  {icon:'⚖️', label:'10 записей веса', check:function(pd){ return Object.keys(ST.bw||{}).length>=10; }},
+  {icon:'🛠️', label:'Своё упражнение', check:function(pd){ return (ST.customEx||[]).length>=1; }}
 ];
 function achievementsHtml(pd) {
   return '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +

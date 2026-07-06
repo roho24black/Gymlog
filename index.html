@@ -2241,7 +2241,9 @@ function toggleEx(ei) { OPEN_EX[ei] = !OPEN_EX[ei]; renderWorkout(); }
 function toggleSetDone(ei, si) {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
-  wkt.exercises[ei].sets[si].done = !wkt.exercises[ei].sets[si].done;
+  var s = wkt.exercises[ei].sets[si];
+  s.done = !s.done;
+  if (s.done && navigator.vibrate) navigator.vibrate(12);
   saveST(); updateVolBar(); renderWorkout();
 }
 function toggleWarmup(ei, si) {

@@ -2784,27 +2784,34 @@ function applyInputMode(focusIt) {
   var bd = document.getElementById('sh-mode-drum'), bm = document.getElementById('sh-mode-manual');
   if (bd) bd.className = manual ? '' : 'on';
   if (bm) bm.className = manual ? 'on' : '';
-  var dw = document.getElementById('sh-drum-wrap'), mw = document.getElementById('sh-manual-wrap'), disp = document.getElementById('sh-val-display');
+  var dw = document.getElementById('sh-drum-wrap'), mw = document.getElementById('sh-manual-wrap'), mtw = document.getElementById('sh-manual-time-wrap'), disp = document.getElementById('sh-val-display');
   if (manual) {
     if (dw) dw.style.display = 'none';
-    if (mw) mw.style.display = 'flex';
     if (disp) disp.style.display = 'none';
-    var inp = document.getElementById('sh-manual-input');
-    var un = document.getElementById('sh-manual-unit');
-    if (inp) {
-      if (isTime) {
-        inp.type = 'text'; inp.setAttribute('inputmode','numeric'); inp.placeholder = 'м:сс';
-        inp.value = fmtTime(Math.max(0, Math.round(SH_VAL)));
-        if (un) un.textContent = 'мин:сек';
-      } else {
+    if (isTime) {
+      if (mw) mw.style.display = 'none';
+      if (mtw) mtw.style.display = 'flex';
+      var mIn = document.getElementById('sh-manual-min'), sIn = document.getElementById('sh-manual-sec');
+      if (mIn && sIn) {
+        var totalSec = Math.max(0, Math.round(SH_VAL));
+        mIn.value = Math.floor(totalSec/60);
+        sIn.value = totalSec%60;
+        if (focusIt) setTimeout(function(){ mIn.focus(); mIn.select(); }, 60);
+      }
+    } else {
+      if (mw) mw.style.display = 'flex';
+      if (mtw) mtw.style.display = 'none';
+      var inp = document.getElementById('sh-manual-input');
+      if (inp) {
         inp.type = 'number'; inp.setAttribute('inputmode','decimal'); inp.step = SH_STEP || 1;
         inp.value = Math.round(SH_VAL*100)/100;
+        if (focusIt) setTimeout(function(){ inp.focus(); inp.select(); }, 60);
       }
-      if (focusIt) setTimeout(function(){ inp.focus(); inp.select(); }, 60);
     }
   } else {
     if (dw) dw.style.display = 'block';
     if (mw) mw.style.display = 'none';
+    if (mtw) mtw.style.display = 'none';
     if (disp) disp.style.display = 'block';
   }
 }

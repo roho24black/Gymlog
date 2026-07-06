@@ -4188,7 +4188,7 @@ function renderStaticChart(el, name, pd) {
     {val:fmtDurLong(best), unit:'', lbl:'Рекорд', color:'var(--ylw)'},
     {val:fmtDurLong(total), unit:'', lbl:'Всего', color:'var(--blu)'}
   ]);
-  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, function(v){ return fmtTime(Math.round(v)); }) + '</div>';
+  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, function(v){ return fmtDurLong(v); }) + '</div>';
 }
 
 // ═══════════════════════ PROFILE ═══════════════════════

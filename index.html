@@ -571,6 +571,12 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
       <input class="sh-manual-input" id="sh-manual-input" type="number" inputmode="decimal" oninput="shManualInput()">
       <span class="sh-manual-unit" id="sh-manual-unit">кг</span>
     </div>
+    <div class="sh-manual-wrap" id="sh-manual-time-wrap" style="display:none">
+      <input class="sh-manual-input" id="sh-manual-min" type="number" inputmode="numeric" placeholder="0" oninput="shManualTimeInput()" style="width:110px">
+      <span class="sh-manual-unit">мин</span>
+      <input class="sh-manual-input" id="sh-manual-sec" type="number" inputmode="numeric" placeholder="00" oninput="shManualTimeInput()" style="width:110px">
+      <span class="sh-manual-unit">сек</span>
+    </div>
     <button class="sh-done" onclick="shConfirm()">Готово</button>
   </div>
 </div>

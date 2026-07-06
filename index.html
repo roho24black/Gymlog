@@ -3810,52 +3810,29 @@ function fmtPace(minsPerKm) {
   if (s===60) { s=0; m++; }
   return m+':'+(s<10?'0':'')+s;
 }
-function renderProgress() {
-  var body = document.getElementById('prog-body');
-  var pd = computeProgressData();
-  var h = '';
-  window._progData = pd;
-
-  if (!pd.totalWkts) {
-    h += '<div class="empty"><div class="empty-ico">📈</div><div class="empty-msg">Данные появятся после тренировок</div></div>';
-    h += bwSectionHtml();
-    h += dataBackupBoxHtml();
-    body.innerHTML = h;
-    return;
-  }
-
+var PROG_SUBTAB = 'overview';
+function progSetSubtab(tab) {
+  PROG_SUBTAB = tab;
+  renderProgress();
+}
+function progSubtabChipsHtml() {
+  var tabs = [['overview','Обзор'],['strength','Сила'],['cardio','Кардио'],['body','Тело']];
+  return '<div style="display:flex;gap:6px;margin-bottom:14px">' + tabs.map(function(t){
+    var on = PROG_SUBTAB===t[0];
+    return '<button onclick="progSetSubtab(\''+t[0]+'\')" style="flex:1;padding:9px 4px;border-radius:11px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?'var(--acc)':'var(--brd2)')+';background:'+(on?'rgba(34,197,94,.12)':'none')+';color:'+(on?'var(--acc)':'var(--sub)')+'">'+t[1]+'</button>';
+  }).join('') + '</div>';
+}
+function renderProgOverview(pd) {
   var streak = computeStreak(pd.workoutDays);
   var bestStreak = computeBestStreak(pd.workoutDays);
   var streakLbl = (streak===1?'День подряд':streak<5?'Дня подряд':'Дней подряд') + (bestStreak>streak ? ' · рекорд '+bestStreak : '');
-  h += '<div class="prog-overview">' +
+  var h = '<div class="prog-overview">' +
     statCard(pd.totalWkts, pd.totalWkts===1?'Тренировка':pd.totalWkts<5?'Тренировки':'Тренировок', null, 'var(--acc)') +
     statCard(fmtVol(pd.totalVolAll), 'Общий объём', 'кг', 'var(--ylw)') +
     statCard(pd.totalSets, 'Подходов', null, 'var(--blu)') +
     statCard(streak, streakLbl, null, 'var(--pur)') +
   '</div>';
 
-  h += '<div class="chart-box"><div class="chart-title">Достижения</div>' + achievementsHtml(pd) + '</div>';
-
-  h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
-
-  h += bwSectionHtml();
-
-  if (pd.totalCardioKm > 0 || pd.totalCardioMins > 0) {
-    h += '<div class="chart-box"><div class="chart-title">Кардио</div><div style="display:flex;gap:10px">' +
-      statCard(nf(pd.totalCardioKm), 'Дистанция', 'км', 'var(--blu)') +
-      statCard(Math.round(pd.totalCardioMins), 'Время', 'мин', 'var(--acc)') +
-    '</div></div>';
-  }
-  if (pd.totalSwimM > 0) {
-    h += '<div class="chart-box"><div class="chart-title">Бассейн</div><div style="display:flex;gap:10px">' +
-      statCard(pd.totalSwimM, 'Дистанция', 'м', 'var(--blu)') +
-    '</div></div>';
-  }
-  if (pd.totalStaticSec > 0) {
-    h += '<div class="chart-box"><div class="chart-title">Статика</div><div style="display:flex;gap:10px">' +
-      statCard(fmtTime(pd.totalStaticSec), 'Общее время', null, 'var(--red)') +
-    '</div></div>';
-  }
   if (pd.durationCount > 0) {
     h += '<div class="chart-box"><div class="chart-title">Время в зале</div><div style="display:flex;gap:10px">' +
       statCard(nf(pd.totalDurationMs/3600000), 'Всего часов', null, 'var(--acc)') +
@@ -3863,6 +3840,13 @@ function renderProgress() {
     '</div></div>';
   }
 
+  h += '<div class="chart-box"><div class="chart-title">Достижения</div>' + achievementsHtml(pd) + '</div>';
+  h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
+  h += dataBackupBoxHtml();
+  return h;
+}
+function renderProgStrength(pd) {
+  var h = '';
   var weeks = computeWeeklyVolume(pd.dailyVol, PROG_WEEKS);
   h += '<div class="chart-box"><div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">' +
     '<span>Объём по неделям</span>' + weekDeltaBadge(pd.dailyVol) + '</div>' +
@@ -3905,15 +3889,76 @@ function renderProgress() {
     h += '</div>';
   }
 
-  var names = Object.keys(pd.byExName).concat(Object.keys(pd.byCardioName), Object.keys(pd.bySwimName), Object.keys(pd.byStaticName)).sort();
+  var names = Object.keys(pd.byExName).sort();
   if (names.length) {
     h += '<div class="chart-title" style="margin:4px 2px 8px">История по упражнению</div>';
     h += '<select class="prog-sel" id="prog-ex-sel" onchange="renderProgChart(this.value)">' + exSelectOptions(names) + '</select>';
     h += '<div id="prog-exn-chips">' + chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN') + '</div>';
     h += '<div id="prog-chart"></div>';
   }
+  return h;
+}
+function renderProgCardio(pd) {
+  var h = '', hasAny = false;
+  if (pd.totalCardioKm > 0 || pd.totalCardioMins > 0) {
+    hasAny = true;
+    h += '<div class="chart-box"><div class="chart-title">Кардио</div><div style="display:flex;gap:10px">' +
+      statCard(nf(pd.totalCardioKm), 'Дистанция', 'км', 'var(--blu)') +
+      statCard(Math.round(pd.totalCardioMins), 'Время', 'мин', 'var(--acc)') +
+    '</div></div>';
+  }
+  if (pd.totalSwimM > 0) {
+    hasAny = true;
+    h += '<div class="chart-box"><div class="chart-title">Бассейн</div><div style="display:flex;gap:10px">' +
+      statCard(pd.totalSwimM, 'Дистанция', 'м', 'var(--blu)') +
+    '</div></div>';
+  }
+  if (pd.totalStaticSec > 0) {
+    hasAny = true;
+    h += '<div class="chart-box"><div class="chart-title">Статика</div><div style="display:flex;gap:10px">' +
+      statCard(fmtTime(pd.totalStaticSec), 'Общее время', null, 'var(--red)') +
+    '</div></div>';
+  }
 
-  h += dataBackupBoxHtml();
+  var names = Object.keys(pd.byCardioName).concat(Object.keys(pd.bySwimName), Object.keys(pd.byStaticName)).sort();
+  if (names.length) {
+    h += '<div class="chart-title" style="margin:4px 2px 8px">История по упражнению</div>';
+    h += '<select class="prog-sel" id="prog-ex-sel" onchange="renderProgChart(this.value)">' + exSelectOptions(names) + '</select>';
+    h += '<div id="prog-exn-chips">' + chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN') + '</div>';
+    h += '<div id="prog-chart"></div>';
+  } else if (!hasAny) {
+    h += '<div class="empty"><div class="empty-ico">🏃</div><div class="empty-msg">Нет кардио, бассейна или статики</div></div>';
+  }
+  return h;
+}
+function renderProgress() {
+  var body = document.getElementById('prog-body');
+  var pd = computeProgressData();
+  var h = '';
+  window._progData = pd;
+
+  if (!pd.totalWkts) {
+    h += '<div class="empty"><div class="empty-ico">📈</div><div class="empty-msg">Данные появятся после тренировок</div></div>';
+    h += bwSectionHtml();
+    h += dataBackupBoxHtml();
+    body.innerHTML = h;
+    return;
+  }
+
+  h += progSubtabChipsHtml();
+
+  var names = [];
+  if (PROG_SUBTAB === 'strength') {
+    h += renderProgStrength(pd);
+    names = Object.keys(pd.byExName).sort();
+  } else if (PROG_SUBTAB === 'cardio') {
+    h += renderProgCardio(pd);
+    names = Object.keys(pd.byCardioName).concat(Object.keys(pd.bySwimName), Object.keys(pd.byStaticName)).sort();
+  } else if (PROG_SUBTAB === 'body') {
+    h += bwSectionHtml();
+  } else {
+    h += renderProgOverview(pd);
+  }
 
   body.innerHTML = h;
   if (names.length) renderProgChart(names[0]);

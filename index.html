@@ -1870,7 +1870,7 @@ function renderPlanView(wkt) {
         h += '<div class="set-row" style="grid-template-columns:26px 1.15fr 0.95fr">' +
           '<div class="set-n">'+(si+1)+'</div>' +
           '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>' +
-          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">км</span></div>' +
+          '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">'+distUnit(ex.name)+'</span></div>' +
           '</div>';
       } else {
         h += '<div class="set-row'+(s.warmup?' warmup-row':'')+'" style="grid-template-columns:26px 1.15fr 0.95fr">' +

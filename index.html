@@ -4220,7 +4220,35 @@ function renderStrengthChart(el, name, pd) {
     {val:nf(pr), unit:'кг', lbl:'Рекорд', color:'var(--ylw)'},
     {val:(diff>0?'+':'')+nf(diff), unit:'кг', lbl:'За период', color:trendClr}
   ]);
-  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, nf) + '</div>';
+  var goal = (ST.goals && ST.goals.byExName && ST.goals.byExName[name]) || 0;
+  el.innerHTML = '<div class="chart-box">' + hdr + svgLineChart(vals, dsArr, nf) +
+    goalBoxHtml(pr, goal, 'кг', 'goal-ex-input', "setExGoal('"+name.replace(/'/g,"\\'")+"')") + '</div>';
+}
+function goalBoxHtml(current, target, unit, inputId, saveOnclick) {
+  var progress = '';
+  if (target > 0) {
+    var pct = Math.max(0, Math.min(100, Math.round(current/target*100)));
+    var remain = Math.round((target-current)*10)/10;
+    progress = '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:6px">' +
+      '<span>'+pct+'% до цели</span><span>'+(remain>0?nf(remain)+' '+unit+' осталось':'Цель достигнута 🎉')+'</span></div>' +
+      '<div style="height:6px;border-radius:3px;background:var(--card2);overflow:hidden;margin-bottom:10px">' +
+      '<div style="height:100%;width:'+pct+'%;background:var(--acc)"></div></div>';
+  }
+  return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">' + progress +
+    '<div style="display:flex;gap:8px">' +
+    '<input type="number" id="'+inputId+'" inputmode="decimal" value="'+(target>0?nf(target):'')+'" placeholder="Цель, '+unit+'" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:inherit;box-sizing:border-box" />' +
+    '<button class="btn btn-sm" onclick="'+saveOnclick+'">Сохранить</button>' +
+    '</div></div>';
+}
+function setExGoal(name) {
+  var inp = document.getElementById('goal-ex-input');
+  var v = parseFloat(inp.value);
+  if (!ST.goals) ST.goals = {};
+  if (!ST.goals.byExName) ST.goals.byExName = {};
+  if (v > 0) ST.goals.byExName[name] = Math.round(v*10)/10;
+  else delete ST.goals.byExName[name];
+  saveST();
+  renderProgChart(name);
 }
 function renderCardioChart(el, name, pd) {
   var raw = pd.byCardioName[name]||[];

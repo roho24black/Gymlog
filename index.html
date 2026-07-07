@@ -1985,6 +1985,18 @@ function finishWorkout() {
   restStop();
   renderTopbar(); renderWorkout();
   if (summary && summary.sets > 0) showWorkoutSummary(summary);
+  autoExportIfDue();
+}
+function autoExportIfDue() {
+  try {
+    var last = (ST.cfg && ST.cfg.lastAutoExport) || 0;
+    var weekMs = 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() - last < weekMs) return;
+    exportData();
+    if (!ST.cfg) ST.cfg = {};
+    ST.cfg.lastAutoExport = Date.now();
+    saveST();
+  } catch (e) {}
 }
 function buildWorkoutSummary(wkt) {
   var sets = 0, vol = 0, prs = [];

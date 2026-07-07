@@ -4036,6 +4036,7 @@ function renderProgress() {
   if (!pd.totalWkts) {
     h += '<div class="empty"><div class="empty-ico">📈</div><div class="empty-msg">Данные появятся после тренировок</div></div>';
     h += bwSectionHtml();
+    h += measurementsSectionHtml();
     h += dataBackupBoxHtml();
     body.innerHTML = h;
     return;
@@ -4052,6 +4053,7 @@ function renderProgress() {
     names = Object.keys(pd.byCardioName).concat(Object.keys(pd.bySwimName), Object.keys(pd.byStaticName)).sort();
   } else if (PROG_SUBTAB === 'body') {
     h += bwSectionHtml();
+    h += measurementsSectionHtml();
   } else {
     h += renderProgOverview(pd);
   }

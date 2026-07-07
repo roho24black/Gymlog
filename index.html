@@ -116,8 +116,12 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
   padding:3px 2px;gap:4px;border-radius:10px;transition:background .15s}
 .set-row.done{background:rgba(34,197,94,0.05)}
 .set-row.warmup-row{opacity:.5}
-.set-n{font-size:11px;color:var(--dim);font-weight:600;text-align:center;cursor:pointer;-webkit-user-select:none;user-select:none}
-.set-n.warmup{color:var(--ylw);font-weight:800}
+.set-n{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);
+  display:flex;align-items:center;justify-content:center;margin:0 auto;box-sizing:border-box;
+  font-size:11px;color:var(--sub);font-weight:700;cursor:pointer;-webkit-user-select:none;user-select:none;
+  transition:all .15s}
+.set-n:active{opacity:.6}
+.set-n.warmup{color:#0a0a0a;font-weight:800;background:var(--ylw);border-color:var(--ylw)}
 .set-cell{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.05);border-radius:10px;
   min-height:48px;padding:6px 8px;text-align:center;font-size:17px;font-weight:700;cursor:pointer;
   transition:all .15s;position:relative;display:flex;align-items:center;justify-content:center;gap:2px;
@@ -1849,6 +1853,7 @@ function renderPlanView(wkt) {
     }
     if (!cardio && !swim && !stat) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1.15fr 0.95fr"><div>№</div><div>Вес</div><div>Повт</div></div>';
+      h += '<div style="font-size:10px;color:var(--mut);margin:-4px 0 6px 2px">Тапни № — отметить разминочный подход</div>';
     } else if (stat) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr"><div>№</div><div>Удержание</div></div>';
     } else if (swim) {

@@ -2326,7 +2326,8 @@ function renderWorkout() {
         h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimdist\')">'+(s.dist||0)+'<span class="set-cell-unit">м</span></div>';
         h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+(s.secs ? fmtTime(s.secs) : '<span style="color:var(--dim);font-weight:600;font-size:13px">+ время</span>')+'</div>';
       } else {
-        h += '<div class="set-row'+(s.done?' done':'')+(s.warmup?' warmup-row':'')+'">';
+        var rowStyle = cardio ? '' : ' style="grid-template-columns:26px 1fr 0.85fr 34px 44px"';
+        h += '<div class="set-row'+(s.done?' done':'')+(s.warmup?' warmup-row':'')+'"'+rowStyle+'>';
         if (cardio) {
           h += '<div class="set-n">'+(si+1)+'</div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';
@@ -2335,6 +2336,7 @@ function renderWorkout() {
           h += '<div class="set-n'+(s.warmup?' warmup':'')+'" onclick="toggleWarmup('+ei+','+si+')" title="Разминочный подход">'+(s.warmup?'Р':(si+1))+'</div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>';
+          h += '<div class="set-cell" onclick="openSheet('+ei+','+si+',\'rpe\')" style="font-size:13px">'+(s.rpe?s.rpe:'<span style="color:var(--dim)">–</span>')+'</div>';
         }
       }
       h += '<div class="set-circle'+(s.done?' done':'')+'" onclick="toggleSetDone('+ei+','+si+')">✓</div>';
@@ -2764,6 +2766,11 @@ function openSheet(ei, si, field) {
     for (var v=0; v<=3600; v+=5) range.push(v);
     presets = [[-30,'−30с'],[-5,'−5с'],[5,'+5с'],[30,'+30с']];
     document.getElementById('sh-title').textContent = 'Время (мин:сек) · 0:00 — без времени';
+  } else if (field === 'rpe') {
+    cur = s.rpe||0; step = 1; unit = '';
+    for (var v=0; v<=10; v++) range.push(v);
+    presets = [[-1,'−1'],[1,'+1']];
+    document.getElementById('sh-title').textContent = 'RPE — тяжесть подхода (0 — не указано)';
   }
   SH_RANGE = range; SH_VAL = cur; SH_STEP = step;
   SH_FMT = (field === 'swimtime') ? fmtTime : nf;

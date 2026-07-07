@@ -3981,6 +3981,7 @@ function renderProgStrength(pd) {
     h += '<select class="prog-sel" id="prog-ex-sel" onchange="renderProgChart(this.value)">' + exSelectOptions(names) + '</select>';
     h += '<div id="prog-exn-chips">' + chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN') + '</div>';
     h += '<div id="prog-chart"></div>';
+    h += '<div id="prog-ex-history"></div>';
   }
   return h;
 }
@@ -4018,6 +4019,7 @@ function renderProgCardio(pd) {
     h += '<select class="prog-sel" id="prog-ex-sel" onchange="renderProgChart(this.value)">' + exSelectOptions(names) + '</select>';
     h += '<div id="prog-exn-chips">' + chipsHtml('prog-chip', [[12,'12'],[26,'26'],[52,'52']], PROG_EX_N, 'progSetExN') + '</div>';
     h += '<div id="prog-chart"></div>';
+    h += '<div id="prog-ex-history"></div>';
   } else if (!hasAny) {
     h += '<div class="empty"><div class="empty-ico">🏃</div><div class="empty-msg">Нет кардио, бассейна или статики</div></div>';
   }

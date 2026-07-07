@@ -2447,6 +2447,22 @@ function moveEx(ei, dir) {
   var a = OPEN_EX[ei], b = OPEN_EX[j]; OPEN_EX[ei] = b; OPEN_EX[j] = a;
   saveST(); renderWorkout();
 }
+function toggleSuperset(ei) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var ex = wkt.exercises[ei];
+  if (ei === 0 || !ex) return;
+  ex.linkedToPrev = !ex.linkedToPrev;
+  saveST(); renderWorkout();
+}
+function superlinkRowHtml(ei, linked) {
+  if (linked) {
+    return '<div onclick="toggleSuperset('+ei+');event.stopPropagation()" style="display:flex;align-items:center;gap:8px;margin:-1px 4px;padding:5px 4px;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;-webkit-user-select:none;user-select:none">' +
+      '<span style="flex:1;height:1px;background:var(--acc-brd)"></span>⛓ Суперсет — тапни, чтобы разъединить<span style="flex:1;height:1px;background:var(--acc-brd)"></span>' +
+      '</div>';
+  }
+  return '<button onclick="toggleSuperset('+ei+');event.stopPropagation()" style="display:block;width:100%;background:none;border:none;padding:2px 4px;margin:-3px 0 1px;font-size:11px;font-weight:600;color:var(--dim);font-family:inherit;cursor:pointer;text-align:left;-webkit-user-select:none;user-select:none">🔗 Объединить с предыдущим в суперсет</button>';
+}
 function updateExNote(ei, val) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);

@@ -623,6 +623,34 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 </div>
 
 <script>
+// ═══════════════════════ ERROR REPORTING ═══════════════════════
+(function(){
+  var ERR_TOPIC = 'gymlog-roman-errors-2024';
+  var reported = {};
+  var reportCount = 0;
+  function reportErr(msg, src, line) {
+    var sig = msg + '@' + line;
+    if (reported[sig] || reportCount >= 5) return;
+    reported[sig] = true;
+    reportCount++;
+    var text = msg + (src ? ' (' + src.split('/').pop() + ':' + line + ')' : '');
+    try {
+      fetch('https://ntfy.sh/' + ERR_TOPIC, {
+        method: 'POST',
+        headers: { 'Title': 'GymLog error', 'Priority': 'high', 'Tags': 'bug' },
+        body: text.slice(0, 500)
+      }).catch(function(){});
+    } catch(e) {}
+  }
+  window.addEventListener('error', function(e) {
+    reportErr(e.message, e.filename, e.lineno);
+  });
+  window.addEventListener('unhandledrejection', function(e) {
+    var reason = e.reason;
+    reportErr('Unhandled promise rejection: ' + (reason && reason.message ? reason.message : reason), '', 0);
+  });
+})();
+
 // ═══════════════════════ DATA ═══════════════════════
 var KEY = 'gymlog2';
 var ST = {w:{}, cfg:{name:'Роман',age:20,weight:75,height:180}, wr:{}, wrMax:{}, templates:[], recovery:null, recentEx:[], bw:{}, customEx:[]};

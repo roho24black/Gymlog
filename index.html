@@ -2289,7 +2289,9 @@ function renderWorkout() {
     var exVol = 0;
     ex.sets.forEach(function(s){ if(s.done && !s.warmup) exVol += (s.w||0)*(s.r||1); });
 
-    h += '<div class="ex-card">';
+    if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev);
+
+    h += '<div class="ex-card"'+(ex.linkedToPrev?' style="border-left:3px solid var(--acc)"':'')+'>';
     h += '<div class="ex-card-hd">' +
       '<div class="ex-tile" style="background:'+color+';opacity:0.85">'+letterOf(ex.name)+'</div>' +
       '<div class="ex-info">' +

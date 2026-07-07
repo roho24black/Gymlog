@@ -4089,11 +4089,32 @@ function bwSectionHtml() {
     ]);
     chart = hdr + svgLineChart(vals, dsArr, nf);
   }
+  var bwGoal = (ST.goals && ST.goals.bodyweight) || 0;
+  var goalHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">' +
+    (bwGoal>0 ? '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">'+bwGoalRemainText(Number(last)||0, bwGoal)+'</div>' : '') +
+    '<div style="display:flex;gap:8px">' +
+    '<input type="number" id="goal-bw-input" inputmode="decimal" value="'+(bwGoal>0?nf(bwGoal):'')+'" placeholder="Цель, кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:inherit;box-sizing:border-box" />' +
+    '<button class="btn btn-sm" onclick="setBwGoal()">Сохранить</button>' +
+    '</div></div>';
   return '<div class="chart-box"><div class="chart-title">Вес тела</div>' +
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(chart?'12px':'0')+'">' +
     '<input type="number" id="bw-input" inputmode="decimal" step="0.1" value="'+esc(last)+'" placeholder="кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:15px;font-family:inherit;box-sizing:border-box" />' +
     '<button class="btn btn-sm" onclick="logBodyweight()">Сохранить</button>' +
-    '</div>' + chart + '</div>';
+    '</div>' + chart + goalHtml + '</div>';
+}
+function bwGoalRemainText(current, target) {
+  var diff = Math.round((target-current)*10)/10;
+  if (Math.abs(diff) < 0.05) return 'Цель достигнута 🎉';
+  return (diff>0?'+':'')+nf(diff)+' кг до цели';
+}
+function setBwGoal() {
+  var inp = document.getElementById('goal-bw-input');
+  var v = parseFloat(inp.value);
+  if (!ST.goals) ST.goals = {};
+  if (v > 0) ST.goals.bodyweight = Math.round(v*10)/10;
+  else delete ST.goals.bodyweight;
+  saveST();
+  renderProgress();
 }
 var MEAS_FIELDS = [['waist','Талия'],['chest','Грудь'],['arm','Рука'],['hips','Бёдра']];
 function logMeasurements() {

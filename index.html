@@ -1864,7 +1864,8 @@ function renderPlanView(wkt) {
     var summary = planExSummary(ex);
 
     var exOpen = OPEN_EX[ei] ? ' open' : '';
-    h += '<div class="plan-ex-row">' +
+    if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev);
+    h += '<div class="plan-ex-row"'+(ex.linkedToPrev?' style="border-left:3px solid var(--acc)"':'')+'>' +
       '<div class="plan-ex-hd" onclick="togglePlanEx('+ei+')">' +
         '<div class="plan-ex-tile" style="background:'+color+'">'+letterOf(ex.name)+'</div>' +
         '<div class="plan-ex-info">' +

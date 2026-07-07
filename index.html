@@ -4127,11 +4127,33 @@ function importDataFile(input) {
 }
 function renderProgChart(name) {
   var pd = window._progData || computeProgressData();
+  renderExHistory(name, pd);
   var el = document.getElementById('prog-chart'); if (!el) return;
   if (pd.byCardioName[name]) return renderCardioChart(el, name, pd);
   if (pd.bySwimName[name]) return renderSwimChart(el, name, pd);
   if (pd.byStaticName[name]) return renderStaticChart(el, name, pd);
   renderStrengthChart(el, name, pd);
+}
+function renderExHistory(name, pd) {
+  var el = document.getElementById('prog-ex-history'); if (!el) return;
+  var rows = [];
+  if (pd.byCardioName[name]) {
+    pd.byCardioName[name].forEach(function(d){ rows.push({ds:d.ds, txt:nf(d.dist)+' '+distUnit(name)+(d.mins?' · '+d.mins+' мин':'')}); });
+  } else if (pd.bySwimName[name]) {
+    pd.bySwimName[name].forEach(function(d){ rows.push({ds:d.ds, txt:d.dist+' м'+(d.secs?' · '+fmtTime(d.secs):'')}); });
+  } else if (pd.byStaticName[name]) {
+    pd.byStaticName[name].forEach(function(d){ rows.push({ds:d.ds, txt:fmtDurLong(d.secs)}); });
+  } else if (pd.byExName[name]) {
+    pd.byExName[name].forEach(function(d){ rows.push({ds:d.ds, txt:nf(d.w)+' кг × '+d.r+(d.rpe?' · RPE '+d.rpe:'')}); });
+  }
+  rows.sort(function(a,b){ return b.ds.localeCompare(a.ds); });
+  rows = rows.slice(0, 20);
+  if (!rows.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="chart-box"><div class="chart-title">История подходов</div>' +
+    rows.map(function(r){
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--brd);font-size:13px">' +
+        '<span style="color:var(--sub)">'+dateLabel(r.ds)+'</span><span style="font-weight:600">'+esc(r.txt)+'</span></div>';
+    }).join('') + '</div>';
 }
 function renderStrengthChart(el, name, pd) {
   var raw = pd.byExName[name]||[];

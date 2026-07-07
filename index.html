@@ -2744,6 +2744,206 @@ function renderTmr() {
   ov.innerHTML = h;
 }
 
+// ═══════════════════════ CIRCUIT (КРУГОВАЯ ТРЕНИРОВКА) ═══════════════════════
+function startCircuit(startEi) {
+  if (!ACTIVE_WKT) { uiToast('Сначала начни тренировку'); return; }
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var exs = wkt.exercises || [];
+  var group = [startEi];
+  var j = startEi + 1;
+  while (exs[j] && exs[j].linkedToPrev) { group.push(j); j++; }
+  if (group.length < 2) { uiToast('Нужно минимум 2 связанных упражнения'); return; }
+  var rounds = 0;
+  group.forEach(function(ei){ rounds = Math.max(rounds, exs[ei].sets.length); });
+  group.forEach(function(ei){
+    var ex = exs[ei];
+    while (ex.sets.length < rounds) {
+      var last = ex.sets[ex.sets.length-1];
+      ex.sets.push(Object.assign({}, last, {done:false}));
+    }
+  });
+  saveST();
+  CIRC = {
+    group: group, rounds: rounds, round: 0, pos: 0,
+    restEx: (ST.cfg && ST.cfg.circuitRestEx!=null) ? ST.cfg.circuitRestEx : 20,
+    restRound: (ST.cfg && ST.cfg.circuitRestRound!=null) ? ST.cfg.circuitRestRound : 90,
+    phase: 'work', running: false, raf: null
+  };
+  renderCirc();
+}
+function circDone() {
+  if (!CIRC || !ACTIVE_WKT) return;
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ei = CIRC.group[CIRC.pos];
+  var s = wkt.exercises[ei].sets[CIRC.round];
+  s.done = true;
+  saveST(); updateVolBar();
+  if (navigator.vibrate) navigator.vibrate(12);
+  CIRC.pos++;
+  if (CIRC.pos >= CIRC.group.length) {
+    if (CIRC.round+1 >= CIRC.rounds) { circFinish(); return; }
+    circStartRest('round');
+  } else {
+    circStartRest('ex');
+  }
+}
+function circSetPhaseTimer(secs) {
+  CIRC.phaseSecs = secs; CIRC.endAt = Date.now()+secs*1000; CIRC.lastWhole = secs;
+}
+function circStartRest(kind) {
+  var secs = kind==='round' ? CIRC.restRound : CIRC.restEx;
+  CIRC.phase = 'rest'; CIRC.restKind = kind;
+  if (secs <= 0) { circAfterRest(kind); return; }
+  CIRC.running = true;
+  circSetPhaseTimer(secs);
+  tmrBeep(520, 0.2); tmrVibe(120);
+  renderCirc();
+  CIRC.raf = requestAnimationFrame(circFrame);
+}
+function circFrame() {
+  if (!CIRC || !CIRC.running || CIRC.phase!=='rest') return;
+  var remain = (CIRC.endAt - Date.now())/1000;
+  if (remain < 0) remain = 0;
+  var whole = Math.ceil(remain-0.001);
+  if (whole !== CIRC.lastWhole) { if (whole>=1 && whole<=3) tmrBeep(660,0.07); CIRC.lastWhole = whole; }
+  circPaint(remain);
+  if (remain <= 0.04) { circAfterRest(CIRC.restKind); return; }
+  CIRC.raf = requestAnimationFrame(circFrame);
+}
+function circPaint(remain) {
+  var num = document.getElementById('circ-num');
+  if (num) num.textContent = fmtTime(Math.max(0, Math.ceil(remain - 0.001)));
+  var ring = document.getElementById('circ-ring');
+  if (ring) {
+    var frac = CIRC.phaseSecs > 0 ? Math.max(0, Math.min(1, remain/CIRC.phaseSecs)) : 0;
+    ring.style.strokeDashoffset = String(2*Math.PI*110 * (1 - frac));
+  }
+}
+function circAfterRest(kind) {
+  if (CIRC.raf) { cancelAnimationFrame(CIRC.raf); CIRC.raf = null; }
+  CIRC.running = false;
+  if (kind === 'round') { CIRC.round++; CIRC.pos = 0; }
+  if (CIRC.round >= CIRC.rounds) { circFinish(); return; }
+  CIRC.phase = 'work';
+  renderCirc();
+}
+function circToggle() {
+  if (!CIRC || CIRC.phase!=='rest') return;
+  if (CIRC.running) {
+    CIRC.pauseRemain = Math.max(0, (CIRC.endAt-Date.now())/1000);
+    CIRC.running = false;
+    if (CIRC.raf) { cancelAnimationFrame(CIRC.raf); CIRC.raf = null; }
+    renderCirc();
+  } else {
+    CIRC.running = true;
+    var r = CIRC.pauseRemain || 0;
+    CIRC.endAt = Date.now() + r*1000; CIRC.lastWhole = Math.ceil(r-0.001);
+    renderCirc();
+    CIRC.raf = requestAnimationFrame(circFrame);
+  }
+}
+function circSkipRest() {
+  if (!CIRC || CIRC.phase!=='rest') return;
+  if (CIRC.raf) { cancelAnimationFrame(CIRC.raf); CIRC.raf = null; }
+  circAfterRest(CIRC.restKind);
+}
+function circSetRestEx(delta) {
+  if (!CIRC) return;
+  CIRC.restEx = Math.max(0, (CIRC.restEx||0)+delta);
+  if (!ST.cfg) ST.cfg = {}; ST.cfg.circuitRestEx = CIRC.restEx; saveST();
+}
+function circSetRestRound(delta) {
+  if (!CIRC) return;
+  CIRC.restRound = Math.max(0, (CIRC.restRound||0)+delta);
+  if (!ST.cfg) ST.cfg = {}; ST.cfg.circuitRestRound = CIRC.restRound; saveST();
+}
+function circFinish() {
+  CIRC.phase = 'done';
+  if (CIRC.raf) { cancelAnimationFrame(CIRC.raf); CIRC.raf = null; }
+  tmrBeep(990, 0.3); setTimeout(function(){ tmrBeep(1320, 0.3); }, 180);
+  tmrVibe([120,60,120,60,200]);
+  renderCirc();
+}
+function closeCirc() {
+  if (CIRC && CIRC.raf) { cancelAnimationFrame(CIRC.raf); CIRC.raf = null; }
+  CIRC = null;
+  var el = document.getElementById('circ-overlay'); if (el) el.remove();
+  renderWorkout();
+}
+function circWorkCellsHtml(ei, si) {
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var ex = wkt.exercises[ei], s = ex.sets[si];
+  var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
+  function cell(field, val, unit) {
+    return '<div style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:14px;padding:16px 8px;text-align:center;cursor:pointer" onclick="openSheet('+ei+','+si+',\''+field+'\')">' +
+      '<div style="font-size:26px;font-weight:800;color:var(--txt)">'+val+(unit?' <span style="font-size:12px;color:var(--mut);font-weight:600">'+unit+'</span>':'')+'</div></div>';
+  }
+  if (stat) return '<div style="display:flex;gap:10px">' + cell('secs', s.secs||60, 'сек') + '</div>';
+  if (swim) return '<div style="display:flex;gap:10px">' + cell('swimdist', s.dist||0, 'м') + cell('swimtime', s.secs?fmtTime(s.secs):'—', '') + '</div>';
+  if (cardio) return '<div style="display:flex;gap:10px">' + cell('mins', s.mins||20, 'мин') + cell('dist', s.dist||0, distUnit(ex.name)) + '</div>';
+  return '<div style="display:flex;gap:10px">' + cell('w', s.w||0, 'кг') + cell('r', s.r||0, 'повт') + '</div>';
+}
+function renderCirc() {
+  var ov = document.getElementById('circ-overlay');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'circ-overlay'; ov.style.cssText = 'position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;flex-direction:column'; document.body.appendChild(ov); }
+  if (!CIRC) { ov.remove(); return; }
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var h = '';
+  if (CIRC.phase === 'done') {
+    h = '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">' +
+        '<div style="font-size:64px">🏁</div>' +
+        '<div style="font-size:26px;font-weight:800;color:var(--txt)">Круг завершён!</div>' +
+        '<div style="font-size:15px;color:var(--sub)">'+CIRC.rounds+' круг(ов) · '+CIRC.group.length+' упражнения</div>' +
+        '<button onclick="closeCirc()" style="margin-top:10px;width:220px;height:54px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:17px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Завершить</button>' +
+      '</div>';
+  } else if (CIRC.phase === 'rest') {
+    var clr = '#38bdf8';
+    var remainNow = CIRC.running ? Math.max(0,(CIRC.endAt-Date.now())/1000) : (CIRC.pauseRemain!=null?CIRC.pauseRemain:CIRC.phaseSecs);
+    var frac0 = CIRC.phaseSecs>0 ? Math.max(0,Math.min(1, remainNow/CIRC.phaseSecs)) : 0;
+    var RC = 2*Math.PI*110;
+    var nextEi = CIRC.group[CIRC.pos % CIRC.group.length];
+    var nextName = wkt.exercises[nextEi] ? exTitle(wkt.exercises[nextEi]) : '';
+    var label = CIRC.restKind==='round' ? 'Отдых · конец круга' : 'Отдых · смена упражнения';
+    h = '<div style="padding:max(env(safe-area-inset-top),16px) 18px 0;display:flex;align-items:center;justify-content:space-between">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px">Круг '+(CIRC.round+1)+'/'+CIRC.rounds+'</div>' +
+        '<button onclick="closeCirc()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
+      '</div>' +
+      '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 20px">' +
+        '<div style="font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:'+clr+'">ОТДЫХ</div>' +
+        '<div style="font-size:19px;font-weight:700;color:var(--txt);text-align:center">'+label+'</div>' +
+        '<div style="font-size:13px;color:var(--sub);margin-bottom:14px">Далее: '+esc(nextName)+'</div>' +
+        '<div style="position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center">' +
+          '<svg width="240" height="240" viewBox="0 0 240 240" style="position:absolute;inset:0;transform:rotate(-90deg)">' +
+            '<circle cx="120" cy="120" r="110" fill="none" stroke="var(--card2)" stroke-width="9"/>' +
+            '<circle id="circ-ring" cx="120" cy="120" r="110" fill="none" stroke="'+clr+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+RC+'" stroke-dashoffset="'+(RC*(1-frac0))+'"/>' +
+          '</svg>' +
+          '<div id="circ-num" style="font-size:66px;font-weight:800;color:'+clr+';font-variant-numeric:tabular-nums;letter-spacing:-1px">'+fmtTime(Math.ceil(remainNow-0.001))+'</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:0 20px max(env(safe-area-inset-bottom),20px);display:flex;gap:10px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
+        '<button onclick="circToggle()" style="flex:1;height:54px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer">'+(CIRC.running?'⏸ Пауза':'▶ Продолжить')+'</button>' +
+        '<button onclick="circSkipRest()" style="flex:1;height:54px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--sub);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer">⏭ Пропуск</button>' +
+      '</div>';
+  } else {
+    var ei = CIRC.group[CIRC.pos];
+    var ex = wkt.exercises[ei];
+    h = '<div style="padding:max(env(safe-area-inset-top),16px) 18px 0;display:flex;align-items:center;justify-content:space-between">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px">Круг '+(CIRC.round+1)+'/'+CIRC.rounds+' · '+(CIRC.pos+1)+'/'+CIRC.group.length+'</div>' +
+        '<button onclick="closeCirc()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
+      '</div>' +
+      '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px">' +
+        '<div style="font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#34d399">РАБОТА</div>' +
+        '<div style="font-size:24px;font-weight:800;color:var(--txt);text-align:center;max-width:92%">'+esc(exTitle(ex))+'</div>' +
+        '<div style="width:100%;max-width:340px">' + circWorkCellsHtml(ei, CIRC.round) + '</div>' +
+        '<div style="font-size:12px;color:var(--mut);text-align:center">Тапни значение, чтобы изменить</div>' +
+      '</div>' +
+      '<div style="padding:0 20px max(env(safe-area-inset-bottom),20px);max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
+        '<button onclick="circDone()" style="width:100%;height:58px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:18px;font-weight:800;border:none;font-family:inherit;cursor:pointer">✓ Готово — дальше</button>' +
+      '</div>';
+  }
+  ov.innerHTML = h;
+}
+
 // ═══════════════════════ BOTTOM SHEET (DRUM PICKER) ═══════════════════════
 function openSheet(ei, si, field) {
   var ref = curWktRef(); if (!ref) return;

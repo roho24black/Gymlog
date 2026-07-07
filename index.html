@@ -2292,7 +2292,7 @@ function renderWorkout() {
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'dist\')">'+(s.dist||0)+'<span class="set-cell-unit">'+distUnit(ex.name)+'</span></div>';
         } else {
-          h += '<div class="set-n'+(s.warmup?' warmup':'')+'" onclick="toggleWarmup('+ei+','+si+')" title="Разминочный подход">'+(s.warmup?'W':(si+1))+'</div>';
+          h += '<div class="set-n'+(s.warmup?' warmup':'')+'" onclick="toggleWarmup('+ei+','+si+')" title="Разминочный подход">'+(s.warmup?'Р':(si+1))+'</div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'w\')">'+(s.w||0)+'<span class="set-cell-unit">кг</span></div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'r\')">'+(s.r||0)+'<span class="set-cell-unit">повт</span></div>';
         }

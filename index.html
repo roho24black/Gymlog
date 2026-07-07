@@ -3169,7 +3169,7 @@ function shConfirm() {
   saveST();
   document.getElementById('sh-overlay').classList.remove('vis');
   SH_MODE = null;
-  renderWorkout();
+  if (CIRC) renderCirc(); else renderWorkout();
 }
 
 // ═══════════════════════ EXERCISE DB MODAL ═══════════════════════

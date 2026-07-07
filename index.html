@@ -2308,7 +2308,7 @@ function renderWorkout() {
           (st.pr > st.lastW ? '<span>PR: <span class="ex-hist-pr">'+st.pr+' кг</span></span>' : '') +
           '</div>';
       }
-      h += '<div class="sets-hdr"><div>№</div><div>Вес</div><div>Повт</div><div></div></div>';
+      h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr 0.85fr 34px 44px"><div>№</div><div>Вес</div><div>Повт</div><div>RPE</div><div></div></div>';
       h += '<div style="font-size:10px;color:var(--mut);margin:-4px 0 6px 2px">Тапни № — отметить разминочный подход</div>';
     } else if (stat) {
       h += '<div class="sets-hdr" style="grid-template-columns:26px 1fr 30px"><div>№</div><div>Удержание</div><div></div></div>';

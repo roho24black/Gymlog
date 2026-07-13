@@ -2899,7 +2899,7 @@ function startCircuit(startEi) {
   });
   saveST();
   CIRC = {
-    group: group, rounds: rounds, round: 0, pos: 0,
+    group: group, rounds: rounds, round: 0, pos: 0, name: exs[startEi].groupName || '',
     restEx: (ST.cfg && ST.cfg.circuitRestEx!=null) ? ST.cfg.circuitRestEx : 20,
     restRound: (ST.cfg && ST.cfg.circuitRestRound!=null) ? ST.cfg.circuitRestRound : 90,
     phase: 'work', running: false, raf: null

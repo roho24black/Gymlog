@@ -4444,10 +4444,11 @@ function bwSectionHtml() {
     '<button class="btn btn-sm" onclick="logBodyweight()">Сохранить</button>' +
     '</div>' + chart + goalHtml + '</div>';
 }
-function bwGoalRemainText(current, target) {
+function bwGoalRemainText(current, target, unit) {
+  unit = unit || 'кг';
   var diff = Math.round((target-current)*10)/10;
   if (Math.abs(diff) < 0.05) return 'Цель достигнута 🎉';
-  return (diff>0?'+':'')+nf(diff)+' кг до цели';
+  return (diff>0?'+':'')+nf(diff)+' '+unit+' до цели';
 }
 function setBwGoal() {
   var inp = document.getElementById('goal-bw-input');

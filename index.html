@@ -3027,7 +3027,7 @@ function renderCirc() {
   if (CIRC.phase === 'done') {
     h = '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">' +
         '<div style="font-size:64px">🏁</div>' +
-        '<div style="font-size:26px;font-weight:800;color:var(--txt)">Круг завершён!</div>' +
+        '<div style="font-size:26px;font-weight:800;color:var(--txt)">'+(CIRC.name?esc(CIRC.name)+' — ':'')+'Круг завершён!</div>' +
         '<div style="font-size:15px;color:var(--sub)">'+CIRC.rounds+' круг(ов) · '+CIRC.group.length+' упражнения</div>' +
         '<button onclick="closeCirc()" style="margin-top:10px;width:220px;height:54px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:17px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Завершить</button>' +
       '</div>';

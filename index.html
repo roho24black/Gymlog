@@ -4489,11 +4489,26 @@ function measurementsSectionHtml() {
     return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--brd);font-size:13px">' +
       '<span style="color:var(--sub)">'+dateLabel(ds)+'</span><span style="font-weight:600">'+esc(txt)+'</span></div>';
   }).join('');
-  return '<div class="chart-box"><div class="chart-title">Замеры тела (см)</div>' +
+  var box = '<div class="chart-box"><div class="chart-title">Замеры тела (см)</div>' +
     '<div style="display:flex;gap:8px;margin-bottom:10px">' + inputs + '</div>' +
     '<button class="btn btn-sm" style="width:100%" onclick="logMeasurements()">Сохранить</button>' +
     (histRows ? '<div style="margin-top:10px">'+histRows+'</div>' : '') +
     '</div>';
+  MEAS_FIELDS.forEach(function(f){ box += measurementChartHtml(f[0], f[1]); });
+  return box;
+}
+function measurementChartHtml(field, label) {
+  var m = ST.measurements || {};
+  var dates = Object.keys(m).filter(function(ds){ return m[ds] && m[ds][field] != null; }).sort();
+  if (dates.length < 2) return '';
+  var dsArr = dates.slice(-30);
+  var vals = dsArr.map(function(ds){ return m[ds][field]; });
+  var diff = Math.round((vals[vals.length-1]-vals[0])*10)/10;
+  var hdr = trendHeader([
+    {val:nf(vals[vals.length-1]), unit:'см', lbl:'Текущий', color:'var(--txt)'},
+    {val:(diff>0?'+':'')+nf(diff), unit:'см', lbl:'За период', color:'var(--sub)'}
+  ]);
+  return '<div class="chart-box"><div class="chart-title">'+label+'</div>' + hdr + svgLineChart(vals, dsArr, nf) + '</div>';
 }
 function dataBackupBoxHtml() {
   return '<div class="chart-box"><div class="chart-title">Данные</div>' +

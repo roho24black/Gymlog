@@ -2587,6 +2587,13 @@ function addExToWorkout(name) {
 }
 
 // ═══════════════════════ REST TIMER ═══════════════════════
+function defaultRestSet() { return (ST.cfg && ST.cfg.restSet != null) ? ST.cfg.restSet : 45; }
+function setRestSetCfg(delta) {
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.restSet = Math.max(0, defaultRestSet() + delta);
+  saveST();
+  renderWorkout();
+}
 function startRest(sec) {
   REST_SEC = sec; REST_TOTAL = sec; REST_RUNNING = true;
   document.getElementById('rest-bar').classList.add('vis');

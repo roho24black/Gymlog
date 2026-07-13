@@ -1871,7 +1871,9 @@ function renderPlanView(wkt) {
     var summary = planExSummary(ex);
 
     var exOpen = OPEN_EX[ei] ? ' open' : '';
-    if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev);
+    if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev, ex.linkedToPrev ? exs[groupStartIdx(exs, ei)].groupName : null);
+    var pGroupStart = !ex.linkedToPrev && exs[ei+1] && exs[ei+1].linkedToPrev;
+    if (pGroupStart) h += groupNameInputHtml(ei, ex.groupName);
     h += '<div class="plan-ex-row"'+(ex.linkedToPrev?' style="border-left:3px solid var(--acc)"':'')+'>' +
       '<div class="plan-ex-hd" onclick="togglePlanEx('+ei+')">' +
         '<div class="plan-ex-tile" style="background:'+color+'">'+letterOf(ex.name)+'</div>' +
@@ -2399,10 +2401,11 @@ function renderWorkout() {
     var exVol = 0;
     ex.sets.forEach(function(s){ if(s.done && !s.warmup) exVol += (s.w||0)*(s.r||1); });
 
-    if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev);
+    if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev, ex.linkedToPrev ? exs[groupStartIdx(exs, ei)].groupName : null);
 
     var groupStart = !ex.linkedToPrev && exs[ei+1] && exs[ei+1].linkedToPrev;
     if (groupStart) {
+      h += groupNameInputHtml(ei, ex.groupName);
       h += '<button onclick="startCircuit('+ei+')" style="width:100%;height:44px;border-radius:12px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.4);color:#34d399;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;margin-bottom:-1px">▶ Начать круг</button>';
     }
 

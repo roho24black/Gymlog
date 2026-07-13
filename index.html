@@ -4504,12 +4504,30 @@ function measurementChartHtml(field, label) {
   if (dates.length < 2) return '';
   var dsArr = dates.slice(-30);
   var vals = dsArr.map(function(ds){ return m[ds][field]; });
-  var diff = Math.round((vals[vals.length-1]-vals[0])*10)/10;
+  var cur = vals[vals.length-1];
+  var diff = Math.round((cur-vals[0])*10)/10;
   var hdr = trendHeader([
-    {val:nf(vals[vals.length-1]), unit:'см', lbl:'Текущий', color:'var(--txt)'},
+    {val:nf(cur), unit:'см', lbl:'Текущий', color:'var(--txt)'},
     {val:(diff>0?'+':'')+nf(diff), unit:'см', lbl:'За период', color:'var(--sub)'}
   ]);
-  return '<div class="chart-box"><div class="chart-title">'+label+'</div>' + hdr + svgLineChart(vals, dsArr, nf) + '</div>';
+  var goal = (ST.goals && ST.goals.measurements && ST.goals.measurements[field]) || 0;
+  var goalHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">' +
+    (goal>0 ? '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">'+bwGoalRemainText(cur, goal, 'см')+'</div>' : '') +
+    '<div style="display:flex;gap:8px">' +
+    '<input type="number" id="goal-meas-'+field+'" inputmode="decimal" value="'+(goal>0?nf(goal):'')+'" placeholder="Цель, см" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:inherit;box-sizing:border-box" />' +
+    '<button class="btn btn-sm" onclick="setMeasGoal(\''+field+'\')">Сохранить</button>' +
+    '</div></div>';
+  return '<div class="chart-box"><div class="chart-title">'+label+'</div>' + hdr + svgLineChart(vals, dsArr, nf) + goalHtml + '</div>';
+}
+function setMeasGoal(field) {
+  var inp = document.getElementById('goal-meas-'+field);
+  var v = parseFloat(inp.value);
+  if (!ST.goals) ST.goals = {};
+  if (!ST.goals.measurements) ST.goals.measurements = {};
+  if (v > 0) ST.goals.measurements[field] = Math.round(v*10)/10;
+  else delete ST.goals.measurements[field];
+  saveST();
+  renderProgress();
 }
 function dataBackupBoxHtml() {
   return '<div class="chart-box"><div class="chart-title">Данные</div>' +

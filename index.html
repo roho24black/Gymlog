@@ -2506,7 +2506,7 @@ function recordSet(ei, si) {
   }
   s.done = true;
   if (navigator.vibrate) navigator.vibrate(12);
-  saveST(); startRest(45); updateVolBar(); renderWorkout();
+  saveST(); startRest(defaultRestSet()); updateVolBar(); renderWorkout();
   if (isPR) uiPrToast(ex.name, s.w);
 }
 

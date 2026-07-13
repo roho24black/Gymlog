@@ -4288,7 +4288,9 @@ function renderProgOverview(pd) {
     '</div></div>';
   }
 
-  h += '<div class="chart-box"><div class="chart-title">Достижения</div>' + achievementsHtml(pd) + '</div>';
+  h += '<div class="chart-box"><div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">' +
+    '<span>Достижения</span><button class="btn btn-sm" onclick="shareAchievementsCardImg()">📸 Поделиться</button></div>' +
+    achievementsHtml(pd) + '</div>';
   h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
   h += dataBackupBoxHtml();
   return h;

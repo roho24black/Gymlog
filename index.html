@@ -3096,7 +3096,8 @@ function renderCirc() {
         '<div style="font-size:64px">🏁</div>' +
         '<div style="font-size:26px;font-weight:800;color:var(--txt)">'+(CIRC.name?esc(CIRC.name)+' — ':'')+'Круг завершён!</div>' +
         '<div style="font-size:15px;color:var(--sub)">'+CIRC.rounds+' круг(ов) · '+CIRC.group.length+' упражнения</div>' +
-        '<button onclick="closeCirc()" style="margin-top:10px;width:220px;height:54px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:17px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Завершить</button>' +
+        '<button onclick="shareCircuitCardImg()" style="width:220px;height:46px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">📸 Поделиться</button>' +
+        '<button onclick="closeCirc()" style="width:220px;height:54px;border-radius:16px;background:var(--acc);color:var(--acc-txt);font-size:17px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Завершить</button>' +
       '</div>';
   } else if (CIRC.phase === 'rest') {
     var clr = '#38bdf8';

@@ -948,7 +948,7 @@ function ensureDay(date) {
 
 function getExStats(name) {
   var today = todayStr();
-  var pr = 0, lastW = 0, lastR = 0, lastDate = null;
+  var pr = 0, lastW = 0, lastR = 0, lastRPE = 0, lastDate = null;
   Object.keys(ST.w).sort().forEach(function(ds) {
     if (ds === today) return;
     var day = ST.w[ds];
@@ -963,12 +963,18 @@ function getExStats(name) {
         if (!lastDate || ds > lastDate) {
           lastDate = ds;
           var last = done[done.length-1];
-          lastW = last.w||0; lastR = last.r||0;
+          lastW = last.w||0; lastR = last.r||0; lastRPE = last.rpe||0;
         }
       });
     });
   });
-  return lastDate ? {lastW:lastW, lastR:lastR, pr:pr} : null;
+  return lastDate ? {lastW:lastW, lastR:lastR, pr:pr, lastRPE:lastRPE} : null;
+}
+function rpeSuggestionText(rpe) {
+  if (!rpe) return '';
+  if (rpe <= 6) return '💡 Прошлый RPE '+rpe+' — можно +2,5 кг';
+  if (rpe >= 9) return '💡 Прошлый RPE '+rpe+' — вес не повышай';
+  return '';
 }
 // ═══════════════════════ RECOVERY ═══════════════════════
 var RCV_TIMER_ID = null;

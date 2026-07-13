@@ -2571,13 +2571,28 @@ function toggleSuperset(ei) {
   ex.linkedToPrev = !ex.linkedToPrev;
   saveST(); renderWorkout();
 }
-function superlinkRowHtml(ei, linked) {
+function groupStartIdx(exs, ei) {
+  var idx = ei;
+  while (idx > 0 && exs[idx].linkedToPrev) idx--;
+  return idx;
+}
+function superlinkRowHtml(ei, linked, groupName) {
   if (linked) {
+    var label = groupName ? esc(groupName) : 'Суперсет';
     return '<div onclick="toggleSuperset('+ei+');event.stopPropagation()" style="display:flex;align-items:center;gap:8px;margin:-1px 4px;padding:5px 4px;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;-webkit-user-select:none;user-select:none">' +
-      '<span style="flex:1;height:1px;background:var(--acc-brd)"></span>⛓ Суперсет — тапни, чтобы разъединить<span style="flex:1;height:1px;background:var(--acc-brd)"></span>' +
+      '<span style="flex:1;height:1px;background:var(--acc-brd)"></span>⛓ '+label+' — тапни, чтобы разъединить<span style="flex:1;height:1px;background:var(--acc-brd)"></span>' +
       '</div>';
   }
   return '<button onclick="toggleSuperset('+ei+');event.stopPropagation()" style="display:block;width:100%;background:none;border:none;padding:2px 4px;margin:-3px 0 1px;font-size:11px;font-weight:600;color:var(--dim);font-family:inherit;cursor:pointer;text-align:left;-webkit-user-select:none;user-select:none">🔗 Объединить с предыдущим в суперсет</button>';
+}
+function setGroupName(ei, val) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  if (wkt.exercises[ei]) wkt.exercises[ei].groupName = val;
+  saveST();
+}
+function groupNameInputHtml(ei, groupName) {
+  return '<input type="text" value="'+esc(groupName||'')+'" placeholder="Название круга (необязательно)" oninput="setGroupName('+ei+',this.value)" onclick="event.stopPropagation()" style="width:100%;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:8px 10px;color:var(--txt);font-size:12px;font-family:inherit;box-sizing:border-box;margin-bottom:6px" />';
 }
 function updateExNote(ei, val) {
   var ref = curWktRef(); if (!ref) return;

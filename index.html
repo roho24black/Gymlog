@@ -2295,6 +2295,72 @@ function shareAchievementsCardImg() {
 
   shareCanvasImg(canvas, 'achievements.png', 'Мои достижения');
 }
+function shareCircuitCardImg() {
+  if (!CIRC || !ACTIVE_WKT) return;
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  var exNames = CIRC.group.map(function(ei){ return wkt.exercises[ei] ? exTitle(wkt.exercises[ei]) : ''; });
+
+  var canvas = document.createElement('canvas');
+  var W = 1080, H = 1080, PAD = 64;
+  canvas.width = W; canvas.height = H;
+  var ctx = canvas.getContext('2d');
+
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a0a12'); grad.addColorStop(1, '#14141f');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = 'rgba(56,189,248,0.07)';
+  ctx.beginPath(); ctx.arc(W-40, 40, 280, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath(); ctx.arc(PAD+6, 90, 6, 0, Math.PI*2); ctx.fill();
+  ctx.font = '700 26px -apple-system, sans-serif';
+  ctx.fillText('GYM LOG', PAD+24, 98);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 48px -apple-system, sans-serif';
+  ctx.fillText(fitText(ctx, CIRC.name || 'Круговая тренировка', W-PAD*2), PAD, 176);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '500 23px -apple-system, sans-serif';
+  ctx.fillText(dateLabel(todayStr()), PAD, 212);
+
+  var sy0 = 244, sh = 138, gap = 18, sw = (W - PAD*2 - gap)/2;
+  var stats = [
+    [String(CIRC.rounds), 'КРУГОВ', '#38bdf8'],
+    [String(CIRC.group.length), 'УПРАЖНЕНИЙ', '#fbbf24']
+  ];
+  stats.forEach(function(s, i){
+    var sx = PAD + i*(sw+gap);
+    ctx.fillStyle = 'rgba(255,255,255,0.045)';
+    crRoundRect(ctx, sx, sy0, sw, sh, 18); ctx.fill();
+    ctx.fillStyle = s[2];
+    ctx.font = '800 44px -apple-system, sans-serif';
+    ctx.fillText(s[0], sx+22, sy0+70);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '700 14px -apple-system, sans-serif';
+    ctx.fillText(s[1], sx+22, sy0+102);
+  });
+
+  var cursorY = sy0 + sh + 50, footerY = H - 60;
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '700 18px -apple-system, sans-serif';
+  ctx.fillText('УПРАЖНЕНИЯ', PAD, cursorY);
+  cursorY += 38;
+  exNames.forEach(function(name, i){
+    if (cursorY > footerY - 10) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 26px -apple-system, sans-serif';
+    ctx.fillText((i+1)+'. '+fitText(ctx, name, W-PAD*2-40), PAD, cursorY);
+    cursorY += 46;
+  });
+
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = '500 19px -apple-system, sans-serif';
+  ctx.fillText('gymlog', PAD, H-40);
+
+  shareCanvasImg(canvas, 'circuit.png', 'Мой круг');
+}
 
 function tickWktTimer() {
   if (!WKT_START) return;

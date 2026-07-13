@@ -2214,19 +2214,86 @@ function shareWorkoutCardImg(sum) {
   ctx.font = '500 19px -apple-system, sans-serif';
   ctx.fillText('gymlog', PAD, H-40);
 
+  shareCanvasImg(canvas, 'workout.png', 'Моя тренировка');
+}
+function shareCanvasImg(canvas, filename, shareTitle) {
   canvas.toBlob(function(blob){
     if (!blob) return;
-    var file = (typeof File !== 'undefined') ? new File([blob], 'workout.png', {type:'image/png'}) : null;
+    var file = (typeof File !== 'undefined') ? new File([blob], filename, {type:'image/png'}) : null;
     if (file && navigator.canShare && navigator.canShare({files:[file]})) {
-      navigator.share({files:[file], title:'Моя тренировка'}).catch(function(){});
+      navigator.share({files:[file], title:shareTitle}).catch(function(){});
     } else {
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = url; a.download = 'workout.png';
+      a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
     }
   }, 'image/png');
+}
+function shareAchievementsCardImg() {
+  var pd = window._progData || computeProgressData();
+  var unlocked = ACHIEVEMENTS.filter(function(a){ return a.check(pd); });
+
+  var canvas = document.createElement('canvas');
+  var W = 1080, H = 1080, PAD = 64;
+  canvas.width = W; canvas.height = H;
+  var ctx = canvas.getContext('2d');
+
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a0a12'); grad.addColorStop(1, '#14141f');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = 'rgba(251,191,36,0.07)';
+  ctx.beginPath(); ctx.arc(W-40, 40, 280, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath(); ctx.arc(PAD+6, 90, 6, 0, Math.PI*2); ctx.fill();
+  ctx.font = '700 26px -apple-system, sans-serif';
+  ctx.fillText('GYM LOG', PAD+24, 98);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 48px -apple-system, sans-serif';
+  ctx.fillText('Достижения', PAD, 176);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '500 23px -apple-system, sans-serif';
+  ctx.fillText(unlocked.length+' из '+ACHIEVEMENTS.length+' разблокировано', PAD, 212);
+
+  if (!unlocked.length) {
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '600 26px -apple-system, sans-serif';
+    ctx.fillText('Пока пусто — но это ненадолго 💪', PAD, 300);
+  } else {
+    var cols = 4, gap = 16;
+    var tw = (W - PAD*2 - gap*(cols-1))/cols, th = 158;
+    var footerY = H - 60;
+    unlocked.forEach(function(a, i){
+      var row = Math.floor(i/cols), col = i%cols;
+      var ty = 250 + row*(th+gap);
+      if (ty + th > footerY) return;
+      var tx = PAD + col*(tw+gap);
+      ctx.fillStyle = 'rgba(251,191,36,0.08)';
+      crRoundRect(ctx, tx, ty, tw, th, 16); ctx.fill();
+      ctx.font = '40px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(a.icon, tx+tw/2, ty+62);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '600 15px -apple-system, sans-serif';
+      var words = a.label.split(' ');
+      var line1 = words.slice(0, Math.ceil(words.length/2)).join(' ');
+      var line2 = words.slice(Math.ceil(words.length/2)).join(' ');
+      ctx.fillText(line1, tx+tw/2, ty+96);
+      if (line2) ctx.fillText(line2, tx+tw/2, ty+116);
+      ctx.textAlign = 'left';
+    });
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = '500 19px -apple-system, sans-serif';
+  ctx.fillText('gymlog', PAD, H-40);
+
+  shareCanvasImg(canvas, 'achievements.png', 'Мои достижения');
 }
 
 function tickWktTimer() {

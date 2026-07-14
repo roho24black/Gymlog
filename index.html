@@ -2758,6 +2758,7 @@ function substituteEx(ei) {
 function applySubstitute(newName) {
   var ei = SUBSTITUTE_EI;
   SUBSTITUTE_EI = null;
+  dbClose();
   if (ei == null) return;
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);

@@ -4182,6 +4182,7 @@ function computeProgressData() {
             dailyVol[ds] = (dailyVol[ds]||0) + vol;
             if (!byExName[ex.name]) byExName[ex.name] = [];
             byExName[ex.name].push({ds:ds, w:s.w, r:s.r||0, rpe:s.rpe||0});
+            if (s.rpe) totalRpeSets++;
           }
         });
       });

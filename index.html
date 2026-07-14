@@ -626,12 +626,26 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
 // ═══════════════════════ ERROR REPORTING ═══════════════════════
 (function(){
   var ERR_TOPIC = 'gymlog-roman-errors-2024';
+  var DEDUP_KEY = 'gymlog_err_dedup_v1';
+  var d = new Date();
+  var dayKey = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
   var reported = {};
+  try {
+    var raw = localStorage.getItem(DEDUP_KEY);
+    if (raw) {
+      var saved = JSON.parse(raw);
+      if (saved && saved.day === dayKey) reported = saved.sigs || {};
+    }
+  } catch(e) {}
+  function persistDedup() {
+    try { localStorage.setItem(DEDUP_KEY, JSON.stringify({day: dayKey, sigs: reported})); } catch(e) {}
+  }
   var reportCount = 0;
   function reportErr(msg, src, line) {
     var sig = msg + '@' + line;
     if (reported[sig] || reportCount >= 5) return;
     reported[sig] = true;
+    persistDedup();
     reportCount++;
     var text = msg + (src ? ' (' + src.split('/').pop() + ':' + line + ')' : '');
     try {

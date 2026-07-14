@@ -4472,6 +4472,7 @@ function renderProgOverview(pd) {
     achievementsHtml(pd) + '</div>';
   h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
   h += dataBackupBoxHtml();
+  h += bugReportBoxHtml();
   return h;
 }
 function renderProgStrength(pd) {

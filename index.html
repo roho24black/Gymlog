@@ -2746,6 +2746,36 @@ function removeEx(ei) {
     saveST(); renderWorkout();
   });
 }
+function substituteEx(ei) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var ex = wkt.exercises[ei];
+  if (!ex) return;
+  SUBSTITUTE_EI = ei;
+  openDbModal(applySubstitute, exGroup(ex.name), 'Замена: ' + exTitle(ex));
+}
+function applySubstitute(newName) {
+  var ei = SUBSTITUTE_EI;
+  SUBSTITUTE_EI = null;
+  if (ei == null) return;
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var oldEx = wkt.exercises[ei];
+  if (!oldEx || oldEx.name === newName) return;
+  var newEx = makeEx(newName);
+  var keepSets = oldEx.sets ? oldEx.sets.length : 1;
+  while (newEx.sets.length < keepSets) newEx.sets.push(Object.assign({}, newEx.sets[newEx.sets.length-1]));
+  newEx.sets = newEx.sets.slice(0, Math.max(keepSets, 1));
+  newEx.note = oldEx.note;
+  if (oldEx.linkedToPrev) newEx.linkedToPrev = true;
+  if (oldEx.groupName) newEx.groupName = oldEx.groupName;
+  wkt.exercises[ei] = newEx;
+  if (!ST.recentEx) ST.recentEx = [];
+  ST.recentEx = [newName].concat(ST.recentEx.filter(function(n){ return n!==newName; })).slice(0,10);
+  saveST();
+  renderWorkout();
+  uiToast('Заменено на «'+newName+'»');
+}
 function moveEx(ei, dir) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);

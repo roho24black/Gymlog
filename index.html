@@ -5043,6 +5043,7 @@ renderTopbar();
 renderWorkout();
 if (ST.recovery && Date.now() < getRecoveryEnd()) startRecoveryTimer();
 checkShareImport();
+retryUnsentBugReports();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
 </script>
 </body>

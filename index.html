@@ -1727,12 +1727,20 @@ function deletePlan(date, wid) {
 }
 
 function deleteWorkout(date, wid) {
-  uiConfirm('Удалить запись тренировки?', function(){
-    if (!ST.w[date]) return;
-    ST.w[date].workouts = (ST.w[date].workouts||[]).filter(function(w){ return w.id !== wid; });
-    if (!ST.w[date].workouts.length && ST.w[date].type !== 'rest') delete ST.w[date];
-    saveST();
-    renderWorkout();
+  if (!ST.w[date]) return;
+  var workouts = ST.w[date].workouts || [];
+  var idx = -1, removed = null;
+  for (var i = 0; i < workouts.length; i++) if (workouts[i].id === wid) { idx = i; removed = workouts[i]; break; }
+  if (!removed) return;
+  var wasRestDay = ST.w[date].type === 'rest';
+  workouts.splice(idx, 1);
+  if (!workouts.length && !wasRestDay) delete ST.w[date];
+  saveST();
+  renderWorkout();
+  uiUndoToast('Тренировка удалена', function(){
+    ensureDay(date);
+    ST.w[date].workouts.splice(idx, 0, removed);
+    saveST(); renderWorkout();
   });
 }
 

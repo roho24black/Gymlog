@@ -4795,7 +4795,7 @@ function submitBugReport() {
   try {
     fetch('https://ntfy.sh/gymlog-roman-bugs-2024', {
       method: 'POST',
-      headers: { 'Title': 'GymLog: новый баг-репорт', 'Priority': 'high', 'Tags': 'bug' },
+      headers: { 'Title': 'GymLog: new bug report', 'Priority': 'high', 'Tags': 'bug' },
       body: text.slice(0, 1000)
     }).catch(function(){});
   } catch(e) {}

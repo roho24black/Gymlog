@@ -4772,11 +4772,12 @@ function dsFromTs(ts) {
   return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 }
 function bugReportBoxHtml() {
-  var reports = ST.bugReports || [];
+  var reports = (ST.bugReports || []).filter(function(r){ return !r.archived; });
   var listHtml = reports.slice(0, 5).map(function(r){
-    return '<div style="padding:7px 0;border-bottom:1px solid var(--brd);font-size:12px">' +
-      '<div style="color:var(--mut);font-size:10px;margin-bottom:2px">'+dateLabelYr(dsFromTs(r.ts))+'</div>' +
-      '<div style="color:var(--sub)">'+esc(r.text)+'</div></div>';
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--brd);font-size:12px">' +
+      '<div style="min-width:0"><div style="color:var(--mut);font-size:10px;margin-bottom:2px">'+dateLabelYr(dsFromTs(r.ts))+(r.sent?'':' · не отправлено')+'</div>' +
+      '<div style="color:var(--sub)">'+esc(r.text)+'</div></div>' +
+      '<button onclick="archiveBugReport('+r.ts+')" style="flex-shrink:0;background:none;border:none;color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;padding:4px;white-space:nowrap">✓ Обработано</button></div>';
   }).join('');
   return '<div class="chart-box"><div class="chart-title">🐛 Сообщить о баге</div>' +
     '<textarea id="bugreport-input" placeholder="Опиши, что пошло не так..." style="width:100%;min-height:70px;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px;color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical"></textarea>' +
@@ -4784,22 +4785,48 @@ function bugReportBoxHtml() {
     (listHtml ? '<div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin:12px 0 2px">Мои репорты</div><div>'+listHtml+'</div>' : '') +
     '</div>';
 }
+function bugReportContext() {
+  return 'tab=' + CUR_TAB + ' | active=' + (ACTIVE_WKT ? 'yes' : 'no') +
+    ' | screen=' + window.innerWidth + 'x' + window.innerHeight +
+    ' | ua=' + (navigator.userAgent || '').slice(0, 80);
+}
+function sendBugReport(report, silent) {
+  var body = (bugReportContext() + '\n\n' + report.text).slice(0, 1800);
+  try {
+    fetch('https://ntfy.sh/gymlog-roman-bugs-2024', {
+      method: 'POST',
+      headers: { 'Title': 'GymLog: new bug report', 'Priority': 'high', 'Tags': 'bug' },
+      body: body
+    }).then(function(r){
+      if (r && r.ok) {
+        report.sent = true; saveST();
+        if (!silent) uiToast('Отправлено разработчику 🐛');
+      } else if (!silent) {
+        uiToast('Сохранено локально — попробую отправить снова позже');
+      }
+    }).catch(function(){ if (!silent) uiToast('Сохранено локально — попробую отправить снова позже'); });
+  } catch(e) { if (!silent) uiToast('Сохранено локально — попробую отправить снова позже'); }
+}
+function retryUnsentBugReports() {
+  (ST.bugReports || []).filter(function(r){ return !r.sent; }).forEach(function(r){ sendBugReport(r, true); });
+}
 function submitBugReport() {
   var inp = document.getElementById('bugreport-input');
   var text = (inp.value||'').trim();
   if (!text) { uiToast('Опиши баг перед отправкой'); return; }
   if (!ST.bugReports) ST.bugReports = [];
-  ST.bugReports.unshift({ts: Date.now(), text: text});
+  var report = {ts: Date.now(), text: text, sent: false, archived: false};
+  ST.bugReports.unshift(report);
   saveST();
   inp.value = '';
-  try {
-    fetch('https://ntfy.sh/gymlog-roman-bugs-2024', {
-      method: 'POST',
-      headers: { 'Title': 'GymLog: new bug report', 'Priority': 'high', 'Tags': 'bug' },
-      body: text.slice(0, 1000)
-    }).catch(function(){});
-  } catch(e) {}
-  uiToast('Спасибо! Баг отправлен разработчику 🐛');
+  renderProgress();
+  sendBugReport(report, false);
+}
+function archiveBugReport(ts) {
+  var r = (ST.bugReports || []).find(function(r){ return r.ts === ts; });
+  if (!r) return;
+  r.archived = true;
+  saveST();
   renderProgress();
 }
 function exportData() {

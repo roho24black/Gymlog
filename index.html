@@ -2821,7 +2821,7 @@ function tmrBeep(freq, dur) {
     o.start(t); o.stop(t + (dur || 0.15) + 0.03);
   } catch(e) {}
 }
-function tmrVibe(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {} }
+function tmrVibe(p) { if (timerMuted()) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {} }
 
 function openWorkoutTimer() {
   if (!ACTIVE_WKT) return;

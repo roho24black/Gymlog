@@ -3178,7 +3178,8 @@ function renderCirc() {
     var label = CIRC.restKind==='round' ? 'Отдых · конец круга' : 'Отдых · смена упражнения';
     h = '<div style="padding:max(env(safe-area-inset-top),16px) 18px 0;display:flex;align-items:center;justify-content:space-between">' +
         '<div style="font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px">'+(CIRC.name?esc(CIRC.name)+' · ':'')+'Круг '+(CIRC.round+1)+'/'+CIRC.rounds+'</div>' +
-        '<button onclick="closeCirc()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
+        '<div style="display:flex;align-items:center;gap:4px">' + muteToggleBtnHtml() +
+        '<button onclick="closeCirc()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:6px;line-height:1">✕</button></div>' +
       '</div>' +
       '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 20px">' +
         '<div style="font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:'+clr+'">ОТДЫХ</div>' +

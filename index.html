@@ -4767,6 +4767,41 @@ function dataBackupBoxHtml() {
     '<input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="importDataFile(this)">' +
     '</div>';
 }
+function dsFromTs(ts) {
+  var d = new Date(ts);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function bugReportBoxHtml() {
+  var reports = ST.bugReports || [];
+  var listHtml = reports.slice(0, 5).map(function(r){
+    return '<div style="padding:7px 0;border-bottom:1px solid var(--brd);font-size:12px">' +
+      '<div style="color:var(--mut);font-size:10px;margin-bottom:2px">'+dateLabelYr(dsFromTs(r.ts))+'</div>' +
+      '<div style="color:var(--sub)">'+esc(r.text)+'</div></div>';
+  }).join('');
+  return '<div class="chart-box"><div class="chart-title">🐛 Сообщить о баге</div>' +
+    '<textarea id="bugreport-input" placeholder="Опиши, что пошло не так..." style="width:100%;min-height:70px;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px;color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical"></textarea>' +
+    '<button class="btn btn-sm" style="width:100%;margin-top:8px" onclick="submitBugReport()">Отправить</button>' +
+    (listHtml ? '<div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin:12px 0 2px">Мои репорты</div><div>'+listHtml+'</div>' : '') +
+    '</div>';
+}
+function submitBugReport() {
+  var inp = document.getElementById('bugreport-input');
+  var text = (inp.value||'').trim();
+  if (!text) { uiToast('Опиши баг перед отправкой'); return; }
+  if (!ST.bugReports) ST.bugReports = [];
+  ST.bugReports.unshift({ts: Date.now(), text: text});
+  saveST();
+  inp.value = '';
+  try {
+    fetch('https://ntfy.sh/gymlog-roman-bugs-2024', {
+      method: 'POST',
+      headers: { 'Title': 'GymLog: новый баг-репорт', 'Priority': 'high', 'Tags': 'bug' },
+      body: text.slice(0, 1000)
+    }).catch(function(){});
+  } catch(e) {}
+  uiToast('Спасибо! Баг отправлен разработчику 🐛');
+  renderProgress();
+}
 function exportData() {
   var blob = new Blob([JSON.stringify(ST)], {type:'application/json'});
   var url = URL.createObjectURL(blob);

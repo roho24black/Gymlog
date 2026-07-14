@@ -1669,6 +1669,24 @@ function uiToast(message) {
   document.body.appendChild(t);
   setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){ if(t.parentNode) t.remove(); },300); }, 2200);
 }
+function uiUndoToast(message, undoFn) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--card2);color:var(--txt);border:1px solid var(--brd2);border-radius:12px;padding:10px 10px 10px 18px;font-size:14px;font-weight:600;z-index:9600;max-width:88%;display:flex;align-items:center;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5)';
+  var span = document.createElement('span'); span.textContent = message;
+  var btn = document.createElement('button');
+  btn.textContent = 'Отменить';
+  btn.style.cssText = 'background:none;border:none;color:var(--acc);font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;padding:6px 4px;white-space:nowrap;-webkit-user-select:none;user-select:none';
+  var dismissed = false;
+  function dismiss() {
+    if (dismissed) return; dismissed = true;
+    t.style.transition = 'opacity .3s'; t.style.opacity = '0';
+    setTimeout(function(){ if (t.parentNode) t.remove(); }, 300);
+  }
+  btn.onclick = function(){ dismiss(); if (undoFn) undoFn(); };
+  t.appendChild(span); t.appendChild(btn);
+  document.body.appendChild(t);
+  setTimeout(dismiss, 5000);
+}
 function fireConfetti() {
   var colors = ['#22c55e','#fbbf24','#38bdf8','#f43f5e','#a78bfa'];
   var n = 26;

@@ -2275,6 +2275,7 @@ function shareAchievementsCardImg() {
       var tx = PAD + col*(tw+gap);
       ctx.fillStyle = 'rgba(251,191,36,0.08)';
       crRoundRect(ctx, tx, ty, tw, th, 16); ctx.fill();
+      ctx.fillStyle = '#ffffff';
       ctx.font = '40px -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(a.icon, tx+tw/2, ty+62);

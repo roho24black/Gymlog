@@ -2604,6 +2604,7 @@ function renderWorkout() {
         '<div class="ex-sub">'+(group||'Упражнение')+' · '+doneSets+'/'+ex.sets.length+' подх.</div>' +
       '</div>' +
       (exVol > 0 ? '<div class="ex-vol">'+exVol+' кг</div>' : '') +
+      '<button onclick="substituteEx('+ei+')" title="Заменить упражнение" style="flex-shrink:0;background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:4px;margin-left:2px;-webkit-user-select:none;user-select:none">🔄</button>' +
       '</div>';
 
     h += '<div class="ex-body open">';

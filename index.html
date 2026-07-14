@@ -3198,6 +3198,9 @@ function circFinish() {
   if (CIRC.raf) { cancelAnimationFrame(CIRC.raf); CIRC.raf = null; }
   tmrBeep(990, 0.3); setTimeout(function(){ tmrBeep(1320, 0.3); }, 180);
   tmrVibe([120,60,120,60,200]);
+  if (!ST.stats) ST.stats = {};
+  ST.stats.circuitsCompleted = (ST.stats.circuitsCompleted||0) + 1;
+  saveST();
   renderCirc();
 }
 function closeCirc() {

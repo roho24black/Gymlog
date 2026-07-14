@@ -4240,7 +4240,10 @@ var ACHIEVEMENTS = [
   {icon:'🪜', label:'500 этажей',       check:function(pd){ return pd.totalStairFloors>=500; }},
   {icon:'🧘', label:'30 мин статики',   check:function(pd){ return pd.totalStaticSec>=1800; }},
   {icon:'⚖️', label:'10 записей веса', check:function(pd){ return Object.keys(ST.bw||{}).length>=10; }},
-  {icon:'🛠️', label:'Своё упражнение', check:function(pd){ return (ST.customEx||[]).length>=1; }}
+  {icon:'🛠️', label:'Своё упражнение', check:function(pd){ return (ST.customEx||[]).length>=1; }},
+  {icon:'📊', label:'20 подходов с RPE', check:function(pd){ return pd.totalRpeSets>=20; }},
+  {icon:'🌀', label:'5 кругов пройдено', check:function(pd){ return (ST.stats && ST.stats.circuitsCompleted||0)>=5; }},
+  {icon:'📏', label:'5 замеров тела',   check:function(pd){ return Object.keys(ST.measurements||{}).length>=5; }}
 ];
 function achievementsHtml(pd) {
   return '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">' +

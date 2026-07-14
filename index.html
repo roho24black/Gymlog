@@ -2954,7 +2954,8 @@ function renderTmr() {
     }).join('');
     h = '<div style="padding:max(env(safe-area-inset-top),20px) 20px 0;display:flex;align-items:center;justify-content:space-between">' +
         '<div style="font-size:18px;font-weight:800;color:var(--txt)">⏱️ Таймер подходов</div>' +
-        '<button onclick="closeTmr()" style="background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:6px;line-height:1">✕</button>' +
+        '<div style="display:flex;align-items:center;gap:4px">' + muteToggleBtnHtml() +
+        '<button onclick="closeTmr()" style="background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;padding:6px;line-height:1">✕</button></div>' +
       '</div>' +
       '<div style="flex:1;overflow-y:auto;padding:24px 20px 20px;max-width:480px;width:100%;margin:0 auto;box-sizing:border-box">' +
         row('Отдых между подходами', fmtTime(TMR.restSet), 'tmrSetRestSet(-5)', 'tmrSetRestSet(5)') +

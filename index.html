@@ -3516,9 +3516,10 @@ function shConfirm() {
 }
 
 // ═══════════════════════ EXERCISE DB MODAL ═══════════════════════
-function openDbModal(cb) {
+function openDbModal(cb, presetFilter, title) {
   DB_CB = cb || addExToWorkout;
-  DB_FILTER = null;
+  DB_FILTER = presetFilter || null;
+  document.getElementById('db-modal-title').textContent = title || 'База упражнений';
   // Режим (зал/бассейн) — из редактора шаблона или из текущей тренировки/плана
   if (cb === editorAddEx && typeof EDITOR_TPL !== 'undefined' && EDITOR_TPL) {
     DB_POOL = EDITOR_TPL.loc === 'pool';

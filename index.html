@@ -4526,7 +4526,34 @@ function renderProgStrength(pd) {
     h += '<div id="prog-chart"></div>';
     h += '<div id="prog-ex-history"></div>';
   }
+
+  h += calc1rmBoxHtml();
   return h;
+}
+function calc1rmResultHtml(w, r) {
+  var est = (w > 0 && r > 0) ? Math.round(e1RM(w, r)) : 0;
+  if (!est) return '';
+  var pctRows = [95, 90, 85, 80, 75, 70, 65, 60].map(function(pct){
+    return '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--sub)">'+pct+'%</span><span style="font-weight:600">'+Math.round(est*pct/100)+' кг</span></div>';
+  }).join('');
+  return '<div style="text-align:center;padding:12px;background:var(--card2);border-radius:12px;margin-bottom:8px">' +
+    '<div style="font-size:11px;color:var(--mut);text-transform:uppercase">Расчётный 1ПМ</div>' +
+    '<div style="font-size:32px;font-weight:800;color:var(--acc)">'+est+' кг</div></div>' + pctRows;
+}
+function calc1rmInput() {
+  var w = parseFloat(document.getElementById('calc1rm-w').value) || 0;
+  var r = parseFloat(document.getElementById('calc1rm-r').value) || 0;
+  var el = document.getElementById('calc1rm-result');
+  if (el) el.innerHTML = calc1rmResultHtml(w, r);
+}
+function calc1rmBoxHtml() {
+  return '<div class="chart-box"><div class="chart-title">🧮 Калькулятор 1ПМ</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:10px">' +
+    '<input type="number" id="calc1rm-w" inputmode="decimal" placeholder="Вес, кг" oninput="calc1rmInput()" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:9px 10px;color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box" />' +
+    '<input type="number" id="calc1rm-r" inputmode="numeric" placeholder="Повторы" oninput="calc1rmInput()" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:9px 10px;color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box" />' +
+    '</div>' +
+    '<div id="calc1rm-result"></div>' +
+    '</div>';
 }
 function renderProgCardio(pd) {
   var h = '', hasAny = false;

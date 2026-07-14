@@ -2708,14 +2708,16 @@ function removeEx(ei) {
   var ref = curWktRef(); if (!ref) return;
   var wkt = getWkt(ref.date, ref.wid);
   var ex = wkt.exercises[ei];
-  var doRemove = function(){
-    wkt.exercises.splice(ei, 1);
-    delete OPEN_EX[ei];
+  if (!ex) return;
+  wkt.exercises.splice(ei, 1);
+  delete OPEN_EX[ei];
+  saveST(); renderWorkout();
+  uiUndoToast('Удалено: '+exTitle(ex), function(){
+    var wkt2 = getWkt(ref.date, ref.wid);
+    if (!wkt2) return;
+    wkt2.exercises.splice(ei, 0, ex);
     saveST(); renderWorkout();
-  };
-  var hasDone = ex && (ex.sets||[]).some(function(s){ return s.done; });
-  if (hasDone) uiConfirm('Удалить «'+exTitle(ex)+'»? Записанные подходы будут потеряны.', doRemove);
-  else doRemove();
+  });
 }
 function moveEx(ei, dir) {
   var ref = curWktRef(); if (!ref) return;

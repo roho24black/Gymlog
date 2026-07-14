@@ -2770,8 +2770,6 @@ function applySubstitute(newName) {
   if (oldEx.linkedToPrev) newEx.linkedToPrev = true;
   if (oldEx.groupName) newEx.groupName = oldEx.groupName;
   wkt.exercises[ei] = newEx;
-  if (!ST.recentEx) ST.recentEx = [];
-  ST.recentEx = [newName].concat(ST.recentEx.filter(function(n){ return n!==newName; })).slice(0,10);
   saveST();
   renderWorkout();
   uiToast('Заменено на «'+newName+'»');

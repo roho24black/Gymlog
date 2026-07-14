@@ -2796,7 +2796,19 @@ function restStop() {
 }
 
 // ═══════════════════════ ТАЙМЕР ПОДХОДОВ (статика) ═══════════════════════
+function timerMuted() { return !!(ST.cfg && ST.cfg.timerMuted); }
+function toggleTimerMute() {
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.timerMuted = !ST.cfg.timerMuted;
+  saveST();
+  if (TMR) renderTmr();
+  if (CIRC) renderCirc();
+}
+function muteToggleBtnHtml() {
+  return '<button onclick="toggleTimerMute()" style="background:none;border:none;color:var(--dim);font-size:19px;cursor:pointer;padding:6px;line-height:1">'+(timerMuted()?'🔇':'🔊')+'</button>';
+}
 function tmrBeep(freq, dur) {
+  if (timerMuted()) return;
   try {
     if (!TMR_AC) return;
     var o = TMR_AC.createOscillator(), g = TMR_AC.createGain();

@@ -999,6 +999,11 @@ var BASE_RCV_H = {'Ноги':72,'Спина':64,'Грудь':56,'Плечи':44,
 
 // Оценка 1ПМ по формуле Эпли
 function e1RM(w, r) { return (w > 0 && r > 0) ? w * (1 + r / 30) : 0; }
+// type="number" inputs silently strip a typed ',' (only '.' is a valid decimal
+// separator per spec) instead of treating it as a decimal point — on a Russian
+// keyboard that turns "82,5" into "825". These fields use type="text" instead,
+// so parse through here to accept either separator.
+function parseDecimal(str) { return parseFloat(String(str||'').replace(',', '.')); }
 
 // Лучший расчётный 1ПМ упражнения за всю историю (включая сегодня) — мера силы
 function bestE1RM(name) {

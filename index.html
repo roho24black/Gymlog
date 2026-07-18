@@ -4703,7 +4703,7 @@ function renderProgress() {
 }
 function logBodyweight() {
   var inp = document.getElementById('bw-input');
-  var v = parseFloat(inp.value);
+  var v = parseDecimal(inp.value);
   if (!v || v <= 0) { uiToast('Введи вес'); return; }
   v = Math.round(v*10)/10;
   if (!ST.bw) ST.bw = {};

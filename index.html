@@ -4750,7 +4750,7 @@ function bwGoalRemainText(current, target, unit) {
 }
 function setBwGoal() {
   var inp = document.getElementById('goal-bw-input');
-  var v = parseFloat(inp.value);
+  var v = parseDecimal(inp.value);
   if (!ST.goals) ST.goals = {};
   if (v > 0) ST.goals.bodyweight = Math.round(v*10)/10;
   else delete ST.goals.bodyweight;

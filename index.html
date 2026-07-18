@@ -4762,7 +4762,7 @@ function logMeasurements() {
   var day = {}, any = false;
   MEAS_FIELDS.forEach(function(f){
     var inp = document.getElementById('meas-'+f[0]);
-    var v = parseFloat(inp.value);
+    var v = parseDecimal(inp.value);
     if (v > 0) { day[f[0]] = Math.round(v*10)/10; any = true; }
   });
   if (!any) { uiToast('Введи хотя бы один замер'); return; }

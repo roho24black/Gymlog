@@ -4819,7 +4819,7 @@ function measurementChartHtml(field, label) {
 }
 function setMeasGoal(field) {
   var inp = document.getElementById('goal-meas-'+field);
-  var v = parseFloat(inp.value);
+  var v = parseDecimal(inp.value);
   if (!ST.goals) ST.goals = {};
   if (!ST.goals.measurements) ST.goals.measurements = {};
   if (v > 0) ST.goals.measurements[field] = Math.round(v*10)/10;

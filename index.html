@@ -4733,7 +4733,7 @@ function bwSectionHtml() {
   var goalHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">' +
     (bwGoal>0 ? '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">'+bwGoalRemainText(Number(last)||0, bwGoal)+'</div>' : '') +
     '<div style="display:flex;gap:8px">' +
-    '<input type="number" id="goal-bw-input" inputmode="decimal" value="'+(bwGoal>0?nf(bwGoal):'')+'" placeholder="Цель, кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:inherit;box-sizing:border-box" />' +
+    '<input type="text" id="goal-bw-input" inputmode="decimal" value="'+(bwGoal>0?nf(bwGoal):'')+'" placeholder="Цель, кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:inherit;box-sizing:border-box" />' +
     '<button class="btn btn-sm" onclick="setBwGoal()">Сохранить</button>' +
     '</div></div>';
   return '<div class="chart-box"><div class="chart-title">Вес тела</div>' +

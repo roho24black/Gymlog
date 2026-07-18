@@ -4738,7 +4738,7 @@ function bwSectionHtml() {
     '</div></div>';
   return '<div class="chart-box"><div class="chart-title">Вес тела</div>' +
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(chart?'12px':'0')+'">' +
-    '<input type="number" id="bw-input" inputmode="decimal" step="0.1" value="'+esc(last)+'" placeholder="кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:15px;font-family:inherit;box-sizing:border-box" />' +
+    '<input type="text" id="bw-input" inputmode="decimal" value="'+esc(last)+'" placeholder="кг" style="flex:1;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:15px;font-family:inherit;box-sizing:border-box" />' +
     '<button class="btn btn-sm" onclick="logBodyweight()">Сохранить</button>' +
     '</div>' + chart + goalHtml + '</div>';
 }

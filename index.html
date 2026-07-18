@@ -4779,7 +4779,7 @@ function measurementsSectionHtml() {
   var last = dates.length ? m[dates[dates.length-1]] : {};
   var inputs = MEAS_FIELDS.map(function(f){
     return '<div style="flex:1"><div style="font-size:10px;color:var(--mut);margin-bottom:4px">'+f[1]+'</div>' +
-      '<input type="number" id="meas-'+f[0]+'" inputmode="decimal" step="0.5" value="'+(last[f[0]]!=null?esc(last[f[0]]):'')+'" placeholder="см" style="width:100%;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:9px 8px;color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box" /></div>';
+      '<input type="text" id="meas-'+f[0]+'" inputmode="decimal" value="'+(last[f[0]]!=null?esc(last[f[0]]):'')+'" placeholder="см" style="width:100%;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:9px 8px;color:var(--txt);font-size:14px;font-family:inherit;box-sizing:border-box" /></div>';
   }).join('');
   var histRows = dates.slice(-10).reverse().map(function(ds){
     var d = m[ds];

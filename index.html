@@ -5009,7 +5009,7 @@ function goalBoxHtml(current, target, unit, inputId, saveOnclick) {
 }
 function setExGoal(name) {
   var inp = document.getElementById('goal-ex-input');
-  var v = parseFloat(inp.value);
+  var v = parseDecimal(inp.value);
   if (!ST.goals) ST.goals = {};
   if (!ST.goals.byExName) ST.goals.byExName = {};
   if (v > 0) ST.goals.byExName[name] = Math.round(v*10)/10;

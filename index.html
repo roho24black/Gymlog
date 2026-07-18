@@ -3492,7 +3492,7 @@ function applyInputMode(focusIt) {
 }
 function shManualInput() {
   var inp = document.getElementById('sh-manual-input');
-  var v = parseFloat(inp.value);
+  var v = parseDecimal(inp.value);
   if (!isNaN(v)) SH_VAL = v;
 }
 function shManualTimeInput() {

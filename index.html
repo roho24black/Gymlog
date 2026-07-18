@@ -2957,12 +2957,27 @@ function tmrSetPhase(secs) {
   TMR.endAt = Date.now() + secs*1000;
   TMR.lastWhole = secs;
 }
+function tmrFirstPendingIdx(seq) {
+  var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
+  for (var i = 0; i < seq.length; i++) {
+    var p = seq[i];
+    if (p.type !== 'work') continue;
+    var s = wkt && wkt.exercises[p.ei] && wkt.exercises[p.ei].sets[p.si];
+    if (!s || !s.done) return i;
+  }
+  return seq.length;
+}
 function tmrStart() {
   try { TMR_AC = TMR_AC || new (window.AudioContext||window.webkitAudioContext)(); if (TMR_AC.state==='suspended') TMR_AC.resume(); } catch(e) {}
   tmrBuildSeq();
   if (!TMR.seq.length) { uiToast('Нет подходов'); return; }
-  TMR.idx = 0; TMR.running = true; TMR.done = false;
-  tmrSetPhase(TMR.seq[0].secs);
+  // Start at the first not-yet-done set instead of always index 0 — otherwise
+  // finishing exercise 1 and opening the timer for exercise 2 replays exercise 1
+  // (and overwrites its recorded times) instead of picking up where you left off.
+  var startIdx = tmrFirstPendingIdx(TMR.seq);
+  if (startIdx >= TMR.seq.length) { uiToast('Все подходы уже выполнены'); return; }
+  TMR.idx = startIdx; TMR.running = true; TMR.done = false;
+  tmrSetPhase(TMR.seq[TMR.idx].secs);
   tmrBeep(880, 0.12); tmrVibe(60);
   renderTmr();
   TMR.raf = requestAnimationFrame(tmrFrame);

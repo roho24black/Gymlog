@@ -4399,9 +4399,16 @@ function computeProgressData() {
     totalDurationMs:totalDurationMs, durationCount:durationCount};
 }
 function computeStreak(workoutDays) {
-  var streak = 0, ds = todayStr();
+  // One "freeze": a single skipped day within the chain doesn't zero the streak,
+  // it's just not counted itself — so missing one day here and there (sick, travel)
+  // doesn't wipe out weeks of consistency. A second gap still ends the streak.
+  var streak = 0, freezeUsed = false, ds = todayStr();
   if (!workoutDays[ds]) ds = dateAdd(ds, -1);
-  while (workoutDays[ds]) { streak++; ds = dateAdd(ds, -1); }
+  while (true) {
+    if (workoutDays[ds]) { streak++; ds = dateAdd(ds, -1); continue; }
+    if (!freezeUsed) { freezeUsed = true; ds = dateAdd(ds, -1); continue; }
+    break;
+  }
   return streak;
 }
 function computeBestStreak(workoutDays) {

@@ -994,7 +994,31 @@ function getExStats(name) {
   });
   return lastDate ? {lastW:lastW, lastR:lastR, pr:pr, lastRPE:lastRPE} : null;
 }
-function rpeSuggestionText(rpe) {
+// Two full sessions of easy RPE is a much stronger "time to add weight" signal than
+// a single easy set (which could just be a fluke) — checked before the softer,
+// single-set hint below so the stronger signal takes priority when both apply.
+function lastTwoSessionsEasyRPE(name) {
+  var byDs = {};
+  Object.keys(ST.w).forEach(function(ds) {
+    if (ds === todayStr()) return;
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(wkt) {
+      (wkt.exercises || []).forEach(function(ex) {
+        if (ex.name !== name) return;
+        (ex.sets || []).forEach(function(s) {
+          if (!s.done || s.warmup || s.failed || !s.rpe) return;
+          (byDs[ds] = byDs[ds] || []).push(s.rpe);
+        });
+      });
+    });
+  });
+  var dates = Object.keys(byDs).sort();
+  if (dates.length < 2) return false;
+  return dates.slice(-2).every(function(ds) { return byDs[ds].every(function(r) { return r <= 7; }); });
+}
+function rpeSuggestionText(rpe, name) {
+  if (name && lastTwoSessionsEasyRPE(name)) return '💪 Два раза подряд легко (RPE ≤7) — добавь 2,5 кг';
   if (!rpe) return '';
   if (rpe <= 6) return '💡 Прошлый RPE '+rpe+' — можно +2,5 кг';
   if (rpe >= 9) return '💡 Прошлый RPE '+rpe+' — вес не повышай';

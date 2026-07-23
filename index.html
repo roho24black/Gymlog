@@ -5270,11 +5270,12 @@ function shareBackupFile() {
 }
 function dataBackupBoxHtml() {
   return '<div class="chart-box"><div class="chart-title">Данные</div>' +
-    '<div style="display:flex;gap:8px">' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
     '<button class="btn btn-sm" style="flex:1" onclick="exportData()">⬇️ Экспорт</button>' +
     '<button class="btn btn-sm" style="flex:1" onclick="shareBackupFile()">📤 Поделиться</button>' +
     '<button class="btn btn-sm" style="flex:1" onclick="document.getElementById(\'import-file-input\').click()">⬆️ Импорт</button>' +
     '</div>' +
+    '<button class="btn btn-sm" style="width:100%" onclick="exportCSV()">📊 Экспорт в CSV (Excel/Sheets)</button>' +
     '<input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="importDataFile(this)">' +
     '</div>';
 }

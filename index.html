@@ -4037,7 +4037,12 @@ function renderTemplates() {
 
   if (ST.templates.length > 0) {
     h += '<div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Мои шаблоны</div>';
-    ST.templates.forEach(function(tpl, ti){
+    // Pinned templates float to the top; stable sort keeps relative order within each group.
+    var order = ST.templates.map(function(t,i){ return i; }).sort(function(a,b){
+      return (ST.templates[b].pinned?1:0) - (ST.templates[a].pinned?1:0);
+    });
+    order.forEach(function(ti){
+      var tpl = ST.templates[ti];
       var color = tplColor(tpl.name);
       h += '<div class="tpl-card" style="cursor:default">' +
         '<div class="tpl-tile" style="background:'+color+'">'+letterOf(tpl.name)+'</div>' +
@@ -4048,6 +4053,7 @@ function renderTemplates() {
           '<span class="tpl-badge '+(tpl.loc||'gym')+'">'+((tpl.loc||'gym')==='pool'?'🌊 Бассейн':'🏋️ Зал')+'</span>' +
         '</div>' +
         '<div style="display:flex;gap:6px">' +
+          '<button onclick="togglePinTpl('+ti+')" title="'+(tpl.pinned?'Открепить':'Закрепить сверху')+'" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;opacity:'+(tpl.pinned?'1':'.35')+'">📌</button>' +
           '<button onclick="dupTpl('+ti+')" title="Дублировать" style="background:none;border:none;color:var(--sub);font-size:16px;cursor:pointer;padding:4px">⧉</button>' +
           '<button onclick="editTpl('+ti+')" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer;padding:4px">✏️</button>' +
           '<button onclick="delTpl('+ti+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px">✕</button>' +

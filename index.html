@@ -3701,7 +3701,9 @@ function shConfirm() {
   else if (key === 'swimdist') key = 'dist';
   var val = (typeof SH_VAL === 'number' && !isNaN(SH_VAL)) ? SH_VAL : 0;
   val = Math.max(0, Math.round(val*100)/100);
-  wkt.exercises[SH_MODE.ei].sets[SH_MODE.si][key] = val;
+  var set = wkt.exercises[SH_MODE.ei].sets[SH_MODE.si];
+  set[key] = val;
+  if (SH_MODE.field === 'rpe') { if (SH_FAILED) set.failed = true; else delete set.failed; }
   saveST();
   document.getElementById('sh-overlay').classList.remove('vis');
   SH_MODE = null;

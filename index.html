@@ -4892,6 +4892,11 @@ function logBodyweight() {
   saveST();
   renderProgress();
 }
+// Latest known bodyweight — logged entries win, falling back to the profile's static weight.
+function currentBodyweight() {
+  var dates = Object.keys(ST.bw || {}).sort();
+  return dates.length ? (ST.bw[dates[dates.length-1]] || 0) : ((ST.cfg && ST.cfg.weight) || 0);
+}
 function bwSectionHtml() {
   var bw = ST.bw || {};
   var dates = Object.keys(bw).sort();

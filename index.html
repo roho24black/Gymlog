@@ -5157,12 +5157,15 @@ function measurementsSectionHtml() {
   var histRows = dates.slice(-10).reverse().map(function(ds){
     var d = m[ds];
     var txt = MEAS_FIELDS.filter(function(f){ return d[f[0]]!=null; }).map(function(f){ return f[1]+' '+nf(d[f[0]]); }).join(' · ');
-    if (!txt) return '';
-    return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--brd);font-size:13px">' +
-      '<span style="color:var(--sub)">'+dateLabel(ds)+'</span><span style="font-weight:600">'+esc(txt)+'</span></div>';
+    if (!txt && !d.note) return '';
+    return '<div style="padding:7px 0;border-bottom:1px solid var(--brd);font-size:13px">' +
+      '<div style="display:flex;justify-content:space-between"><span style="color:var(--sub)">'+dateLabel(ds)+'</span><span style="font-weight:600">'+esc(txt)+'</span></div>' +
+      (d.note ? '<div style="font-size:12px;color:var(--mut);font-style:italic;margin-top:2px">"'+esc(d.note)+'"</div>' : '') +
+      '</div>';
   }).join('');
   var box = '<div class="chart-box"><div class="chart-title">Замеры тела (см)</div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:10px">' + inputs + '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px">' + inputs + '</div>' +
+    '<input type="text" id="meas-note" value="'+esc(last.note||'')+'" placeholder="Заметка (после отпуска, начало сушки…)" style="width:100%;box-sizing:border-box;background:var(--card2);border:1px solid var(--brd2);border-radius:10px;padding:9px 10px;color:var(--txt);font-size:13px;font-family:inherit;margin-bottom:10px" />' +
     '<button class="btn btn-sm" style="width:100%" onclick="logMeasurements()">Сохранить</button>' +
     (histRows ? '<div style="margin-top:10px">'+histRows+'</div>' : '') +
     '</div>';

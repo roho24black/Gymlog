@@ -5189,6 +5189,42 @@ function settingsBoxHtml() {
     chipsHtml('prog-chip', [[1,'1 кг'],[2.5,'2,5 кг'],[5,'5 кг']], weightRoundStep(), 'setWeightRoundStep') +
     '</div>';
 }
+function searchAllNotes(q) {
+  q = q.toLowerCase();
+  var results = [];
+  Object.keys(ST.w).sort().forEach(function(ds){
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(w){
+      if (w.note && w.note.toLowerCase().indexOf(q) !== -1) results.push({ds:ds, text:w.note, label:w.name||'Тренировка'});
+      (w.exercises||[]).forEach(function(ex){
+        if (ex.note && ex.note.toLowerCase().indexOf(q) !== -1) results.push({ds:ds, text:ex.note, label:exTitle(ex)});
+      });
+    });
+  });
+  return results.reverse();
+}
+function renderNotesSearchResults() {
+  var input = document.getElementById('notes-search-input');
+  var el = document.getElementById('notes-search-results');
+  if (!input || !el) return;
+  var q = input.value.trim();
+  if (!q) { el.innerHTML = ''; return; }
+  var results = searchAllNotes(q).slice(0, 20);
+  if (!results.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--mut);padding:6px 0">Ничего не найдено</div>'; return; }
+  el.innerHTML = results.map(function(r){
+    return '<div onclick="jumpToCalDate(\''+r.ds+'\')" style="padding:8px 0;border-bottom:1px solid var(--brd);cursor:pointer">' +
+      '<div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--mut);margin-bottom:2px"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.label)+'</span><span style="flex-shrink:0">'+dateLabelYr(r.ds)+'</span></div>' +
+      '<div style="font-size:13px;color:var(--txt);font-style:italic">"'+esc(r.text)+'"</div>' +
+      '</div>';
+  }).join('');
+}
+function searchNotesBoxHtml() {
+  return '<div class="chart-box"><div class="chart-title">Поиск по заметкам</div>' +
+    '<input type="text" id="notes-search-input" placeholder="Например: плечо, устал…" oninput="renderNotesSearchResults()" style="width:100%;box-sizing:border-box;height:40px;border-radius:10px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:14px;font-family:inherit;padding:0 12px;margin-bottom:4px">' +
+    '<div id="notes-search-results"></div>' +
+    '</div>';
+}
 function shareBackupFile() {
   var blob = new Blob([JSON.stringify(ST)], {type:'application/json'});
   var filename = 'gymlog-backup-'+todayStr()+'.json';

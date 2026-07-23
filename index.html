@@ -2713,7 +2713,7 @@ function renderWorkout() {
         h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'swimtime\')">'+(s.secs ? fmtTime(s.secs) : '<span style="color:var(--dim);font-weight:600;font-size:13px">+ время</span>')+'</div>';
       } else {
         var rowStyle = cardio ? '' : ' style="grid-template-columns:26px 1fr 0.85fr 34px 44px"';
-        h += '<div class="set-row'+(s.done?' done':'')+(s.warmup?' warmup-row':'')+'"'+rowStyle+'>';
+        h += '<div class="set-row'+(s.done?' done':'')+(s.warmup?' warmup-row':'')+(s.failed?' failed-row':'')+'"'+rowStyle+'>';
         if (cardio) {
           h += '<div class="set-n">'+(si+1)+'</div>';
           h += '<div class="set-cell'+(s.done?' done':'')+'" onclick="openSheet('+ei+','+si+',\'mins\')">'+(s.mins||20)+'<span class="set-cell-unit">мин</span></div>';

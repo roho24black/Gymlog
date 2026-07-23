@@ -2108,7 +2108,7 @@ function buildWorkoutSummary(wkt) {
       if (cardio) { cardioDist += s.dist||0; cardioMins += s.mins||0; }
       else if (swim) { swimDist += s.dist||0; }
       else if (stat) { staticMax = Math.max(staticMax, s.secs||0); }
-      else if (!s.warmup) {
+      else if (!s.warmup && !s.failed) {
         if ((s.w||0) > 0) vol += s.w*(s.r||0);
         else totalBwReps += s.r||0;
         if (!bestSet || (s.w||0) > (bestSet.w||0)) bestSet = s;

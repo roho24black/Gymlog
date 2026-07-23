@@ -4084,6 +4084,19 @@ function removeCalWorkout(ds, wi) {
   if (hasDone) uiConfirm('Удалить «'+(w.name||'Тренировка')+'» за '+dateLabel(ds)+'? Вся история этой тренировки будет потеряна.', doRemove);
   else doRemove();
 }
+function removeAllCalWorkouts(ds) {
+  var day = ST.w[ds];
+  if (!day || !day.workouts || !day.workouts.length) return;
+  var n = day.workouts.length;
+  var hasDone = day.workouts.some(function(w){ return (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); }); });
+  var doRemove = function(){
+    day.workouts = [];
+    if (day.type !== 'rest') delete ST.w[ds];
+    saveST(); renderCalDetail(); renderCal();
+  };
+  if (hasDone) uiConfirm('Удалить все '+n+' записи за '+dateLabel(ds)+'? Вся история этого дня будет потеряна.', doRemove);
+  else doRemove();
+}
 function startOnDate(ds) {
   if (ds===todayStr()) { startWorkout(); goTab('workout'); }
   else { logWorkout(ds); }

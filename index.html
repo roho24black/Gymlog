@@ -567,6 +567,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
     </div>
     <div class="sh-val-display" id="sh-val-display">0 <span class="sh-val-unit" id="sh-val-unit">кг</span></div>
     <div id="sh-plates" style="text-align:center;font-size:12.5px;color:var(--sub);min-height:16px;margin:-4px 0 6px"></div>
+    <div id="sh-failed-wrap" style="display:none;text-align:center;margin:-2px 0 8px">
+      <button id="sh-failed-btn" onclick="shToggleFailed()" style="border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid var(--brd2);background:var(--card2);color:var(--sub)">☐ Подход не засчитан</button>
+    </div>
     <div class="presets" id="sh-presets"></div>
     <div class="drum-wrap" id="sh-drum-wrap">
       <div class="drum-mask"></div>

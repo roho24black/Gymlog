@@ -2101,12 +2101,30 @@ function finishWorkout() {
   saveST();
   var summary = wkt ? buildWorkoutSummary(wkt) : null;
   var delta = summary ? buildSummaryDelta(summary, ACTIVE_WKT.date) : null;
+  var hardHint = wkt ? hardDayHint(wkt) : '';
   ACTIVE_WKT = null; WKT_START = null;
   if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
   restStop();
   renderTopbar(); renderWorkout();
-  if (summary && summary.sets > 0) showWorkoutSummary(summary, delta);
+  if (summary && summary.sets > 0) showWorkoutSummary(summary, delta, hardHint);
   autoExportIfDue();
+}
+// If every RPE-rated set today came in at RPE>=9, the session was maximally hard —
+// reuse the existing per-muscle-group recovery model (calcRecovery, driven by the
+// same startRecovery button) to surface a concrete "rest N days" hint automatically,
+// instead of only when the user remembers to tap 🔋 Рассчитать восстановление.
+function hardDayHint(wkt) {
+  var rpes = [];
+  (wkt.exercises||[]).forEach(function(ex){
+    (ex.sets||[]).forEach(function(s){ if (s.done && !s.warmup && !s.failed && s.rpe) rpes.push(s.rpe); });
+  });
+  if (!rpes.length || rpes.some(function(r){ return r < 9; })) return '';
+  var rcv = calcRecovery(wkt.exercises);
+  var groups = Object.keys(rcv);
+  if (!groups.length) return '';
+  var maxH = 0; groups.forEach(function(g){ if (rcv[g] > maxH) maxH = rcv[g]; });
+  var days = Math.round(maxH/24*10)/10;
+  return '🔥 Тяжёлая тренировка (RPE 9+ во всех подходах) — дай телу больше времени: '+groups.join(', ')+' — примерно '+days+' дн до полного восстановления.';
 }
 function autoExportIfDue() {
   try {

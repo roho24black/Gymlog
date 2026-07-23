@@ -4824,6 +4824,8 @@ function renderProgOverview(pd) {
     '</div></div>';
   }
 
+  h += monthComparisonHtml(pd);
+
   h += '<div class="chart-box"><div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">' +
     '<span>Достижения</span><button class="btn btn-sm" onclick="shareAchievementsCardImg()">📸 Поделиться</button></div>' +
     achievementsHtml(pd) + '</div>';

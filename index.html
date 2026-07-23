@@ -1289,7 +1289,10 @@ function getRecommendation() {
   return { tired: tired, rested: MAIN.filter(function(g){ return tired[g] === undefined; }), score: score };
 }
 function daysSinceLastWorkout() {
-  for (var i = 1; i <= 60; i++) {
+  // Start at i=0 (today) so a workout already logged today resolves to 0 days —
+  // otherwise the loop skipped straight to yesterday and the "haven't trained in
+  // N days" banner kept showing the pre-today gap all day even right after training.
+  for (var i = 0; i <= 60; i++) {
     var ws = getWorkouts(dateOffset(-i));
     var any = ws.some(function(w){ return !w.planned && (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); }); });
     if (any) return i;

@@ -2210,7 +2210,7 @@ function summaryDeltaHtml(delta) {
   if (!parts.length) return '<div style="font-size:12px;color:var(--sub);margin-top:12px">Как в прошлый раз ('+dateLabelYr(delta.prevDs)+')</div>';
   return '<div style="font-size:12px;color:var(--sub);margin-top:12px">К прошлому разу ('+dateLabelYr(delta.prevDs)+'): '+parts.join(' · ')+'</div>';
 }
-function showWorkoutSummary(sum, delta) {
+function showWorkoutSummary(sum, delta, hardHint) {
   var ov = document.createElement('div');
   ov.id = 'wkt-summary-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:flex-end;justify-content:center';

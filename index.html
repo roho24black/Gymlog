@@ -5134,10 +5134,14 @@ function logMeasurements() {
     var v = parseDecimal(inp.value);
     if (v > 0) { day[f[0]] = Math.round(v*10)/10; any = true; }
   });
+  var noteInp = document.getElementById('meas-note');
+  var note = noteInp ? noteInp.value.trim() : '';
+  if (note) any = true;
   if (!any) { uiToast('Введи хотя бы один замер'); return; }
   if (!ST.measurements) ST.measurements = {};
   var existing = ST.measurements[todayStr()] || {};
   MEAS_FIELDS.forEach(function(f){ if (day[f[0]] != null) existing[f[0]] = day[f[0]]; });
+  if (note) existing.note = note; else delete existing.note;
   ST.measurements[todayStr()] = existing;
   saveST();
   renderProgress();

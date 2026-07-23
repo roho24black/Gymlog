@@ -4008,7 +4008,10 @@ function renderCalDetail() {
   var el = document.getElementById('cal-detail');
   if (!SEL_DATE) { el.innerHTML = ''; return; }
   var day = ST.w[SEL_DATE];
-  var h = '<div class="cal-detail"><div class="cal-det-title">📅 '+dateLabel(SEL_DATE)+'</div>';
+  var h = '<div class="cal-detail"><div class="cal-det-title" style="display:flex;align-items:center;justify-content:space-between">' +
+    '<span>📅 '+dateLabel(SEL_DATE)+'</span>' +
+    ((day && day.workouts && day.workouts.length > 1) ? '<button onclick="removeAllCalWorkouts(\''+SEL_DATE+'\')" style="background:none;border:none;color:var(--red);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;padding:3px 7px;border-radius:7px;border:1px solid rgba(244,63,94,0.25)">Удалить все ('+day.workouts.length+')</button>' : '') +
+    '</div>';
   if (!day||(!day.workouts&&day.type!=='rest')) {
     h += '<div style="color:var(--sub);font-size:14px;margin-bottom:4px">Нет записей</div>';
   } else if (day.type==='rest') {

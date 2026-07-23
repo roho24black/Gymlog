@@ -3838,6 +3838,67 @@ function delCustomEx(name) {
     saveST(); dbRender();
   });
 }
+// Exercise names are the join key across the whole app (workout history, templates,
+// goals, recents) — renaming has to migrate all of them together, or the old history
+// silently orphans under a name that no longer exists anywhere in the UI.
+function renameCustomEx(oldName, newName) {
+  newName = (newName||'').trim();
+  if (!newName) { uiToast('Введи название'); return false; }
+  if (newName === oldName) return false;
+  var taken = false;
+  DB_SECTIONS.forEach(function(sec){ Object.keys(sec.groups).forEach(function(g){ if (sec.groups[g].indexOf(newName)!==-1) taken = true; }); });
+  (ST.customEx||[]).forEach(function(e){ if (e.name!==oldName && e.name===newName) taken = true; });
+  if (taken) { uiToast('Такое упражнение уже есть'); return false; }
+
+  var ce = (ST.customEx||[]).filter(function(e){ return e.name===oldName; })[0];
+  if (!ce) return false;
+  ce.name = newName;
+
+  Object.keys(ST.w).forEach(function(ds){
+    (ST.w[ds].workouts||[]).forEach(function(w){
+      (w.exercises||[]).forEach(function(ex){ if (ex.name===oldName) ex.name = newName; });
+    });
+  });
+  (ST.templates||[]).forEach(function(t){
+    (t.exs||[]).forEach(function(e, i){
+      if (typeof e === 'string') { if (e===oldName) t.exs[i] = newName; }
+      else if (e && e.name===oldName) e.name = newName;
+    });
+  });
+  if (ST.goals && ST.goals.byExName && ST.goals.byExName[oldName] != null) {
+    ST.goals.byExName[newName] = ST.goals.byExName[oldName];
+    delete ST.goals.byExName[oldName];
+  }
+  if (ST.recentEx) ST.recentEx = ST.recentEx.map(function(n){ return n===oldName ? newName : n; });
+  saveST();
+  return true;
+}
+function renameCustomExPrompt(oldName) {
+  var overlay = document.createElement('div');
+  overlay.id = 'rename-ex-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9600;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:var(--card);border-radius:18px;padding:20px;width:100%;max-width:340px;box-sizing:border-box">' +
+      '<div style="font-size:15px;font-weight:800;color:var(--txt);margin-bottom:12px">Переименовать упражнение</div>' +
+      '<input type="text" id="rename-ex-input" value="'+esc(oldName)+'" style="width:100%;box-sizing:border-box;height:44px;border-radius:10px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:15px;font-family:inherit;padding:0 12px;margin-bottom:14px">' +
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="document.getElementById(\'rename-ex-overlay\').remove()" style="flex:1;height:44px;border-radius:12px;background:none;border:1px solid var(--brd2);color:var(--mut);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Отмена</button>' +
+        '<button onclick="confirmRenameCustomEx(\''+oldName.replace(/'/g,"\\'")+'\')" style="flex:1;height:44px;border-radius:12px;background:var(--acc);color:var(--acc-txt);border:none;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">Сохранить</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  setTimeout(function(){ var inp = document.getElementById('rename-ex-input'); if (inp) { inp.focus(); inp.select(); } }, 50);
+}
+function confirmRenameCustomEx(oldName) {
+  var inp = document.getElementById('rename-ex-input');
+  var newName = inp ? inp.value : '';
+  if (renameCustomEx(oldName, newName)) {
+    var overlay = document.getElementById('rename-ex-overlay');
+    if (overlay) overlay.remove();
+    dbRender();
+    uiToast('Переименовано');
+  }
+}
 
 // ═══════════════════════ CALENDAR ═══════════════════════
 function renderCal() {

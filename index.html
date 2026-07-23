@@ -4004,6 +4004,13 @@ function calShift(dir) {
   renderCal();
 }
 function calSelect(ds) { SEL_DATE = ds===SEL_DATE?null:ds; renderCal(); }
+function jumpToCalDate(ds) {
+  var p = ds.split('-');
+  CAL_YEAR = +p[0]; CAL_MONTH = +p[1]-1;
+  SEL_DATE = ds;
+  goTab('calendar');
+  renderCal();
+}
 function renderCalDetail() {
   var el = document.getElementById('cal-detail');
   if (!SEL_DATE) { el.innerHTML = ''; return; }

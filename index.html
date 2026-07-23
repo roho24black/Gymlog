@@ -4762,7 +4762,7 @@ function renderProgStrength(pd) {
       var ratio = (bwNow > 0 && p.w > 0) ? '<div style="font-size:10.5px;color:var(--mut)">×'+nf(Math.round(p.w/bwNow*100)/100)+' от веса тела</div>' : '';
       h += '<div class="pr-row"><div class="pr-tile" style="background:'+exTileColor(p.name)+'">'+letterOf(p.name)+'</div>' +
         '<div class="pr-info"><div class="pr-name">'+esc(p.name)+'</div><div class="pr-date">'+dateLabel(p.ds)+'</div></div>' +
-        '<div style="text-align:right"><div class="pr-val">'+nf(p.w)+' кг <span style="font-size:11px;color:var(--mut);font-weight:600">× '+p.r+'</span></div>'+ratio+'</div></div>';
+        '<div style="text-align:right;flex-shrink:0"><div class="pr-val">'+nf(p.w)+' кг <span style="font-size:11px;color:var(--mut);font-weight:600">× '+p.r+'</span></div>'+ratio+'</div></div>';
     });
     if (allPRs.length > 6) {
       h += '<button class="btn btn-sm" style="width:100%;margin-top:8px" onclick="progTogglePRs()">'+(PROG_PR_ALL?'Свернуть':'Показать все ('+allPRs.length+')')+'</button>';

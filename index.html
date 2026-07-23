@@ -5226,6 +5226,38 @@ function searchNotesBoxHtml() {
     '<div id="notes-search-results"></div>' +
     '</div>';
 }
+function exportCSV() {
+  var rows = [['Date','Workout','Exercise','SetNum','Weight_kg','Reps','Duration_sec','Distance','RPE','Warmup','Failed']];
+  Object.keys(ST.w).sort().forEach(function(ds){
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(w){
+      if (w.planned) return;
+      (w.exercises||[]).forEach(function(ex){
+        var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
+        (ex.sets||[]).forEach(function(s, si){
+          if (!s.done) return;
+          var dur = stat ? (s.secs||0) : swim ? (s.secs||0) : cardio ? (s.mins||0)*60 : '';
+          var dist = (cardio || swim) ? (s.dist||0) : '';
+          rows.push([ds, w.name||'', exTitle(ex), si+1, s.w||'', s.r||'', dur, dist, s.rpe||'', s.warmup?'1':'', s.failed?'1':'']);
+        });
+      });
+    });
+  });
+  var csv = rows.map(function(r){
+    return r.map(function(v){
+      var str = String(v);
+      return /[",\n]/.test(str) ? '"'+str.replace(/"/g,'""')+'"' : str;
+    }).join(',');
+  }).join('\n');
+  // BOM so Excel autodetects UTF-8 and doesn't garble the Cyrillic exercise/workout names.
+  var blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'gymlog-history-'+todayStr()+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
 function shareBackupFile() {
   var blob = new Blob([JSON.stringify(ST)], {type:'application/json'});
   var filename = 'gymlog-backup-'+todayStr()+'.json';

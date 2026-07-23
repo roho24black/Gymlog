@@ -5004,6 +5004,19 @@ function setMeasGoal(field) {
   saveST();
   renderProgress();
 }
+function weightRoundStep() { return (ST.cfg && ST.cfg.roundStep) || 2.5; }
+function setWeightRoundStep(step) {
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.roundStep = step;
+  saveST();
+  renderProgress();
+}
+function settingsBoxHtml() {
+  return '<div class="chart-box"><div class="chart-title">Настройки</div>' +
+    '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">Шаг округления веса в разминке</div>' +
+    chipsHtml('prog-chip', [[1,'1 кг'],[2.5,'2,5 кг'],[5,'5 кг']], weightRoundStep(), 'setWeightRoundStep') +
+    '</div>';
+}
 function dataBackupBoxHtml() {
   return '<div class="chart-box"><div class="chart-title">Данные</div>' +
     '<div style="display:flex;gap:8px">' +

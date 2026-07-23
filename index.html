@@ -4086,6 +4086,11 @@ function renderTemplates() {
   body.innerHTML = h;
 }
 
+function togglePinTpl(ti) {
+  var tpl = ST.templates[ti]; if (!tpl) return;
+  tpl.pinned = !tpl.pinned;
+  saveST(); renderTemplates();
+}
 function useTpl(builtinId, customIdx) {
   var tpl;
   if (builtinId) tpl = BUILT_IN.find(function(t){return t.id===builtinId;});

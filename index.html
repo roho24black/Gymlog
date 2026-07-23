@@ -110,6 +110,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
   padding:4px 8px;border-radius:7px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ex-body{display:none}
 .ex-body.open{display:block}
+.ex-chev{color:var(--dim);flex-shrink:0;transition:transform .2s}
+.ex-chev.open{transform:rotate(90deg)}
 .sets-hdr{display:grid;grid-template-columns:26px 1.15fr 0.95fr 44px;align-items:center;
   padding:0 2px 5px;font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:0.4px;font-weight:600}
 .set-row{display:grid;grid-template-columns:26px 1.15fr 0.95fr 44px;align-items:center;
@@ -1294,6 +1296,20 @@ function daysSinceLastWorkout() {
   }
   return null;
 }
+// True background push for "you haven't started today's plan" isn't feasible for an
+// iOS home-screen PWA without a server that tracks each user's plan state (workout
+// data lives only in this device's localStorage). This is the realistic substitute:
+// a prominent banner shown whenever the app is opened after 18:00 with an unstarted
+// plan for today, so it's seen the next time the phone comes out even if that's not
+// the moment the plan was made.
+function todayPlanReminderHtml() {
+  if (new Date().getHours() < 18) return '';
+  var todays = getWorkouts(todayStr()).filter(function(w){ return w.planned; });
+  if (!todays.length) return '';
+  var names = todays.map(function(w){ return w.name || 'Тренировка'; }).join(', ');
+  return '<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.28);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--sub)">' +
+    '⏰ На сегодня запланировано «<b style="color:var(--ylw)">'+esc(names)+'</b>» — ещё не начато.</div>';
+}
 function inactivityBannerHtml() {
   var days = daysSinceLastWorkout();
   if (days == null || days < 3) return '';
@@ -2052,11 +2068,12 @@ function finishWorkout() {
   if (wkt) wkt.endTime = Date.now();
   saveST();
   var summary = wkt ? buildWorkoutSummary(wkt) : null;
+  var delta = summary ? buildSummaryDelta(summary, ACTIVE_WKT.date) : null;
   ACTIVE_WKT = null; WKT_START = null;
   if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
   restStop();
   renderTopbar(); renderWorkout();
-  if (summary && summary.sets > 0) showWorkoutSummary(summary);
+  if (summary && summary.sets > 0) showWorkoutSummary(summary, delta);
   autoExportIfDue();
 }
 function autoExportIfDue() {
@@ -2108,7 +2125,42 @@ function buildWorkoutSummary(wkt) {
   return {sets:sets, vol:vol, prs:prs, durMs:durMs, name:wkt.name||'Тренировка', loc:wkt.loc, exercises:exercises,
           totalCardioKm:totalCardioKm, totalSwimM:totalSwimM, totalBwReps:totalBwReps};
 }
-function showWorkoutSummary(sum) {
+// Most recent other finished workout with the same name — used to show a vs-last-time
+// delta on the summary screen. Ignores planned-but-not-started entries.
+function findLastSimilarWorkout(name, excludeDate) {
+  var bestDs = null, bestW = null;
+  Object.keys(ST.w).sort().forEach(function(ds) {
+    if (ds === excludeDate) return;
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(w) {
+      if (w.planned || w.name !== name) return;
+      var hasDone = (w.exercises||[]).some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); });
+      if (!hasDone) return;
+      if (!bestDs || ds > bestDs) { bestDs = ds; bestW = w; }
+    });
+  });
+  return bestW ? {w:bestW, ds:bestDs} : null;
+}
+function buildSummaryDelta(sum, curDate) {
+  var prev = findLastSimilarWorkout(sum.name, curDate);
+  if (!prev) return null;
+  var prevSum = buildWorkoutSummary(prev.w);
+  return {volDelta: Math.round(sum.vol - prevSum.vol), setsDelta: sum.sets - prevSum.sets, prevDs: prev.ds};
+}
+function summaryDeltaHtml(delta) {
+  if (!delta) return '';
+  function fmtD(n, unit) {
+    if (n === 0) return '';
+    var sign = n > 0 ? '+' : '−';
+    var clr = n > 0 ? 'var(--acc)' : 'var(--red)';
+    return '<span style="color:'+clr+';font-weight:700">'+sign+nf(Math.abs(n))+' '+unit+'</span>';
+  }
+  var parts = [fmtD(delta.volDelta, 'кг'), fmtD(delta.setsDelta, 'подх.')].filter(Boolean);
+  if (!parts.length) return '<div style="font-size:12px;color:var(--sub);margin-top:12px">Как в прошлый раз ('+dateLabelYr(delta.prevDs)+')</div>';
+  return '<div style="font-size:12px;color:var(--sub);margin-top:12px">К прошлому разу ('+dateLabelYr(delta.prevDs)+'): '+parts.join(' · ')+'</div>';
+}
+function showWorkoutSummary(sum, delta) {
   var ov = document.createElement('div');
   ov.id = 'wkt-summary-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:flex-end;justify-content:center';
@@ -2126,6 +2178,7 @@ function showWorkoutSummary(sum) {
       '<div style="flex:1;background:var(--card2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--ylw)">'+fmtVol(Math.round(sum.vol))+'</div><div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin-top:2px">Кг объём</div></div>' +
       '<div style="flex:1;background:var(--card2);border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--blu)">'+sum.sets+'</div><div style="font-size:10px;color:var(--mut);text-transform:uppercase;margin-top:2px">Подходов</div></div>' +
     '</div>' +
+    summaryDeltaHtml(delta) +
     prsHtml +
     '<button id="wkt-share-card-btn" style="width:100%;height:46px;border-radius:14px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:14px">📸 Поделиться карточкой</button>' +
     '<button onclick="document.getElementById(\'wkt-summary-ov\').remove()" style="width:100%;height:48px;border-radius:14px;background:var(--acc);border:none;color:#0a0a0a;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:10px">Готово</button>' +
@@ -2477,6 +2530,7 @@ function renderWorkout() {
       '<div class="sec-badge">Сегодня</div>' +
       '<div class="sec-title" style="margin-bottom:14px">Тренировка</div>';
 
+    h += todayPlanReminderHtml();
     h += inactivityBannerHtml();
     h += renderRecoveryCard();
     var rcvActive = ST.recovery && Date.now() < getRecoveryEnd();
@@ -2601,18 +2655,24 @@ function renderWorkout() {
       h += '<button onclick="startCircuit('+ei+')" style="width:100%;height:44px;border-radius:12px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.4);color:#34d399;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;margin-bottom:-1px">▶ Начать круг</button>';
     }
 
+    // A fully-done exercise collapses by default (tap to re-expand) so long workouts
+    // don't require scrolling past sets you've already finished.
+    var allDone = ex.sets.length > 0 && doneSets === ex.sets.length;
+    var exCollapsed = allDone && !OPEN_EX[ei];
+
     h += '<div class="ex-card"'+(ex.linkedToPrev?' style="border-left:3px solid var(--acc)"':'')+'>';
-    h += '<div class="ex-card-hd">' +
+    h += '<div class="ex-card-hd"'+(allDone?' onclick="toggleEx('+ei+')" style="cursor:pointer"':'')+'>' +
       '<div class="ex-tile" style="background:'+color+';opacity:0.85">'+letterOf(ex.name)+'</div>' +
       '<div class="ex-info">' +
         '<div class="ex-name">'+esc(exTitle(ex))+'</div>' +
-        '<div class="ex-sub">'+(group||'Упражнение')+' · '+doneSets+'/'+ex.sets.length+' подх.</div>' +
+        '<div class="ex-sub">'+(group||'Упражнение')+' · '+doneSets+'/'+ex.sets.length+' подх.'+(allDone?' ✓':'')+'</div>' +
       '</div>' +
       (exVol > 0 ? '<div class="ex-vol">'+exVol+' кг</div>' : '') +
-      '<button onclick="substituteEx('+ei+')" title="Заменить упражнение" style="flex-shrink:0;background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:4px;margin-left:2px;-webkit-user-select:none;user-select:none">🔄</button>' +
+      (allDone ? '<span class="ex-chev'+(exCollapsed?'':' open')+'"><svg width="6" height="10" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '') +
+      '<button onclick="event.stopPropagation();substituteEx('+ei+')" title="Заменить упражнение" style="flex-shrink:0;background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:4px;margin-left:2px;-webkit-user-select:none;user-select:none">🔄</button>' +
       '</div>';
 
-    h += '<div class="ex-body open">';
+    h += '<div class="ex-body'+(exCollapsed?'':' open')+'">';
     h += styleChips(ex, ei);
     h += '<input type="text" class="ex-note-input" value="'+esc(ex.note||'')+'" placeholder="+ заметка" oninput="updateExNote('+ei+',this.value)" onclick="event.stopPropagation()" />';
     if (!cardio && !swim && !stat) {
@@ -2659,8 +2719,10 @@ function renderWorkout() {
       h += '<div class="set-circle'+(s.done?' done':'')+'" onclick="toggleSetDone('+ei+','+si+')">✓</div>';
       h += '</div>';
     });
+    var canWarmup = !cardio && !swim && !stat && !ex.sets.some(function(s){ return s.warmup; });
     h += '<div class="add-row">' +
       '<button class="add-btn" onclick="addSet('+ei+')">+ Подход</button>' +
+      (canWarmup ? '<button class="add-btn" onclick="addWarmupSets('+ei+')" title="Разминка: 50%/70%/85% от рабочего веса">🔥 Разминка</button>' : '') +
       (ex.sets.length>1?'<button class="del-btn" onclick="delSet('+ei+')">− Убрать</button>':'') +
       '</div>';
     var nextSet = -1;
@@ -2695,9 +2757,11 @@ function toggleEx(ei) { OPEN_EX[ei] = !OPEN_EX[ei]; renderWorkout(); }
 function toggleSetDone(ei, si) {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
-  var s = wkt.exercises[ei].sets[si];
+  var ex = wkt.exercises[ei];
+  var s = ex.sets[si];
   s.done = !s.done;
   if (s.done && navigator.vibrate) navigator.vibrate(12);
+  if (s.done && ex.sets.length && ex.sets.every(function(x){ return x.done; })) OPEN_EX[ei] = false;
   saveST(); updateVolBar(); renderWorkout();
 }
 function toggleWarmup(ei, si) {
@@ -2719,6 +2783,7 @@ function recordSet(ei, si) {
   }
   s.done = true;
   if (navigator.vibrate) navigator.vibrate(12);
+  if (ex.sets.length && ex.sets.every(function(x){ return x.done; })) OPEN_EX[ei] = false;
   saveST(); startRest(defaultRestSet()); updateVolBar(); renderWorkout();
   if (isPR) uiPrToast(ex.name, s.w);
 }
@@ -2736,6 +2801,26 @@ function delSet(ei) {
   var wkt = getWkt(ref.date, ref.wid);
   var ex = wkt.exercises[ei];
   if (ex.sets.length > 1) { ex.sets.pop(); saveST(); renderWorkout(); }
+}
+// 50%/70%/85% ramp up to the working weight — a common warm-up progression.
+// Rounds to a loadable 2.5kg step and never drops below the empty-bar weight.
+function warmupRamp(target, name) {
+  var base = isBarbell(name) ? BAR_KG : 0;
+  function roundW(v) { return Math.max(base, Math.round(v/2.5)*2.5); }
+  return [{w:roundW(target*0.5), r:8}, {w:roundW(target*0.7), r:5}, {w:roundW(target*0.85), r:3}];
+}
+function addWarmupSets(ei) {
+  var ref = curWktRef(); if (!ref) return;
+  var wkt = getWkt(ref.date, ref.wid);
+  var ex = wkt.exercises[ei];
+  if (ex.sets.some(function(s){ return s.warmup; })) { uiToast('Разминка уже добавлена'); return; }
+  var target = 0;
+  ex.sets.forEach(function(s){ if (!s.warmup && (s.w||0) > target) target = s.w; });
+  if (!target) { var st = getExStats(ex.name); target = st ? st.lastW : 0; }
+  if (!target) { uiToast('Сначала укажи рабочий вес'); return; }
+  var warmupSets = warmupRamp(target, ex.name).map(function(step){ return {w:step.w, r:step.r, done:false, warmup:true}; });
+  ex.sets = warmupSets.concat(ex.sets);
+  saveST(); renderWorkout();
 }
 function removeEx(ei) {
   var ref = curWktRef(); if (!ref) return;
@@ -2912,6 +2997,14 @@ function tmrBeep(freq, dur) {
   } catch(e) {}
 }
 function tmrVibe(p) { if (timerMuted()) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch(e) {} }
+// Escalating pitch/duration on the last 3 seconds of a phase — a flat 660Hz blip for
+// all three seconds was too easy to miss when not looking at the screen; ramping up
+// (and a short vibrate on the final second) makes the last second unmistakable.
+function tmrCountdownBeep(whole) {
+  if (whole === 3)      tmrBeep(620, 0.08);
+  else if (whole === 2) tmrBeep(740, 0.1);
+  else if (whole === 1) { tmrBeep(880, 0.16); tmrVibe(25); }
+}
 
 function openWorkoutTimer() {
   if (!ACTIVE_WKT) return;
@@ -2996,7 +3089,7 @@ function tmrFrame() {
   var remain = (TMR.endAt - Date.now())/1000;
   if (remain < 0) remain = 0;
   var whole = Math.ceil(remain - 0.001);
-  if (whole !== TMR.lastWhole) { if (whole >= 1 && whole <= 3) tmrBeep(660, 0.07); TMR.lastWhole = whole; }
+  if (whole !== TMR.lastWhole) { tmrCountdownBeep(whole); TMR.lastWhole = whole; }
   tmrPaint(remain);
   if (remain <= 0.04) { tmrAdvance(); return; }
   TMR.raf = requestAnimationFrame(tmrFrame);
@@ -3193,7 +3286,7 @@ function circFrame() {
   var remain = (CIRC.endAt - Date.now())/1000;
   if (remain < 0) remain = 0;
   var whole = Math.ceil(remain-0.001);
-  if (whole !== CIRC.lastWhole) { if (whole>=1 && whole<=3) tmrBeep(660,0.07); CIRC.lastWhole = whole; }
+  if (whole !== CIRC.lastWhole) { tmrCountdownBeep(whole); CIRC.lastWhole = whole; }
   circPaint(remain);
   if (remain <= 0.04) { circAfterRest(CIRC.restKind); return; }
   CIRC.raf = requestAnimationFrame(circFrame);
@@ -4344,6 +4437,17 @@ function computeWeeklyVolume(dailyVol, weeks) {
   }
   return res;
 }
+// True when the last 4 fully-completed weeks show volume rising every single week
+// with no down week — a simple heuristic for "you might be due a deload".
+// The current (in-progress) week is excluded since it always looks artificially low.
+function computeDeloadFlag(pd) {
+  var completed = computeWeeklyVolume(pd.dailyVol, 5).filter(function(w){ return !w.isCur; });
+  if (completed.length < 4) return false;
+  var last4 = completed.slice(-4);
+  for (var i = 0; i < last4.length; i++) if (!(last4[i].kg > 0)) return false;
+  for (var i = 1; i < last4.length; i++) if (!(last4[i].kg > last4[i-1].kg)) return false;
+  return true;
+}
 function computePRList(byExName) {
   var list = [];
   Object.keys(byExName).forEach(function(name) {
@@ -4567,6 +4671,11 @@ function renderProgStrength(pd) {
     '<span>Объём по неделям</span>' + weekDeltaBadge(pd.dailyVol) + '</div>' +
     '<div id="prog-weeks-chips">' + chipsHtml('prog-chip', [[8,'8 нед'],[12,'12 нед'],[26,'26 нед']], PROG_WEEKS, 'progSetWeeks') + '</div>' +
     '<div id="prog-weeks-chart">' + weeklyBarsHtml(weeks) + '</div></div>';
+
+  if (computeDeloadFlag(pd)) {
+    h += '<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.28);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--sub)">' +
+      '⚠️ Объём растёт <b style="color:var(--ylw)">4 недели подряд</b> без спада. Возможно, стоит сделать разгрузочную неделю — снизь вес/объём на 30-40%.</div>';
+  }
 
   h += '<div class="chart-box"><div class="chart-title">По дням недели</div>' + weekdayPatternHtml(computeWeekdayPattern(pd.workoutDays)) + '</div>';
 

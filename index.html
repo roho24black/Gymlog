@@ -5251,7 +5251,7 @@ function exportCSV() {
     }).join(',');
   }).join('\n');
   // BOM so Excel autodetects UTF-8 and doesn't garble the Cyrillic exercise/workout names.
-  var blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url; a.download = 'gymlog-history-'+todayStr()+'.csv';

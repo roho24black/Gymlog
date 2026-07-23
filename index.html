@@ -2788,7 +2788,7 @@ function recordSet(ei, si) {
   s.done = true;
   if (navigator.vibrate) navigator.vibrate(12);
   if (ex.sets.length && ex.sets.every(function(x){ return x.done; })) OPEN_EX[ei] = false;
-  saveST(); startRest(defaultRestSet()); updateVolBar(); renderWorkout();
+  saveST(); startRest(restSecFor(ex)); updateVolBar(); renderWorkout();
   if (isPR) uiPrToast(ex.name, s.w);
 }
 

@@ -3522,6 +3522,10 @@ function openSheet(ei, si, field) {
     presets = [[-1,'−1'],[1,'+1']];
     document.getElementById('sh-title').textContent = 'RPE — тяжесть подхода (0 — не указано)';
   }
+  SH_FAILED = !!s.failed;
+  var failedWrap = document.getElementById('sh-failed-wrap');
+  if (failedWrap) failedWrap.style.display = (field === 'rpe') ? 'block' : 'none';
+  shPaintFailedBtn();
   SH_RANGE = range; SH_VAL = cur; SH_STEP = step;
   SH_FMT = (field === 'swimtime') ? fmtTime : nf;
   document.getElementById('sh-val-unit').textContent = unit;
@@ -3544,6 +3548,15 @@ function openSheet(ei, si, field) {
     shUpdateDisplay();
   }, 50);
 }
+function shPaintFailedBtn() {
+  var btn = document.getElementById('sh-failed-btn');
+  if (!btn) return;
+  btn.textContent = (SH_FAILED ? '☑' : '☐') + ' Подход не засчитан';
+  btn.style.background = SH_FAILED ? 'rgba(244,63,94,0.15)' : 'var(--card2)';
+  btn.style.borderColor = SH_FAILED ? 'rgba(244,63,94,0.4)' : 'var(--brd2)';
+  btn.style.color = SH_FAILED ? 'var(--red)' : 'var(--sub)';
+}
+function shToggleFailed() { SH_FAILED = !SH_FAILED; shPaintFailedBtn(); }
 function shUpdateDisplay() {
   var unitEl = document.getElementById('sh-val-unit');
   var unit = unitEl ? unitEl.textContent : '';

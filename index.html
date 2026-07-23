@@ -4713,6 +4713,7 @@ function renderProgOverview(pd) {
     '<span>Достижения</span><button class="btn btn-sm" onclick="shareAchievementsCardImg()">📸 Поделиться</button></div>' +
     achievementsHtml(pd) + '</div>';
   h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
+  h += settingsBoxHtml();
   h += dataBackupBoxHtml();
   h += bugReportBoxHtml();
   return h;

@@ -980,7 +980,7 @@ function getExStats(name) {
     day.workouts.forEach(function(wkt) {
       (wkt.exercises || []).forEach(function(ex) {
         if (ex.name !== name) return;
-        var done = (ex.sets || []).filter(function(s){ return s.done && !s.warmup && (s.w||0) > 0; });
+        var done = (ex.sets || []).filter(function(s){ return s.done && !s.warmup && !s.failed && (s.w||0) > 0; });
         if (!done.length) return;
         var mx = Math.max.apply(null, done.map(function(s){ return s.w||0; }));
         if (mx > pr) pr = mx;
@@ -1022,7 +1022,7 @@ function bestE1RM(name) {
       (wkt.exercises || []).forEach(function(ex) {
         if (ex.name !== name) return;
         (ex.sets || []).forEach(function(s) {
-          if (!s.done || s.warmup) return;
+          if (!s.done || s.warmup || s.failed) return;
           var e = e1RM(s.w || 0, s.r || 0);
           if (e > best) best = e;
         });
@@ -2505,7 +2505,7 @@ function updateVolBar() {
   if (!wkt) return;
   var kg = 0, sets = 0;
   (wkt.exercises||[]).forEach(function(ex) {
-    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; if(!s.warmup) kg += (s.w||0)*(s.r||1); } });
+    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; if(!s.warmup && !s.failed) kg += (s.w||0)*(s.r||1); } });
   });
   var vkg = document.getElementById('vol-kg'); if (vkg) vkg.textContent = kg;
   var vs = document.getElementById('vol-sets'); if (vs) vs.textContent = sets;
@@ -2599,7 +2599,7 @@ function renderWorkout() {
   var elapsed = WKT_START ? fmtTime(Math.floor((Date.now()-WKT_START)/1000)) : '0:00';
   var kg = 0, sets = 0;
   (wkt.exercises||[]).forEach(function(ex) {
-    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; if(!s.warmup) kg += (s.w||0)*(s.r||1); } });
+    (ex.sets||[]).forEach(function(s){ if(s.done){ sets++; if(!s.warmup && !s.failed) kg += (s.w||0)*(s.r||1); } });
   });
 
   var h = '<div class="wkt-head">' +
@@ -2653,7 +2653,7 @@ function renderWorkout() {
     var color = exTileColor(ex.name);
     var group = exGroup(ex.name);
     var exVol = 0;
-    ex.sets.forEach(function(s){ if(s.done && !s.warmup) exVol += (s.w||0)*(s.r||1); });
+    ex.sets.forEach(function(s){ if(s.done && !s.warmup && !s.failed) exVol += (s.w||0)*(s.r||1); });
 
     if (ei > 0) h += superlinkRowHtml(ei, ex.linkedToPrev, ex.linkedToPrev ? exs[groupStartIdx(exs, ei)].groupName : null);
 
@@ -2786,7 +2786,7 @@ function recordSet(ei, si) {
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   var ex = wkt.exercises[ei], s = ex.sets[si];
   var isPR = false;
-  if (!isCardio(ex.name) && !isSwim(ex.name) && !isStatic(ex.name) && !s.warmup && (s.w||0) > 0) {
+  if (!isCardio(ex.name) && !isSwim(ex.name) && !isStatic(ex.name) && !s.warmup && !s.failed && (s.w||0) > 0) {
     var st = getExStats(ex.name);
     if (st && s.w > st.pr) isPR = true;
   }
@@ -2824,7 +2824,7 @@ function addWarmupSets(ei) {
   var ex = wkt.exercises[ei];
   if (ex.sets.some(function(s){ return s.warmup; })) { uiToast('Разминка уже добавлена'); return; }
   var target = 0;
-  ex.sets.forEach(function(s){ if (!s.warmup && (s.w||0) > target) target = s.w; });
+  ex.sets.forEach(function(s){ if (!s.warmup && !s.failed && (s.w||0) > target) target = s.w; });
   if (!target) { var st = getExStats(ex.name); target = st ? st.lastW : 0; }
   if (!target) { uiToast('Сначала укажи рабочий вес'); return; }
   var warmupSets = warmupRamp(target, ex.name).map(function(step){ return {w:step.w, r:step.r, done:false, warmup:true}; });
@@ -3944,7 +3944,7 @@ function renderCalDetail() {
         (ex.sets||[]).forEach(function(s){
           if (!s.done) return;
           wSets++;
-          if ((s.w||0)>0 && !s.warmup) wVol += s.w*(s.r||0);
+          if ((s.w||0)>0 && !s.warmup && !s.failed) wVol += s.w*(s.r||0);
         });
       });
       if (w.note) {

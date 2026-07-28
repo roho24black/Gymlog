@@ -3435,7 +3435,11 @@ function shareWrappedCardImg(period) {
   var st = computeWrappedStats(period);
   var canvas = document.createElement('canvas');
   var W = 1080, PAD = 64;
-  var H = 1080 + (st.prs.length ? st.prs.length*54 + 50 : 0);
+  // sy0+sh (490+120) + the 56px gap before the PR section, then the PR block itself if
+  // present — matches the exact per-row increments used in the draw calls below, so the
+  // 1080 floor only gets exceeded when the content actually needs it.
+  var contentBottom = 490 + 120 + 56 + (st.prs.length ? 36 + st.prs.length*54 : 0);
+  var H = Math.max(1080, contentBottom + 110);
   canvas.width = W; canvas.height = H;
   var ctx = canvas.getContext('2d');
 

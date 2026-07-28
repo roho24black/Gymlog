@@ -2959,10 +2959,13 @@ function renderCardOptSheetChips() {
   var fmtEl = document.getElementById('card-fmt-chips');
   if (fmtEl) fmtEl.innerHTML = chipsHtml('prog-chip', [['square','Квадрат'],['story','История']], CARD_FORMAT, 'setCardFormat');
   var bgEl = document.getElementById('card-bg-chips');
-  if (bgEl) bgEl.innerHTML = chipsHtml('prog-chip', [['dark','Тёмный'],['photo','Своё фото']], CARD_BG_PHOTO ? 'photo' : 'dark', 'setCardBgMode');
+  if (bgEl) {
+    var bgOpts = CARD_BG_PRESETS.map(function(p){ return [p.key, p.label]; }).concat([['photo','Своё фото']]);
+    bgEl.innerHTML = chipsHtml('prog-chip', bgOpts, CARD_BG_PHOTO ? 'photo' : CARD_BG_PRESET, 'setCardBgMode');
+  }
   renderCardGallery();
 }
-// Live-renders all 3 templates at the current format/background so the user actually
+// Live-renders all 5 templates at the current format/background so the user actually
 // SEES each option (not just an abstract label) before picking one.
 function renderCardGallery() {
   var wrap = document.getElementById('card-gallery');
@@ -2970,7 +2973,7 @@ function renderCardGallery() {
   var aspect = CARD_FORMAT === 'story' ? '0.5625' : '1';
   wrap.innerHTML = CARD_TEMPLATES.map(function(t){
     var on = CARD_TEMPLATE === t.key;
-    return '<div style="flex:1;min-width:0">' +
+    return '<div style="min-width:0">' +
       '<div onclick="selectCardTemplate(\''+t.key+'\')" style="cursor:pointer;border-radius:12px;overflow:hidden;border:2px solid '+(on?'var(--acc)':'var(--brd2)')+'">' +
         '<div id="card-tpl-img-'+t.key+'" style="width:100%;aspect-ratio:'+aspect+';background:var(--card2);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:10px">…</div>' +
       '</div>' +
@@ -2978,7 +2981,7 @@ function renderCardGallery() {
     '</div>';
   }).join('');
   CARD_TEMPLATES.forEach(function(t){
-    renderShareCard(CARD_SUM, {template:t.key, format:CARD_FORMAT, bgPhoto:CARD_BG_PHOTO}, function(canvas){
+    renderShareCard(CARD_SUM, {template:t.key, format:CARD_FORMAT, bgPhoto:CARD_BG_PHOTO, bgPreset:CARD_BG_PRESET}, function(canvas){
       var el = document.getElementById('card-tpl-img-'+t.key);
       if (!el) return;
       el.style.background = 'none';
@@ -2991,6 +2994,7 @@ function setCardFormat(fmt) { CARD_FORMAT = fmt; renderCardOptSheetChips(); }
 function setCardBgMode(mode) {
   if (mode === 'photo') { var inp = document.getElementById('card-bg-input'); if (inp) inp.click(); return; }
   CARD_BG_PHOTO = null;
+  CARD_BG_PRESET = mode;
   renderCardOptSheetChips();
 }
 function onCardBgFileChosen(input) {
@@ -3005,7 +3009,7 @@ function closeCardOptionsSheet() {
   CARD_SUM = null;
 }
 function confirmCreateCard() {
-  var sum = CARD_SUM, opts = {template: CARD_TEMPLATE, format: CARD_FORMAT, bgPhoto: CARD_BG_PHOTO};
+  var sum = CARD_SUM, opts = {template: CARD_TEMPLATE, format: CARD_FORMAT, bgPhoto: CARD_BG_PHOTO, bgPreset: CARD_BG_PRESET};
   closeCardOptionsSheet();
   if (!sum) return;
   renderShareCard(sum, opts, function(canvas){ shareCanvasImg(canvas, 'workout.png', 'Моя тренировка'); });

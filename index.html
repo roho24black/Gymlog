@@ -2681,34 +2681,45 @@ function renderShareCard(sum, opts, cb) {
   });
 }
 function shareWorkoutCardImg(sum) {
-  renderShareCard(sum, {format:'square', bgPhoto:null}, function(canvas){
+  renderShareCard(sum, {template:'classic', format:'square', bgPhoto:null}, function(canvas){
     shareCanvasImg(canvas, 'workout.png', 'Моя тренировка');
   });
 }
 
 // ═══════════════════════ CARD OPTIONS SHEET ═══════════════════════
-// getSumFn is called at "Создать" time (not at open time) so a card opened mid-workout
-// reflects whatever's been logged by the moment the user actually confirms.
-var CARD_GET_SUM = null, CARD_FORMAT = 'square', CARD_BG_PHOTO = null;
+// sum is captured once when the sheet opens (the sheet is a full-screen modal, so the
+// underlying workout can't change while it's up) — this keeps every gallery preview and
+// the final shared image pixel-identical, real WYSIWYG instead of a guess.
+var CARD_SUM = null, CARD_TEMPLATE = 'classic', CARD_FORMAT = 'square', CARD_BG_PHOTO = null;
 function openShareCardSheet(getSumFn) {
-  CARD_GET_SUM = getSumFn;
+  var sum = getSumFn ? getSumFn() : null;
+  if (!sum) return;
+  CARD_SUM = sum;
+  CARD_TEMPLATE = 'classic';
   CARD_FORMAT = 'square';
   CARD_BG_PHOTO = null;
   var ov = document.createElement('div');
   ov.id = 'card-opts-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9700;display:flex;align-items:flex-end;justify-content:center';
   ov.innerHTML =
-    '<div style="background:var(--card);border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom) + 20px);width:100%;max-width:480px;box-sizing:border-box">' +
-      '<div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 18px"></div>' +
-      '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:16px">Карточка тренировки</div>' +
-      '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Формат</div>' +
-      '<div id="card-fmt-chips" style="margin-bottom:14px"></div>' +
-      '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Фон</div>' +
-      '<div id="card-bg-chips" style="margin-bottom:10px"></div>' +
-      '<div id="card-bg-preview"></div>' +
-      '<input type="file" id="card-bg-input" accept="image/*" style="display:none" onchange="onCardBgFileChosen(this)">' +
-      '<button onclick="confirmCreateCard()" style="width:100%;height:52px;border-radius:14px;background:var(--acc);color:var(--acc-txt);font-size:16px;font-weight:800;border:none;font-family:inherit;cursor:pointer;margin-top:6px">📸 Создать и поделиться</button>' +
-      '<button onclick="closeCardOptionsSheet()" style="width:100%;height:42px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2);font-family:inherit;cursor:pointer;margin-top:10px">Отмена</button>' +
+    '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box;max-height:88vh;display:flex;flex-direction:column">' +
+      '<div style="padding:20px 20px 0;flex-shrink:0">' +
+        '<div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 18px"></div>' +
+        '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:16px">Карточка тренировки</div>' +
+      '</div>' +
+      '<div style="overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px;flex:1">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Формат</div>' +
+        '<div id="card-fmt-chips" style="margin-bottom:16px"></div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Шаблон</div>' +
+        '<div id="card-gallery" style="display:flex;gap:8px;margin-bottom:16px"></div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Фон</div>' +
+        '<div id="card-bg-chips" style="margin-bottom:16px"></div>' +
+      '</div>' +
+      '<div style="padding:12px 20px calc(env(safe-area-inset-bottom) + 16px);flex-shrink:0">' +
+        '<input type="file" id="card-bg-input" accept="image/*" style="display:none" onchange="onCardBgFileChosen(this)">' +
+        '<button onclick="confirmCreateCard()" style="width:100%;height:52px;border-radius:14px;background:var(--acc);color:var(--acc-txt);font-size:16px;font-weight:800;border:none;font-family:inherit;cursor:pointer">📸 Создать и поделиться</button>' +
+        '<button onclick="closeCardOptionsSheet()" style="width:100%;height:42px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2);font-family:inherit;cursor:pointer;margin-top:10px">Отмена</button>' +
+      '</div>' +
     '</div>';
   ov.addEventListener('click', function(e){ if (e.target===ov) closeCardOptionsSheet(); });
   document.body.appendChild(ov);
@@ -2719,9 +2730,33 @@ function renderCardOptSheetChips() {
   if (fmtEl) fmtEl.innerHTML = chipsHtml('prog-chip', [['square','Квадрат'],['story','История']], CARD_FORMAT, 'setCardFormat');
   var bgEl = document.getElementById('card-bg-chips');
   if (bgEl) bgEl.innerHTML = chipsHtml('prog-chip', [['dark','Тёмный'],['photo','Своё фото']], CARD_BG_PHOTO ? 'photo' : 'dark', 'setCardBgMode');
-  var prev = document.getElementById('card-bg-preview');
-  if (prev) prev.innerHTML = CARD_BG_PHOTO ? '<img src="'+CARD_BG_PHOTO+'" style="width:100%;max-height:130px;object-fit:cover;border-radius:12px;margin-bottom:4px">' : '';
+  renderCardGallery();
 }
+// Live-renders all 3 templates at the current format/background so the user actually
+// SEES each option (not just an abstract label) before picking one.
+function renderCardGallery() {
+  var wrap = document.getElementById('card-gallery');
+  if (!wrap || !CARD_SUM) return;
+  var aspect = CARD_FORMAT === 'story' ? '0.5625' : '1';
+  wrap.innerHTML = CARD_TEMPLATES.map(function(t){
+    var on = CARD_TEMPLATE === t.key;
+    return '<div style="flex:1;min-width:0">' +
+      '<div onclick="selectCardTemplate(\''+t.key+'\')" style="cursor:pointer;border-radius:12px;overflow:hidden;border:2px solid '+(on?'var(--acc)':'var(--brd2)')+'">' +
+        '<div id="card-tpl-img-'+t.key+'" style="width:100%;aspect-ratio:'+aspect+';background:var(--card2);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:10px">…</div>' +
+      '</div>' +
+      '<div onclick="selectCardTemplate(\''+t.key+'\')" style="cursor:pointer;text-align:center;font-size:11px;font-weight:700;color:'+(on?'var(--acc)':'var(--sub)')+';padding:5px 0 0">'+t.label+'</div>' +
+    '</div>';
+  }).join('');
+  CARD_TEMPLATES.forEach(function(t){
+    renderShareCard(CARD_SUM, {template:t.key, format:CARD_FORMAT, bgPhoto:CARD_BG_PHOTO}, function(canvas){
+      var el = document.getElementById('card-tpl-img-'+t.key);
+      if (!el) return;
+      el.style.background = 'none';
+      el.innerHTML = '<img src="'+canvas.toDataURL('image/png')+'" style="width:100%;display:block">';
+    });
+  });
+}
+function selectCardTemplate(key) { CARD_TEMPLATE = key; renderCardGallery(); }
 function setCardFormat(fmt) { CARD_FORMAT = fmt; renderCardOptSheetChips(); }
 function setCardBgMode(mode) {
   if (mode === 'photo') { var inp = document.getElementById('card-bg-input'); if (inp) inp.click(); return; }
@@ -2737,13 +2772,11 @@ function onCardBgFileChosen(input) {
 }
 function closeCardOptionsSheet() {
   var el = document.getElementById('card-opts-ov'); if (el) el.remove();
-  CARD_GET_SUM = null;
+  CARD_SUM = null;
 }
 function confirmCreateCard() {
-  var getSum = CARD_GET_SUM, opts = {format: CARD_FORMAT, bgPhoto: CARD_BG_PHOTO};
+  var sum = CARD_SUM, opts = {template: CARD_TEMPLATE, format: CARD_FORMAT, bgPhoto: CARD_BG_PHOTO};
   closeCardOptionsSheet();
-  if (!getSum) return;
-  var sum = getSum();
   if (!sum) return;
   renderShareCard(sum, opts, function(canvas){ shareCanvasImg(canvas, 'workout.png', 'Моя тренировка'); });
 }

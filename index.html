@@ -6256,6 +6256,24 @@ function sendBugReport(report, silent) {
 function retryUnsentBugReports() {
   (ST.bugReports || []).filter(function(r){ return !r.sent; }).forEach(function(r){ sendBugReport(r, true); });
 }
+// Pushes a short summary to the user's own phone right after a workout — opt-out
+// (ST.cfg.pushWorkoutSummary === false), since the feature was requested specifically
+// to fire by default. Reuses the same ntfy.sh pattern as bug reports; header values
+// stay ASCII-only (enforced by a static test), Cyrillic only goes in the body.
+function pushWorkoutSummaryNtfy(summary) {
+  if (ST.cfg && ST.cfg.pushWorkoutSummary === false) return;
+  var hero = pickHeroStat(summary);
+  var mins = Math.round(summary.durMs/60000);
+  var body = (summary.name||'Тренировка') + '\n' + mins + ' мин · ' + hero[0] + ' ' + hero[1].toLowerCase();
+  if (summary.prs && summary.prs.length) body += '\n🔥 ' + summary.prs.length + ' нов. рекорд' + (summary.prs.length > 1 ? 'а' : '');
+  try {
+    fetch('https://ntfy.sh/gymlog-roman-workouts-2024', {
+      method: 'POST',
+      headers: { 'Title': 'GymLog: workout finished', 'Tags': 'muscle' },
+      body: body
+    }).catch(function(){});
+  } catch(e) {}
+}
 function submitBugReport() {
   var inp = document.getElementById('bugreport-input');
   var text = (inp.value||'').trim();

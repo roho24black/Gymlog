@@ -572,6 +572,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font
     <div id="sh-failed-wrap" style="display:none;text-align:center;margin:-2px 0 8px">
       <button id="sh-failed-btn" onclick="shToggleFailed()" style="border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid var(--brd2);background:var(--card2);color:var(--sub)">☐ Подход не засчитан</button>
     </div>
+    <div id="sh-apply-all-wrap" style="display:none;text-align:center;margin:-2px 0 8px">
+      <button onclick="shApplyToRemaining()" style="border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid var(--brd2);background:var(--card2);color:var(--sub)">⤵️ Применить ко всем оставшимся подходам</button>
+    </div>
     <div class="presets" id="sh-presets"></div>
     <div class="drum-wrap" id="sh-drum-wrap">
       <div class="drum-mask"></div>
@@ -4266,6 +4269,12 @@ function openSheet(ei, si, field) {
   var failedWrap = document.getElementById('sh-failed-wrap');
   if (failedWrap) failedWrap.style.display = (field === 'rpe') ? 'block' : 'none';
   shPaintFailedBtn();
+  var applyAllWrap = document.getElementById('sh-apply-all-wrap');
+  if (applyAllWrap) {
+    var canApplyAll = (field === 'w' || field === 'r') &&
+      wkt.exercises[ei].sets.some(function(x, idx){ return idx > si && !x.done; });
+    applyAllWrap.style.display = canApplyAll ? 'block' : 'none';
+  }
   SH_RANGE = range; SH_VAL = cur; SH_STEP = step;
   SH_FMT = (field === 'swimtime') ? fmtTime : nf;
   document.getElementById('sh-val-unit').textContent = unit;

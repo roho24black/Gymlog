@@ -2359,12 +2359,13 @@ var CARD_TEMPLATES = [
   {key:'mosaic',   label:'Мозаика'},
   {key:'receipt',  label:'Чек-лист'}
 ];
-// Two built-in background looks (independent of template) — combined with the 5
-// templates above that's 10 distinct card designs. A user photo (CARD_BG_PHOTO)
-// overrides either preset when set.
+// Three built-in background looks (independent of template) — combined with the 5
+// templates above that's 15 distinct card designs. A user photo (CARD_BG_PHOTO)
+// overrides whichever preset is selected when set.
 var CARD_BG_PRESETS = [
-  {key:'dark',  label:'Тёмный'},
-  {key:'vivid', label:'Яркий'}
+  {key:'dark',   label:'Тёмный'},
+  {key:'vivid',  label:'Аврора'},
+  {key:'sunset', label:'Закат'}
 ];
 var BG_PRESET_IMPL = {
   dark: function(ctx, W, H) {
@@ -2382,6 +2383,15 @@ var BG_PRESET_IMPL = {
     ctx.beginPath(); ctx.arc(W-40, 40, 300, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = 'rgba(56,189,248,0.10)';
     ctx.beginPath(); ctx.arc(60, H-60, 260, 0, Math.PI*2); ctx.fill();
+  },
+  sunset: function(ctx, W, H) {
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#2a0f0a'); grad.addColorStop(0.5, '#3d160c'); grad.addColorStop(1, '#180907');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(251,146,60,0.18)';
+    ctx.beginPath(); ctx.arc(W-40, 40, 320, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(239,68,68,0.12)';
+    ctx.beginPath(); ctx.arc(80, H-80, 300, 0, Math.PI*2); ctx.fill();
   }
 };
 

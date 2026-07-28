@@ -2492,6 +2492,68 @@ function shareWorkoutCardImg(sum) {
     shareCanvasImg(canvas, 'workout.png', 'Моя тренировка');
   });
 }
+
+// ═══════════════════════ CARD OPTIONS SHEET ═══════════════════════
+// getSumFn is called at "Создать" time (not at open time) so a card opened mid-workout
+// reflects whatever's been logged by the moment the user actually confirms.
+var CARD_GET_SUM = null, CARD_FORMAT = 'square', CARD_BG_PHOTO = null;
+function openShareCardSheet(getSumFn) {
+  CARD_GET_SUM = getSumFn;
+  CARD_FORMAT = 'square';
+  CARD_BG_PHOTO = null;
+  var ov = document.createElement('div');
+  ov.id = 'card-opts-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9700;display:flex;align-items:flex-end;justify-content:center';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom) + 20px);width:100%;max-width:480px;box-sizing:border-box">' +
+      '<div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 18px"></div>' +
+      '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:16px">Карточка тренировки</div>' +
+      '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Формат</div>' +
+      '<div id="card-fmt-chips" style="margin-bottom:14px"></div>' +
+      '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Фон</div>' +
+      '<div id="card-bg-chips" style="margin-bottom:10px"></div>' +
+      '<div id="card-bg-preview"></div>' +
+      '<input type="file" id="card-bg-input" accept="image/*" style="display:none" onchange="onCardBgFileChosen(this)">' +
+      '<button onclick="confirmCreateCard()" style="width:100%;height:52px;border-radius:14px;background:var(--acc);color:var(--acc-txt);font-size:16px;font-weight:800;border:none;font-family:inherit;cursor:pointer;margin-top:6px">📸 Создать и поделиться</button>' +
+      '<button onclick="closeCardOptionsSheet()" style="width:100%;height:42px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2);font-family:inherit;cursor:pointer;margin-top:10px">Отмена</button>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target===ov) closeCardOptionsSheet(); });
+  document.body.appendChild(ov);
+  renderCardOptSheetChips();
+}
+function renderCardOptSheetChips() {
+  var fmtEl = document.getElementById('card-fmt-chips');
+  if (fmtEl) fmtEl.innerHTML = chipsHtml('prog-chip', [['square','Квадрат'],['story','История']], CARD_FORMAT, 'setCardFormat');
+  var bgEl = document.getElementById('card-bg-chips');
+  if (bgEl) bgEl.innerHTML = chipsHtml('prog-chip', [['dark','Тёмный'],['photo','Своё фото']], CARD_BG_PHOTO ? 'photo' : 'dark', 'setCardBgMode');
+  var prev = document.getElementById('card-bg-preview');
+  if (prev) prev.innerHTML = CARD_BG_PHOTO ? '<img src="'+CARD_BG_PHOTO+'" style="width:100%;max-height:130px;object-fit:cover;border-radius:12px;margin-bottom:4px">' : '';
+}
+function setCardFormat(fmt) { CARD_FORMAT = fmt; renderCardOptSheetChips(); }
+function setCardBgMode(mode) {
+  if (mode === 'photo') { var inp = document.getElementById('card-bg-input'); if (inp) inp.click(); return; }
+  CARD_BG_PHOTO = null;
+  renderCardOptSheetChips();
+}
+function onCardBgFileChosen(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){ CARD_BG_PHOTO = e.target.result; renderCardOptSheetChips(); };
+  reader.readAsDataURL(file);
+}
+function closeCardOptionsSheet() {
+  var el = document.getElementById('card-opts-ov'); if (el) el.remove();
+  CARD_GET_SUM = null;
+}
+function confirmCreateCard() {
+  var getSum = CARD_GET_SUM, opts = {format: CARD_FORMAT, bgPhoto: CARD_BG_PHOTO};
+  closeCardOptionsSheet();
+  if (!getSum) return;
+  var sum = getSum();
+  if (!sum) return;
+  renderShareCard(sum, opts, function(canvas){ shareCanvasImg(canvas, 'workout.png', 'Моя тренировка'); });
+}
 function shareCanvasImg(canvas, filename, shareTitle) {
   canvas.toBlob(function(blob){
     if (!blob) return;

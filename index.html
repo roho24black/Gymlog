@@ -6066,10 +6066,11 @@ function importDataFile(input) {
     try {
       var data = JSON.parse(e.target.result);
       if (!data || typeof data.w !== 'object') { uiToast('Некорректный файл'); return; }
-      if (!confirm('Заменить текущие данные данными из файла? Текущий прогресс будет перезаписан.')) return;
-      ST = data;
-      saveST();
-      location.reload();
+      uiConfirm('Заменить текущие данные данными из файла? Текущий прогресс будет перезаписан.', function(){
+        ST = data;
+        saveST();
+        location.reload();
+      }, 'Заменить');
     } catch (err) { uiToast('Не удалось прочитать файл'); }
   };
   reader.readAsText(file);

@@ -2111,6 +2111,24 @@ function renderPlanView(wkt) {
   return h;
 }
 
+// ═══════════════════════ WAKE LOCK (screen stays on during a workout) ═══════════════════════
+var WAKE_LOCK = null;
+function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  navigator.wakeLock.request('screen').then(function(lock){
+    WAKE_LOCK = lock;
+    lock.addEventListener('release', function(){ if (WAKE_LOCK === lock) WAKE_LOCK = null; });
+  }).catch(function(){});
+}
+function releaseWakeLock() {
+  if (WAKE_LOCK) { WAKE_LOCK.release().catch(function(){}); WAKE_LOCK = null; }
+}
+// The lock auto-releases whenever the tab/app goes to the background — re-acquire it
+// as soon as the user comes back, but only if a workout is still actually running.
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible' && ACTIVE_WKT && !WAKE_LOCK) acquireWakeLock();
+});
+
 function startWorkout(fromTpl) {
   var date = todayStr();
   ensureDay(date);
@@ -2123,6 +2141,11 @@ function startWorkout(fromTpl) {
       wkt.exercises.push(makeExFromEntry(e));
     });
   }
+  if (PENDING_PROGRAM_CURSOR) {
+    wkt.programId = PENDING_PROGRAM_CURSOR.progId;
+    wkt.programCursor = PENDING_PROGRAM_CURSOR.idx;
+    PENDING_PROGRAM_CURSOR = null;
+  }
   ST.w[date].workouts.push(wkt);
   saveST();
   ACTIVE_WKT = {date:date, wid:wid};
@@ -2131,6 +2154,7 @@ function startWorkout(fromTpl) {
   OPEN_EX = {};
   if (WKT_TIMER_ID) clearInterval(WKT_TIMER_ID);
   WKT_TIMER_ID = setInterval(tickWktTimer, 1000);
+  acquireWakeLock();
   goTab('workout');
 }
 
@@ -2144,6 +2168,7 @@ function cancelWorkout() {
   ACTIVE_WKT = null; WKT_START = null;
   if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
   restStop();
+  releaseWakeLock();
   saveST();
   renderTopbar(); renderWorkout();
 }
@@ -2151,6 +2176,10 @@ function finishWorkout() {
   if (!ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);
   if (wkt) wkt.endTime = Date.now();
+  if (wkt && wkt.programId != null && ST.activeProgram && ST.activeProgram.progId === wkt.programId) {
+    var prog = (ST.programs||[]).filter(function(p){ return p.id === wkt.programId; })[0];
+    if (prog && prog.days.length) ST.activeProgram.cursorIdx = (wkt.programCursor + 1) % prog.days.length;
+  }
   saveST();
   var summary = wkt ? buildWorkoutSummary(wkt) : null;
   var delta = summary ? buildSummaryDelta(summary, ACTIVE_WKT.date) : null;
@@ -2158,8 +2187,9 @@ function finishWorkout() {
   ACTIVE_WKT = null; WKT_START = null;
   if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
   restStop();
+  releaseWakeLock();
   renderTopbar(); renderWorkout();
-  if (summary && summary.sets > 0) showWorkoutSummary(summary, delta, hardHint);
+  if (summary && summary.sets > 0) { showWorkoutSummary(summary, delta, hardHint); pushWorkoutSummaryNtfy(summary); }
   autoExportIfDue();
 }
 // Build the same share card as the finish-workout screen, but callable at any point

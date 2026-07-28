@@ -1,4 +1,4 @@
-const CACHE = 'gymlog-v6';
+const CACHE = 'gymlog-v7';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -51,4 +51,14 @@ self.addEventListener('fetch', e => {
       )
     );
   }
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({type: 'window'}).then(list => {
+      for (const c of list) if ('focus' in c) return c.focus();
+      if (self.clients.openWindow) return self.clients.openWindow(self.registration.scope);
+    })
+  );
 });

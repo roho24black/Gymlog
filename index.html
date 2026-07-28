@@ -3427,7 +3427,8 @@ function computeWrappedStats(period) {
     });
   });
   var periodPRs = computeAllTimePRs().filter(function(p){ return p.ds.indexOf(prefix) === 0; }).slice(0, 5);
-  var label = period === 'year' ? String(now.getFullYear()) : (monthRuLabel(0).charAt(0).toUpperCase()+monthRuLabel(0).slice(1)) + ' ' + now.getFullYear();
+  var monthsNom = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  var label = period === 'year' ? String(now.getFullYear()) : monthsNom[now.getMonth()] + ' ' + now.getFullYear();
   return {period:period, label:label, vol:vol, sessions:sessions, sets:sets, durMs:durMs, prs:periodPRs};
 }
 function shareWrappedCardImg(period) {

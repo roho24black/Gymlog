@@ -2303,7 +2303,7 @@ function showWorkoutSummary(sum, delta, hardHint) {
     '</div>';
   document.body.appendChild(ov);
   var shareBtn = document.getElementById('wkt-share-card-btn');
-  if (shareBtn) shareBtn.onclick = function(){ shareWorkoutCardImg(sum); };
+  if (shareBtn) shareBtn.onclick = function(){ openShareCardSheet(function(){ return sum; }); };
   fireConfetti();
   if (navigator.vibrate) navigator.vibrate(sum.prs.length ? [25,40,25,40,25] : [20]);
 }

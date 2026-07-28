@@ -4458,6 +4458,23 @@ function shConfirm() {
   SH_MODE = null;
   if (CIRC) renderCirc(); else renderWorkout();
 }
+// Applies the currently-picked value to this set and every later undone set of the
+// same exercise in one tap — for when you decide to go heavier/lighter mid-exercise
+// instead of re-entering the same number for every remaining set.
+function shApplyToRemaining() {
+  var ref = curWktRef();
+  if (!SH_MODE || !ref) { shClose(); return; }
+  var wkt = getWkt(ref.date, ref.wid);
+  var key = SH_MODE.field;
+  if (key !== 'w' && key !== 'r') { shConfirm(); return; }
+  var val = (typeof SH_VAL === 'number' && !isNaN(SH_VAL)) ? Math.max(0, Math.round(SH_VAL*100)/100) : 0;
+  var ex = wkt.exercises[SH_MODE.ei];
+  ex.sets.forEach(function(s, idx){ if (idx >= SH_MODE.si && !s.done) s[key] = val; });
+  saveST();
+  document.getElementById('sh-overlay').classList.remove('vis');
+  SH_MODE = null;
+  if (CIRC) renderCirc(); else renderWorkout();
+}
 
 // ═══════════════════════ EXERCISE DB MODAL ═══════════════════════
 function openDbModal(cb, presetFilter, title) {

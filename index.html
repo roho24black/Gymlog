@@ -1432,6 +1432,172 @@ function todayPlanReminderHtml() {
   return '<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.28);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--sub)">' +
     '⏰ На сегодня запланировано «<b style="color:var(--ylw)">'+esc(names)+'</b>» — ещё не начато.</div>';
 }
+// ═══════════════════════ ЦИКЛЫ ТРЕНИРОВОК (multi-week rotation) ═══════════════════════
+// A "cycle" is an ordered rotation of days (each either a template-by-name reference
+// or a rest day). Unlike a calendar-based schedule, the cursor only advances when a
+// cycle-linked workout is actually finished — so skipping a day in real life doesn't
+// silently desync the rotation from what you actually trained.
+var PENDING_PROGRAM_CURSOR = null;
+function programTodayEntry() {
+  if (!ST.activeProgram) return null;
+  var prog = (ST.programs||[]).filter(function(p){ return p.id === ST.activeProgram.progId; })[0];
+  if (!prog || !prog.days.length) return null;
+  var idx = ST.activeProgram.cursorIdx % prog.days.length;
+  return {prog:prog, idx:idx, entry:prog.days[idx]};
+}
+function programTodayHtml() {
+  if (curWktRef()) return '';
+  var cur = programTodayEntry();
+  if (!cur) return '';
+  var isRest = cur.entry.type === 'rest';
+  var label = isRest ? 'День отдыха' : cur.entry.name;
+  return '<div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.28);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--sub);display:flex;align-items:center;gap:10px">' +
+    '<div style="flex:1">'+(isRest?'😴':'🔁')+' <b style="color:var(--pur)">'+esc(cur.prog.name)+'</b> — день '+(cur.idx+1)+' из '+cur.prog.days.length+': <b style="color:var(--txt)">'+esc(label)+'</b></div>' +
+    '<button class="btn btn-sm" style="background:var(--pur);color:#fff;flex-shrink:0" onclick="startProgramDay()">'+(isRest?'Далее →':'Начать')+'</button>' +
+    '</div>';
+}
+function startProgramDay() {
+  var cur = programTodayEntry();
+  if (!cur) return;
+  if (cur.entry.type === 'rest') { skipProgramRestDay(); return; }
+  var tpl = (ST.templates||[]).filter(function(t){ return t.name === cur.entry.name; })[0];
+  if (!tpl) { uiToast('Шаблон цикла не найден — возможно, был удалён или переименован'); return; }
+  PENDING_PROGRAM_CURSOR = {progId:cur.prog.id, idx:cur.idx};
+  startWorkout(tpl);
+}
+function skipProgramRestDay() {
+  var cur = programTodayEntry();
+  if (!cur || cur.entry.type !== 'rest') return;
+  ST.activeProgram.cursorIdx = (cur.idx + 1) % cur.prog.days.length;
+  saveST(); renderWorkout();
+}
+function activateProgram(pid) {
+  ST.activeProgram = {progId: pid, cursorIdx: 0};
+  saveST(); renderTemplates(); renderWorkout();
+}
+function deactivateProgram() {
+  ST.activeProgram = null;
+  saveST(); renderTemplates(); renderWorkout();
+}
+function deleteCycle(pid) {
+  uiConfirm('Удалить цикл?', function(){
+    ST.programs = (ST.programs||[]).filter(function(p){ return p.id !== pid; });
+    if (ST.activeProgram && ST.activeProgram.progId === pid) ST.activeProgram = null;
+    saveST(); renderTemplates(); renderWorkout();
+  });
+}
+function programsBoxHtml() {
+  var h = '<div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 8px">Циклы тренировок</div>';
+  (ST.programs||[]).forEach(function(p){
+    var active = ST.activeProgram && ST.activeProgram.progId === p.id;
+    h += '<div class="tpl-card" style="cursor:default">' +
+      '<div class="tpl-tile" style="background:var(--pur)">'+letterOf(p.name)+'</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="tpl-name">'+esc(p.name)+(active?' <span style="color:var(--pur);font-size:11px;font-weight:800">· активен</span>':'')+'</div>' +
+        '<div class="tpl-meta">'+p.days.length+' дн. в цикле</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px">' +
+        (active ? '<button onclick="deactivateProgram()" title="Выключить" style="background:none;border:none;color:var(--mut);font-size:16px;cursor:pointer;padding:4px">⏹</button>'
+                : '<button onclick="activateProgram('+p.id+')" title="Сделать активным" style="background:none;border:none;color:var(--pur);font-size:16px;cursor:pointer;padding:4px">▶</button>') +
+        '<button onclick="openCycleBuilder('+(ST.programs||[]).indexOf(p)+')" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer;padding:4px">✏️</button>' +
+        '<button onclick="deleteCycle('+p.id+')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px">✕</button>' +
+      '</div></div>';
+  });
+  h += '<button class="btn btn-sm" style="width:100%;margin-top:6px" onclick="openCycleBuilder(-1)">+ Создать цикл</button>';
+  return h;
+}
+var CYCLE_DRAFT = null;
+function openCycleBuilder(idx) {
+  if (idx >= 0 && ST.programs[idx]) {
+    CYCLE_DRAFT = {editId: ST.programs[idx].id, name: ST.programs[idx].name, days: JSON.parse(JSON.stringify(ST.programs[idx].days))};
+  } else {
+    CYCLE_DRAFT = {editId: null, name: '', days: []};
+  }
+  var ov = document.createElement('div');
+  ov.id = 'cycle-builder-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9400;display:flex;align-items:flex-end;justify-content:center';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box;max-height:88vh;display:flex;flex-direction:column">' +
+      '<div style="padding:20px 20px 0;flex-shrink:0">' +
+        '<div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 18px"></div>' +
+        '<input type="text" id="cycle-name-input" placeholder="Название цикла, например «Push Pull Legs»" value="'+esc(CYCLE_DRAFT.name)+'" oninput="setCycleName(this.value)" style="width:100%;box-sizing:border-box;height:44px;border-radius:12px;background:var(--card2);border:1px solid var(--brd2);color:var(--txt);font-size:15px;font-weight:700;font-family:inherit;padding:0 14px;margin-bottom:14px">' +
+      '</div>' +
+      '<div style="overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px;flex:1" id="cycle-days-list"></div>' +
+      '<div style="padding:12px 20px calc(env(safe-area-inset-bottom) + 16px);flex-shrink:0">' +
+        '<button class="btn btn-sm" style="width:100%;margin-bottom:8px" onclick="openCycleDayPicker()">+ Добавить день</button>' +
+        '<button onclick="saveCycleDraft()" style="width:100%;height:48px;border-radius:14px;background:var(--pur);color:#fff;font-size:15px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Сохранить цикл</button>' +
+        '<button onclick="closeCycleBuilder()" style="width:100%;height:40px;border-radius:12px;background:none;color:var(--mut);font-size:14px;border:1px solid var(--brd2);font-family:inherit;cursor:pointer;margin-top:8px">Отмена</button>' +
+      '</div>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target===ov) closeCycleBuilder(); });
+  document.body.appendChild(ov);
+  renderCycleDaysList();
+}
+function setCycleName(v) { if (CYCLE_DRAFT) CYCLE_DRAFT.name = v; }
+function renderCycleDaysList() {
+  var el = document.getElementById('cycle-days-list');
+  if (!el || !CYCLE_DRAFT) return;
+  if (!CYCLE_DRAFT.days.length) { el.innerHTML = '<div style="font-size:12.5px;color:var(--mut);padding:10px 0">Пока пусто — добавь первый день</div>'; return; }
+  el.innerHTML = CYCLE_DRAFT.days.map(function(d, i){
+    var label = d.type === 'rest' ? '😴 День отдыха' : '🔁 '+esc(d.name);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--brd2)">' +
+      '<div style="width:22px;height:22px;border-radius:50%;background:var(--card2);color:var(--mut);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</div>' +
+      '<div style="flex:1;font-size:13.5px;font-weight:600;color:var(--txt)">'+label+'</div>' +
+      '<button onclick="removeCycleDay('+i+')" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:4px">✕</button>' +
+      '</div>';
+  }).join('');
+}
+function removeCycleDay(i) { if (!CYCLE_DRAFT) return; CYCLE_DRAFT.days.splice(i,1); renderCycleDaysList(); }
+function openCycleDayPicker() {
+  var ov = document.createElement('div');
+  ov.id = 'cycle-day-picker-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;display:flex;align-items:flex-end;justify-content:center';
+  var rows = '<div onclick="pickCycleDay(\'rest\',null)" style="padding:12px 4px;border-bottom:1px solid var(--brd2);font-size:14px;font-weight:700;color:var(--txt);cursor:pointer">😴 День отдыха</div>';
+  rows += (ST.templates||[]).map(function(t, ti){
+    return '<div onclick="pickCycleDay(\'tpl\','+ti+')" style="padding:12px 4px;border-bottom:1px solid var(--brd2);font-size:14px;font-weight:600;color:var(--txt);cursor:pointer">🔁 '+esc(t.name)+'</div>';
+  }).join('');
+  if (!ST.templates || !ST.templates.length) rows += '<div style="font-size:12.5px;color:var(--mut);padding:10px 4px">Нет своих шаблонов — сначала создай хотя бы один в разделе «Мои шаблоны»</div>';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;box-sizing:border-box;max-height:70vh;display:flex;flex-direction:column">' +
+      '<div style="padding:20px 20px 0;flex-shrink:0"><div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 18px"></div>' +
+      '<div style="font-size:15px;font-weight:800;color:var(--txt);margin-bottom:10px">Выбери день</div></div>' +
+      '<div style="overflow-y:auto;padding:0 20px 20px;flex:1">'+rows+'</div>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+function pickCycleDay(kind, ti) {
+  var el = document.getElementById('cycle-day-picker-ov'); if (el) el.remove();
+  if (!CYCLE_DRAFT) return;
+  if (kind === 'rest') { CYCLE_DRAFT.days.push({type:'rest'}); }
+  else {
+    var t = ST.templates[ti];
+    if (!t) return;
+    CYCLE_DRAFT.days.push({type:'tpl', name:t.name});
+  }
+  renderCycleDaysList();
+}
+function closeCycleBuilder() {
+  var el = document.getElementById('cycle-builder-ov'); if (el) el.remove();
+  CYCLE_DRAFT = null;
+}
+function saveCycleDraft() {
+  if (!CYCLE_DRAFT) return;
+  var name = (CYCLE_DRAFT.name||'').trim();
+  if (!name) { uiToast('Дай циклу название'); return; }
+  if (!CYCLE_DRAFT.days.length) { uiToast('Добавь хотя бы один день'); return; }
+  if (!ST.programs) ST.programs = [];
+  if (CYCLE_DRAFT.editId != null) {
+    var existing = ST.programs.filter(function(p){ return p.id === CYCLE_DRAFT.editId; })[0];
+    if (existing) { existing.name = name; existing.days = CYCLE_DRAFT.days; }
+  } else {
+    ST.programs.push({id: Date.now(), name: name, days: CYCLE_DRAFT.days});
+  }
+  saveST();
+  closeCycleBuilder();
+  renderTemplates();
+}
+
 function inactivityBannerHtml() {
   var days = daysSinceLastWorkout();
   if (days == null || days < 3) return '';

@@ -5910,7 +5910,32 @@ function settingsBoxHtml() {
   return '<div class="chart-box"><div class="chart-title">Настройки</div>' +
     '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">Шаг округления веса в разминке</div>' +
     chipsHtml('prog-chip', [[1,'1 кг'],[2.5,'2,5 кг'],[5,'5 кг']], weightRoundStep(), 'setWeightRoundStep') +
+    restNotifyRowHtml() +
     '</div>';
+}
+function restNotifyRowHtml() {
+  if (!('Notification' in window)) return '';
+  var perm = Notification.permission;
+  var on = perm === 'granted' && ST.cfg && ST.cfg.restNotify;
+  var label = perm === 'denied' ? 'Уведомления заблокированы в системе'
+    : on ? '🔔 Уведомления об отдыхе — включены'
+    : '🔕 Уведомления об окончании отдыха';
+  return '<div style="font-size:12px;color:var(--sub);margin:14px 0 8px">Уведомление, когда закончится отдых — сработает, даже если приложение свёрнуто</div>' +
+    '<button class="btn btn-sm" style="width:100%"'+(perm==='denied'?' disabled':' onclick="toggleRestNotify()"')+'>'+label+'</button>';
+}
+function toggleRestNotify() {
+  if (!('Notification' in window)) { uiToast('Уведомления не поддерживаются на этом устройстве'); return; }
+  if (!ST.cfg) ST.cfg = {};
+  if (Notification.permission === 'granted') {
+    ST.cfg.restNotify = !ST.cfg.restNotify;
+    saveST(); renderProgress();
+    return;
+  }
+  if (Notification.permission === 'denied') { uiToast('Уведомления заблокированы в настройках телефона'); return; }
+  Notification.requestPermission().then(function(perm){
+    if (perm === 'granted') { ST.cfg.restNotify = true; saveST(); }
+    renderProgress();
+  });
 }
 function searchAllNotes(q) {
   q = q.toLowerCase();

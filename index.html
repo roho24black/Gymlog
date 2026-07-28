@@ -2162,11 +2162,13 @@ function finishWorkout() {
 }
 // Build the same share card as the finish-workout screen, but callable at any point
 // mid-session — buildWorkoutSummary already works on an in-progress wkt (no endTime).
+// getSum is re-evaluated at "Создать" time so it reflects whatever's logged by then.
 function shareActiveWorkoutCard() {
   var ref = curWktRef(); if (!ref) return;
-  var wkt = getWkt(ref.date, ref.wid);
-  if (!wkt) return;
-  shareWorkoutCardImg(buildWorkoutSummary(wkt));
+  openShareCardSheet(function(){
+    var wkt = getWkt(ref.date, ref.wid);
+    return wkt ? buildWorkoutSummary(wkt) : null;
+  });
 }
 // If every RPE-rated set today came in at RPE>=9, the session was maximally hard —
 // reuse the existing per-muscle-group recovery model (calcRecovery, driven by the

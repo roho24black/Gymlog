@@ -6098,7 +6098,18 @@ function settingsBoxHtml() {
     '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">Шаг округления веса в разминке</div>' +
     chipsHtml('prog-chip', [[1,'1 кг'],[2.5,'2,5 кг'],[5,'5 кг']], weightRoundStep(), 'setWeightRoundStep') +
     restNotifyRowHtml() +
+    pushSummaryRowHtml() +
     '</div>';
+}
+function pushSummaryRowHtml() {
+  var on = !(ST.cfg && ST.cfg.pushWorkoutSummary === false);
+  return '<div style="font-size:12px;color:var(--sub);margin:14px 0 8px">Push себе на телефон с саммари сразу после тренировки</div>' +
+    '<button class="btn btn-sm" style="width:100%" onclick="togglePushSummary()">'+(on?'📲 Push после тренировки — включён':'🔕 Push после тренировки — выключен')+'</button>';
+}
+function togglePushSummary() {
+  if (!ST.cfg) ST.cfg = {};
+  ST.cfg.pushWorkoutSummary = (ST.cfg.pushWorkoutSummary === false) ? true : false;
+  saveST(); renderProgress();
 }
 function restNotifyRowHtml() {
   if (!('Notification' in window)) return '';

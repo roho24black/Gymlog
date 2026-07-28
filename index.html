@@ -2224,10 +2224,14 @@ function buildWorkoutSummary(wkt) {
     if (doneAny) {
       var text = '';
       if (cardio) text = nf(cardioDist)+' '+distUnit(ex.name)+(cardioMins?' · '+cardioMins+' мин':'');
-      else if (swim) text = swimDistSummary(ex.sets) + (gearIconsText(ex) ? '  '+gearIconsText(ex) : '');
+      else if (swim) text = swimDistSummary(ex.sets);
       else if (stat) text = fmtDurLong(staticMax);
       else if (bestSet) text = bestSet.w > 0 ? (nf(bestSet.w)+' кг × '+bestSet.r) : (bestSet.r+' повт');
-      exercises.push({name: exTitle(ex), text: text});
+      // extra lines drawn under the exercise row on the card: gear (swim only), then note
+      var sub = [];
+      if (swim) { var g = gearLabelsText(ex); if (g) sub.push(g); }
+      if (ex.note) sub.push(ex.note);
+      exercises.push({name: exTitle(ex), text: text, sub: sub});
     }
   });
   // endTime isn't set yet on an in-progress workout (card can now be shared mid-session) —

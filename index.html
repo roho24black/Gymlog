@@ -3711,8 +3711,21 @@ function startRest(sec) {
 function tickRest() {
   if (!REST_RUNNING) return;
   REST_SEC--;
-  if (REST_SEC <= 0) { restStop(); return; }
+  if (REST_SEC <= 0) { notifyRestDone(); restStop(); return; }
   updateRestDisplay();
+}
+// Best-effort local notification when rest ends while the app is backgrounded — only
+// fires if the user opted in (ST.cfg.restNotify) and actually granted permission.
+// Routed through the service worker (not `new Notification()` directly) since that's
+// the reliable path for an installed iOS PWA.
+function notifyRestDone() {
+  if (!ST.cfg || !ST.cfg.restNotify) return;
+  if (document.visibilityState === 'visible') return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then(function(reg){
+    reg.showNotification('Отдых закончен', {body:'Пора вернуться к тренировке 💪', icon:'icon.png', tag:'gymlog-rest'});
+  }).catch(function(){});
 }
 function updateRestDisplay() {
   document.getElementById('rest-time').textContent = fmtTime(REST_SEC);

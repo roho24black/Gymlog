@@ -1047,6 +1047,43 @@ function getExStats(name) {
   });
   return lastDate ? {lastW:lastW, lastR:lastR, pr:pr, lastRPE:lastRPE} : null;
 }
+// All-time best set per exercise (max weight, reps as tiebreak), across the full
+// history including today — unlike getExStats() this isn't excluding today, since a
+// hall-of-fame table should show a PR the moment it happens, not the day after.
+function computeAllTimePRs() {
+  var best = {};
+  Object.keys(ST.w).sort().forEach(function(ds){
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(wkt){
+      (wkt.exercises||[]).forEach(function(ex){
+        if (isCardio(ex.name) || isSwim(ex.name) || isStatic(ex.name)) return;
+        (ex.sets||[]).forEach(function(s){
+          if (!s.done || s.warmup || s.failed || !((s.w||0) > 0)) return;
+          var cur = best[ex.name];
+          if (!cur || s.w > cur.w || (s.w === cur.w && (s.r||0) > cur.r)) {
+            best[ex.name] = {w:s.w, r:s.r||0, ds:ds};
+          }
+        });
+      });
+    });
+  });
+  return Object.keys(best).map(function(name){
+    return {name:name, w:best[name].w, r:best[name].r, ds:best[name].ds};
+  }).sort(function(a,b){ return b.w - a.w; });
+}
+function hallOfFameHtml() {
+  var prs = computeAllTimePRs();
+  if (!prs.length) return '';
+  var rows = prs.map(function(p){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--brd)">' +
+      '<div style="min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</div>' +
+      '<div style="font-size:10.5px;color:var(--mut)">'+dateLabelYr(p.ds)+'</div></div>' +
+      '<div style="font-size:14px;font-weight:800;color:var(--ylw);flex-shrink:0;margin-left:10px;white-space:nowrap">'+nf(p.w)+' кг × '+p.r+'</div>' +
+      '</div>';
+  }).join('');
+  return '<div class="chart-box"><div class="chart-title">🏆 Зал славы</div>' + rows + '</div>';
+}
 // Two full sessions of easy RPE is a much stronger "time to add weight" signal than
 // a single easy set (which could just be a fluke) — checked before the softer,
 // single-set hint below so the stronger signal takes priority when both apply.

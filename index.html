@@ -6568,6 +6568,7 @@ renderWorkout();
 if (ST.recovery && Date.now() < getRecoveryEnd()) startRecoveryTimer();
 checkShareImport();
 retryUnsentBugReports();
+checkWhatsNew();
 if ('serviceWorker' in navigator) {
   var hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js').catch(function(){});

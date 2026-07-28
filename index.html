@@ -2355,8 +2355,35 @@ function pickHeroStat(sum) {
 var CARD_TEMPLATES = [
   {key:'classic',  label:'Классика'},
   {key:'bold',     label:'Крупно'},
-  {key:'timeline', label:'Лента'}
+  {key:'timeline', label:'Лента'},
+  {key:'mosaic',   label:'Мозаика'},
+  {key:'receipt',  label:'Чек-лист'}
 ];
+// Two built-in background looks (independent of template) — combined with the 5
+// templates above that's 10 distinct card designs. A user photo (CARD_BG_PHOTO)
+// overrides either preset when set.
+var CARD_BG_PRESETS = [
+  {key:'dark',  label:'Тёмный'},
+  {key:'vivid', label:'Яркий'}
+];
+var BG_PRESET_IMPL = {
+  dark: function(ctx, W, H) {
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#0a0a12'); grad.addColorStop(1, '#14141f');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(34,197,94,0.07)';
+    ctx.beginPath(); ctx.arc(W-40, 40, 280, 0, Math.PI*2); ctx.fill();
+  },
+  vivid: function(ctx, W, H) {
+    var grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#1b0f3d'); grad.addColorStop(0.55, '#101a3d'); grad.addColorStop(1, '#052e2b');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(251,191,36,0.10)';
+    ctx.beginPath(); ctx.arc(W-40, 40, 300, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(56,189,248,0.10)';
+    ctx.beginPath(); ctx.arc(60, H-60, 260, 0, Math.PI*2); ctx.fill();
+  }
+};
 
 // ── Classic: header stat tiles + a plain exercise list ──
 function classicContentHeight(sum) {

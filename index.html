@@ -5618,6 +5618,8 @@ function renderProgOverview(pd) {
     '<span>Достижения</span><button class="btn btn-sm" onclick="shareAchievementsCardImg()">📸 Поделиться</button></div>' +
     achievementsHtml(pd) + '</div>';
   h += '<div class="chart-box"><div class="chart-title">Активность за год</div>' + heatmapHtml(computeHeatmapDays(pd.workoutDays, pd.dailyVol, 52)) + '</div>';
+  h += hallOfFameHtml();
+  h += wrappedBoxHtml();
   h += searchNotesBoxHtml();
   h += settingsBoxHtml();
   h += dataBackupBoxHtml();

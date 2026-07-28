@@ -2327,17 +2327,32 @@ function drawImageCover(ctx, img, W, H) {
   else { sw = iw; sh = sw / cr; sx = 0; sy = (ih - sh) / 2; }
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
 }
-// Core card renderer. opts: {format:'square'|'story', bgPhoto: dataURL|null}. Always
-// finishes via cb(canvas) — async when a photo background needs to load first.
-function renderShareCard(sum, opts, cb) {
-  opts = opts || {};
-  var format = opts.format === 'story' ? 'story' : 'square';
-  var W = 1080, PAD = 64;
+function fitHeroFontSize(ctx, text, maxWidth, maxSize, minSize) {
+  var size = maxSize;
+  while (size > minSize) {
+    ctx.font = '800 '+size+'px -apple-system, sans-serif';
+    if (ctx.measureText(text).width <= maxWidth) break;
+    size -= 6;
+  }
+  return size;
+}
+// The single "headline" number a template can build a poster around — same priority
+// order as the classic stat-tile fallback (volume, then swim/cardio distance, then reps).
+function pickHeroStat(sum) {
+  if (sum.vol > 0) return [String(fmtVol(Math.round(sum.vol))), 'КГ ОБЪЁМ', '#fbbf24'];
+  if (sum.totalSwimM > 0) return [String(sum.totalSwimM), 'М В БАССЕЙНЕ', '#38bdf8'];
+  if (sum.totalCardioKm > 0) return [nf(sum.totalCardioKm), 'КМ КАРДИО', '#38bdf8'];
+  if (sum.totalBwReps > 0) return [String(sum.totalBwReps), 'ПОВТОРЕНИЙ', '#fbbf24'];
+  return [String(sum.sets), 'ПОДХОДОВ', '#38bdf8'];
+}
+var CARD_TEMPLATES = [
+  {key:'classic',  label:'Классика'},
+  {key:'bold',     label:'Крупно'},
+  {key:'timeline', label:'Лента'}
+];
 
-  // Two-pass: every row's height is known up front (fixed line heights, only text
-  // truncation, no wrapping), so total content height — including each exercise's
-  // gear/note sub-lines — is computed before the canvas is created. Nothing gets
-  // truncated at a fixed row count the way the old 1080px-only card used to.
+// ── Classic: header stat tiles + a plain exercise list ──
+function classicContentHeight(sum) {
   var noteExtra = sum.note ? 34 : 0;
   var sy0 = 244 + noteExtra, sh = 138;
   var contentY = sy0 + sh + 50;
@@ -2346,8 +2361,273 @@ function renderShareCard(sum, opts, cb) {
     sum.exercises.forEach(function(e){ contentY += 44 + (e.sub ? e.sub.length : 0)*26; });
   }
   if (sum.prs && sum.prs.length) contentY += 14 + 34 + sum.prs.length*50;
+  return contentY;
+}
+function drawClassicBody(ctx, sum, W, H, PAD, opts) {
+  var noteExtra = sum.note ? 34 : 0;
+  var sy0 = 244 + noteExtra, sh = 138;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 48px -apple-system, sans-serif';
+  ctx.fillText(fitText(ctx, sum.name||'Тренировка', W-PAD*2), PAD, 176);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '500 23px -apple-system, sans-serif';
+  ctx.fillText(dateLabel(todayStr()), PAD, 212);
+  if (sum.note) {
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = 'italic 500 21px -apple-system, sans-serif';
+    ctx.fillText(fitText(ctx, '"'+sum.note+'"', W-PAD*2), PAD, 212+30);
+  }
+
+  var gap = 18, sw = (W - PAD*2 - gap*2)/3;
+  var midStat = pickHeroStat(sum);
+  var stats = [
+    [String(Math.round(sum.durMs/60000)), 'МИНУТ', '#ffffff'],
+    midStat,
+    [String(sum.sets), 'ПОДХОДОВ', '#38bdf8']
+  ];
+  var tileBg = opts.bgPhoto ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.045)';
+  stats.forEach(function(s, i){
+    var sx = PAD + i*(sw+gap);
+    ctx.fillStyle = tileBg;
+    crRoundRect(ctx, sx, sy0, sw, sh, 18); ctx.fill();
+    ctx.fillStyle = s[2];
+    ctx.font = '800 44px -apple-system, sans-serif';
+    ctx.fillText(s[0], sx+22, sy0+70);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '700 14px -apple-system, sans-serif';
+    ctx.fillText(s[1], sx+22, sy0+102);
+  });
+
+  var cursorY = sy0 + sh + 50;
+  if (sum.exercises && sum.exercises.length) {
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '700 18px -apple-system, sans-serif';
+    ctx.fillText('УПРАЖНЕНИЯ', PAD, cursorY);
+    cursorY += 38;
+    sum.exercises.forEach(function(e){
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 25px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, e.name, W-PAD*2-320), PAD, cursorY);
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '600 23px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(e.text, W-PAD, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 44;
+      (e.sub||[]).forEach(function(line){
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '500 18px -apple-system, sans-serif';
+        ctx.fillText(fitText(ctx, line, W-PAD*2), PAD, cursorY-8);
+        cursorY += 26;
+      });
+    });
+  }
+  if (sum.prs && sum.prs.length) {
+    cursorY += 14;
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '800 24px -apple-system, sans-serif';
+    ctx.fillText('🔥 НОВЫЕ РЕКОРДЫ', PAD, cursorY);
+    cursorY += 34;
+    sum.prs.forEach(function(p){
+      ctx.fillStyle = 'rgba(251,191,36,0.13)';
+      crRoundRect(ctx, PAD, cursorY-30, W-PAD*2, 44, 12); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 23px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, p.name, W-PAD*2-260), PAD+18, cursorY);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '700 24px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-18, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 50;
+    });
+  }
+}
+
+// ── Bold: one huge centered "poster" number, everything else secondary ──
+function boldContentHeight(sum) {
+  var y = 570;
+  if (sum.exercises && sum.exercises.length) {
+    y += 40;
+    sum.exercises.forEach(function(e){ y += 40 + (e.sub ? e.sub.length : 0)*24; });
+  }
+  if (sum.prs && sum.prs.length) y += 10 + 30 + sum.prs.length*42;
+  return y;
+}
+function drawBoldBody(ctx, sum, W, H, PAD, opts) {
+  var hero = pickHeroStat(sum);
+  var heroSize = fitHeroFontSize(ctx, hero[0], W-PAD*2, 150, 70);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = hero[2];
+  ctx.font = '800 '+heroSize+'px -apple-system, sans-serif';
+  ctx.fillText(hero[0], W/2, 330);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '700 20px -apple-system, sans-serif';
+  ctx.fillText(hero[1], W/2, 368);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 34px -apple-system, sans-serif';
+  ctx.fillText(fitText(ctx, sum.name||'Тренировка', W-PAD*2), W/2, 424);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '500 20px -apple-system, sans-serif';
+  ctx.fillText(dateLabel(todayStr()) + (sum.note ? '  ·  "'+sum.note+'"' : ''), W/2, 456);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '700 22px -apple-system, sans-serif';
+  ctx.fillText(Math.round(sum.durMs/60000)+' мин   ·   '+sum.sets+' подх.', W/2, 510);
+  ctx.textAlign = 'left';
+
+  var cursorY = 570;
+  if (sum.exercises && sum.exercises.length) {
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '700 16px -apple-system, sans-serif';
+    ctx.fillText('УПРАЖНЕНИЯ', PAD, cursorY);
+    cursorY += 40;
+    sum.exercises.forEach(function(e){
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 22px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, e.name, W-PAD*2-280), PAD, cursorY);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '600 20px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(e.text, W-PAD, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 40;
+      (e.sub||[]).forEach(function(line){
+        ctx.fillStyle = 'rgba(255,255,255,0.38)';
+        ctx.font = '500 16px -apple-system, sans-serif';
+        ctx.fillText(fitText(ctx, line, W-PAD*2), PAD, cursorY-6);
+        cursorY += 24;
+      });
+    });
+  }
+  if (sum.prs && sum.prs.length) {
+    cursorY += 10;
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '800 20px -apple-system, sans-serif';
+    ctx.fillText('🔥 РЕКОРДЫ', PAD, cursorY);
+    cursorY += 30;
+    sum.prs.forEach(function(p){
+      ctx.fillStyle = 'rgba(251,191,36,0.13)';
+      crRoundRect(ctx, PAD, cursorY-26, W-PAD*2, 38, 10); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 19px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, p.name, W-PAD*2-220), PAD+14, cursorY);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '700 20px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-14, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 42;
+    });
+  }
+}
+
+// ── Timeline: exercises as a connected vertical list of dots, condensed header stats ──
+function timelineContentHeight(sum) {
+  var y = 196;
+  if (sum.note) y += 28;
+  y += 42 + 44;
+  if (sum.exercises && sum.exercises.length) {
+    sum.exercises.forEach(function(e){ y += 54 + (e.sub ? e.sub.length : 0)*24; });
+  }
+  if (sum.prs && sum.prs.length) y += 6 + 30 + sum.prs.length*40;
+  return y;
+}
+function drawTimelineBody(ctx, sum, W, H, PAD, opts) {
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 40px -apple-system, sans-serif';
+  ctx.fillText(fitText(ctx, sum.name||'Тренировка', W-PAD*2), PAD, 168);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '500 20px -apple-system, sans-serif';
+  ctx.fillText(dateLabel(todayStr()), PAD, 196);
+  var y = 196;
+  if (sum.note) {
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = 'italic 500 18px -apple-system, sans-serif';
+    ctx.fillText(fitText(ctx, '"'+sum.note+'"', W-PAD*2), PAD, y+28);
+    y += 28;
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = '700 22px -apple-system, sans-serif';
+  var midStat = pickHeroStat(sum);
+  ctx.fillText(Math.round(sum.durMs/60000)+' мин   ·   '+sum.sets+' подх.   ·   '+midStat[0]+' '+midStat[1].toLowerCase(), PAD, y+42);
+
+  var cursorY = y + 42 + 44;
+  var lineX = PAD + 8;
+  if (sum.exercises && sum.exercises.length) {
+    sum.exercises.forEach(function(e, i){
+      var dotY = cursorY - 8;
+      var rowH = 54 + (e.sub ? e.sub.length*24 : 0);
+      var isLast = i === sum.exercises.length-1 && !(sum.prs && sum.prs.length);
+      if (!isLast) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(lineX, dotY+6); ctx.lineTo(lineX, dotY+rowH); ctx.stroke();
+      }
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath(); ctx.arc(lineX, dotY, 6, 0, Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 23px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, e.name, W-PAD*2-320-24), lineX+24, cursorY);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '600 21px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(e.text, W-PAD, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 40;
+      (e.sub||[]).forEach(function(line){
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '500 16px -apple-system, sans-serif';
+        ctx.fillText(fitText(ctx, line, W-PAD*2-24), lineX+24, cursorY-6);
+        cursorY += 24;
+      });
+      cursorY += 14;
+    });
+  }
+  if (sum.prs && sum.prs.length) {
+    cursorY += 6;
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '800 20px -apple-system, sans-serif';
+    ctx.fillText('🔥 РЕКОРДЫ', PAD, cursorY);
+    cursorY += 30;
+    sum.prs.forEach(function(p){
+      ctx.fillStyle = 'rgba(251,191,36,0.13)';
+      crRoundRect(ctx, PAD, cursorY-24, W-PAD*2, 36, 10); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 18px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, p.name, W-PAD*2-220), PAD+14, cursorY);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '700 19px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-14, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 40;
+    });
+  }
+}
+
+var CARD_TEMPLATE_IMPL = {
+  classic:  {height: classicContentHeight,  draw: drawClassicBody},
+  bold:     {height: boldContentHeight,     draw: drawBoldBody},
+  timeline: {height: timelineContentHeight, draw: drawTimelineBody}
+};
+
+// Core card renderer. opts: {template:'classic'|'bold'|'timeline', format:'square'|'story',
+// bgPhoto: dataURL|null}. Always finishes via cb(canvas) — async when a photo background
+// needs to load first. The wordmark header and "gymlog" footer are shared across every
+// template so the brand stays consistent; each template owns everything in between.
+function renderShareCard(sum, opts, cb) {
+  opts = opts || {};
+  var format = opts.format === 'story' ? 'story' : 'square';
+  var impl = CARD_TEMPLATE_IMPL[opts.template] || CARD_TEMPLATE_IMPL.classic;
+  var W = 1080, PAD = 64;
+
+  // Two-pass: every row's height is known up front (fixed line heights, only text
+  // truncation, no wrapping), so total content height is computed before the canvas
+  // is created — nothing gets truncated at a fixed row count.
   var floorH = format === 'story' ? 1920 : 1080;
-  var H = Math.max(floorH, contentY + 110);
+  var H = Math.max(floorH, impl.height(sum) + 110);
 
   var canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
@@ -2379,108 +2659,19 @@ function renderShareCard(sum, opts, cb) {
       ctx.fillStyle = overlay; ctx.fillRect(0, 0, W, H);
     }
 
-    // header: wordmark + location badge
+    // header: wordmark + location badge — identical across every template
     ctx.fillStyle = '#22c55e';
     ctx.beginPath(); ctx.arc(PAD+6, 90, 6, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.font = '700 26px -apple-system, sans-serif';
     ctx.fillText('GYM LOG', PAD+24, 98);
-
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = '600 22px -apple-system, sans-serif';
     ctx.fillText(sum.loc==='pool' ? '🌊 БАССЕЙН' : '🏋️ ЗАЛ', W-PAD, 98);
     ctx.textAlign = 'left';
 
-    // title + date + optional workout note
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '800 48px -apple-system, sans-serif';
-    ctx.fillText(fitText(ctx, sum.name||'Тренировка', W-PAD*2), PAD, 176);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font = '500 23px -apple-system, sans-serif';
-    ctx.fillText(dateLabel(todayStr()), PAD, 212);
-
-    if (sum.note) {
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.font = 'italic 500 21px -apple-system, sans-serif';
-      ctx.fillText(fitText(ctx, '"'+sum.note+'"', W-PAD*2), PAD, 212+30);
-    }
-
-    // stat tiles
-    var gap = 18, sw = (W - PAD*2 - gap*2)/3;
-    var midStat = [String(fmtVol(Math.round(sum.vol))), 'КГ ОБЪЁМ', '#fbbf24'];
-    if (sum.vol <= 0) {
-      if (sum.totalSwimM > 0) midStat = [String(sum.totalSwimM), 'М В БАССЕЙНЕ', '#38bdf8'];
-      else if (sum.totalCardioKm > 0) midStat = [nf(sum.totalCardioKm), 'КМ КАРДИО', '#38bdf8'];
-      else if (sum.totalBwReps > 0) midStat = [String(sum.totalBwReps), 'ПОВТОРЕНИЙ', '#fbbf24'];
-    }
-    var stats = [
-      [String(Math.round(sum.durMs/60000)), 'МИНУТ', '#ffffff'],
-      midStat,
-      [String(sum.sets), 'ПОДХОДОВ', '#38bdf8']
-    ];
-    var tileBg = opts.bgPhoto ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.045)';
-    stats.forEach(function(s, i){
-      var sx = PAD + i*(sw+gap);
-      ctx.fillStyle = tileBg;
-      crRoundRect(ctx, sx, sy0, sw, sh, 18); ctx.fill();
-      ctx.fillStyle = s[2];
-      ctx.font = '800 44px -apple-system, sans-serif';
-      ctx.fillText(s[0], sx+22, sy0+70);
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.font = '700 14px -apple-system, sans-serif';
-      ctx.fillText(s[1], sx+22, sy0+102);
-    });
-
-    var cursorY = sy0 + sh + 50;
-
-    // exercise breakdown — every exercise, with gear/note sub-lines, no truncation
-    if (sum.exercises && sum.exercises.length) {
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.font = '700 18px -apple-system, sans-serif';
-      ctx.fillText('УПРАЖНЕНИЯ', PAD, cursorY);
-      cursorY += 38;
-      sum.exercises.forEach(function(e){
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 25px -apple-system, sans-serif';
-        ctx.fillText(fitText(ctx, e.name, W-PAD*2-320), PAD, cursorY);
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = '600 23px -apple-system, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(e.text, W-PAD, cursorY);
-        ctx.textAlign = 'left';
-        cursorY += 44;
-        (e.sub||[]).forEach(function(line){
-          ctx.fillStyle = 'rgba(255,255,255,0.4)';
-          ctx.font = '500 18px -apple-system, sans-serif';
-          ctx.fillText(fitText(ctx, line, W-PAD*2), PAD, cursorY-8);
-          cursorY += 26;
-        });
-      });
-    }
-
-    // PRs, highlighted — all of them
-    if (sum.prs && sum.prs.length) {
-      cursorY += 14;
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = '800 24px -apple-system, sans-serif';
-      ctx.fillText('🔥 НОВЫЕ РЕКОРДЫ', PAD, cursorY);
-      cursorY += 34;
-      sum.prs.forEach(function(p){
-        ctx.fillStyle = 'rgba(251,191,36,0.13)';
-        crRoundRect(ctx, PAD, cursorY-30, W-PAD*2, 44, 12); ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 23px -apple-system, sans-serif';
-        ctx.fillText(fitText(ctx, p.name, W-PAD*2-260), PAD+18, cursorY);
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = '700 24px -apple-system, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-18, cursorY);
-        ctx.textAlign = 'left';
-        cursorY += 50;
-      });
-    }
+    impl.draw(ctx, sum, W, H, PAD, opts);
 
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.font = '500 19px -apple-system, sans-serif';

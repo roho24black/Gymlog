@@ -3177,6 +3177,128 @@ function shareAchievementsCardImg() {
 
   shareCanvasImg(canvas, 'achievements.png', 'Мои достижения');
 }
+function wrappedBoxHtml() {
+  return '<div class="chart-box"><div class="chart-title">Итог периода</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-sm" style="flex:1" onclick="shareWrappedCardImg(\'month\')">📸 Месяц</button>' +
+    '<button class="btn btn-sm" style="flex:1" onclick="shareWrappedCardImg(\'year\')">📸 Год</button>' +
+    '</div></div>';
+}
+// Aggregates every completed (non-planned) workout in the given calendar period into
+// the numbers a "wrapped"-style recap card needs. period: 'month' (current calendar
+// month) or 'year' (current calendar year) — both keyed off todayStr()'s own clock,
+// so this always reflects "so far this month/year", not a fixed rolling window.
+function computeWrappedStats(period) {
+  var now = new Date();
+  var prefix = period === 'year' ? String(now.getFullYear()) : todayStr().slice(0,7);
+  var vol = 0, sessions = 0, sets = 0, durMs = 0;
+  Object.keys(ST.w).forEach(function(ds){
+    if (ds.indexOf(prefix) !== 0) return;
+    var day = ST.w[ds];
+    if (!day || !day.workouts) return;
+    day.workouts.forEach(function(wkt){
+      if (wkt.planned || !(wkt.exercises||[]).length) return;
+      var hasDone = wkt.exercises.some(function(ex){ return (ex.sets||[]).some(function(s){ return s.done; }); });
+      if (!hasDone) return;
+      sessions++;
+      if (wkt.startTime && wkt.endTime) durMs += (wkt.endTime - wkt.startTime);
+      wkt.exercises.forEach(function(ex){
+        var cardio = isCardio(ex.name), swim = isSwim(ex.name), stat = isStatic(ex.name);
+        (ex.sets||[]).forEach(function(s){
+          if (!s.done) return;
+          sets++;
+          if (!cardio && !swim && !stat && !s.warmup && !s.failed && (s.w||0) > 0) vol += s.w * (s.r||0);
+        });
+      });
+    });
+  });
+  var periodPRs = computeAllTimePRs().filter(function(p){ return p.ds.indexOf(prefix) === 0; }).slice(0, 5);
+  var label = period === 'year' ? String(now.getFullYear()) : (monthRuLabel(0).charAt(0).toUpperCase()+monthRuLabel(0).slice(1)) + ' ' + now.getFullYear();
+  return {period:period, label:label, vol:vol, sessions:sessions, sets:sets, durMs:durMs, prs:periodPRs};
+}
+function shareWrappedCardImg(period) {
+  var st = computeWrappedStats(period);
+  var canvas = document.createElement('canvas');
+  var W = 1080, PAD = 64;
+  var H = 1080 + (st.prs.length ? st.prs.length*54 + 50 : 0);
+  canvas.width = W; canvas.height = H;
+  var ctx = canvas.getContext('2d');
+
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#1b0f3d'); grad.addColorStop(0.55, '#101a3d'); grad.addColorStop(1, '#052e2b');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(251,191,36,0.10)';
+  ctx.beginPath(); ctx.arc(W-40, 40, 300, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#22c55e';
+  ctx.beginPath(); ctx.arc(PAD+6, 90, 6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 26px -apple-system, sans-serif';
+  ctx.fillText('GYM LOG', PAD+24, 98);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '700 22px -apple-system, sans-serif';
+  ctx.fillText(period === 'year' ? 'ИТОГИ ГОДА' : 'ИТОГИ МЕСЯЦА', W/2, 200);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 44px -apple-system, sans-serif';
+  ctx.fillText(st.label, W/2, 252);
+
+  var heroTxt = fmtVol(Math.round(st.vol));
+  var heroSize = fitHeroFontSize(ctx, heroTxt, W-PAD*2, 150, 70);
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '800 '+heroSize+'px -apple-system, sans-serif';
+  ctx.fillText(heroTxt, W/2, 400);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '700 20px -apple-system, sans-serif';
+  ctx.fillText('КГ ОБЩИЙ ОБЪЁМ', W/2, 438);
+  ctx.textAlign = 'left';
+
+  var gap = 18, sw = (W-PAD*2-gap*2)/3, sy0 = 490, sh = 120;
+  var stats = [
+    [String(st.sessions), 'ТРЕНИРОВОК', '#38bdf8'],
+    [String(st.sets), 'ПОДХОДОВ', '#a78bfa'],
+    [nf(st.durMs/3600000), 'ЧАСОВ', '#34d399']
+  ];
+  stats.forEach(function(s, i){
+    var sx = PAD + i*(sw+gap);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    crRoundRect(ctx, sx, sy0, sw, sh, 16); ctx.fill();
+    ctx.fillStyle = s[2];
+    ctx.font = '800 34px -apple-system, sans-serif';
+    ctx.fillText(s[0], sx+18, sy0+58);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '700 12px -apple-system, sans-serif';
+    ctx.fillText(s[1], sx+18, sy0+84);
+  });
+
+  var cursorY = sy0 + sh + 56;
+  if (st.prs.length) {
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '800 22px -apple-system, sans-serif';
+    ctx.fillText('🔥 НОВЫЕ РЕКОРДЫ', PAD, cursorY);
+    cursorY += 36;
+    st.prs.forEach(function(p){
+      ctx.fillStyle = 'rgba(251,191,36,0.13)';
+      crRoundRect(ctx, PAD, cursorY-30, W-PAD*2, 44, 12); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 22px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, p.name, W-PAD*2-260), PAD+18, cursorY);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '700 22px -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-18, cursorY);
+      ctx.textAlign = 'left';
+      cursorY += 54;
+    });
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = '500 19px -apple-system, sans-serif';
+  ctx.fillText('gymlog', PAD, H-40);
+
+  shareCanvasImg(canvas, 'wrapped-'+period+'.png', 'Итоги тренировок');
+}
 function shareCircuitCardImg() {
   if (!CIRC || !ACTIVE_WKT) return;
   var wkt = getWkt(ACTIVE_WKT.date, ACTIVE_WKT.wid);

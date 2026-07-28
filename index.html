@@ -2318,124 +2318,179 @@ function crRoundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
 }
-function shareWorkoutCardImg(sum) {
-  var canvas = document.createElement('canvas');
+function drawImageCover(ctx, img, W, H) {
+  var iw = img.width || img.naturalWidth || 1, ih = img.height || img.naturalHeight || 1;
+  var ir = iw / ih, cr = W / H, sx, sy, sw, sh;
+  if (ir > cr) { sh = ih; sw = sh * cr; sx = (iw - sw) / 2; sy = 0; }
+  else { sw = iw; sh = sw / cr; sx = 0; sy = (ih - sh) / 2; }
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+}
+// Core card renderer. opts: {format:'square'|'story', bgPhoto: dataURL|null}. Always
+// finishes via cb(canvas) — async when a photo background needs to load first.
+function renderShareCard(sum, opts, cb) {
+  opts = opts || {};
+  var format = opts.format === 'story' ? 'story' : 'square';
   var W = 1080, PAD = 64;
 
-  // Two-pass: every row is a fixed height (no text wrapping, just truncation), so the
-  // total content height is computed up front and the canvas is created at that size —
-  // every exercise and PR fits, instead of the old fixed-1080 card cutting off at 6
-  // rows with a "+N ещё" line.
-  var sy0 = 244, sh = 138;
+  // Two-pass: every row's height is known up front (fixed line heights, only text
+  // truncation, no wrapping), so total content height — including each exercise's
+  // gear/note sub-lines — is computed before the canvas is created. Nothing gets
+  // truncated at a fixed row count the way the old 1080px-only card used to.
+  var noteExtra = sum.note ? 34 : 0;
+  var sy0 = 244 + noteExtra, sh = 138;
   var contentY = sy0 + sh + 50;
-  if (sum.exercises && sum.exercises.length) contentY += 38 + sum.exercises.length*44;
+  if (sum.exercises && sum.exercises.length) {
+    contentY += 38;
+    sum.exercises.forEach(function(e){ contentY += 44 + (e.sub ? e.sub.length : 0)*26; });
+  }
   if (sum.prs && sum.prs.length) contentY += 14 + 34 + sum.prs.length*50;
-  var H = Math.max(1080, contentY + 110);
+  var floorH = format === 'story' ? 1920 : 1080;
+  var H = Math.max(floorH, contentY + 110);
 
+  var canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   var ctx = canvas.getContext('2d');
 
-  var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#0a0a12'); grad.addColorStop(1, '#14141f');
-  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = 'rgba(34,197,94,0.07)';
-  ctx.beginPath(); ctx.arc(W-40, 40, 280, 0, Math.PI*2); ctx.fill();
-
-  // header: wordmark + location badge
-  ctx.fillStyle = '#22c55e';
-  ctx.beginPath(); ctx.arc(PAD+6, 90, 6, 0, Math.PI*2); ctx.fill();
-  ctx.font = '700 26px -apple-system, sans-serif';
-  ctx.fillText('GYM LOG', PAD+24, 98);
-
-  ctx.textAlign = 'right';
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.font = '600 22px -apple-system, sans-serif';
-  ctx.fillText(sum.loc==='pool' ? '🌊 БАССЕЙН' : '🏋️ ЗАЛ', W-PAD, 98);
-  ctx.textAlign = 'left';
-
-  // title + subtitle
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '800 48px -apple-system, sans-serif';
-  ctx.fillText(fitText(ctx, sum.name||'Тренировка', W-PAD*2), PAD, 176);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.font = '500 23px -apple-system, sans-serif';
-  ctx.fillText(dateLabel(todayStr()), PAD, 212);
-
-  // stat tiles
-  var gap = 18, sw = (W - PAD*2 - gap*2)/3;
-  var midStat = [String(fmtVol(Math.round(sum.vol))), 'КГ ОБЪЁМ', '#fbbf24'];
-  if (sum.vol <= 0) {
-    if (sum.totalSwimM > 0) midStat = [String(sum.totalSwimM), 'М В БАССЕЙНЕ', '#38bdf8'];
-    else if (sum.totalCardioKm > 0) midStat = [nf(sum.totalCardioKm), 'КМ КАРДИО', '#38bdf8'];
-    else if (sum.totalBwReps > 0) midStat = [String(sum.totalBwReps), 'ПОВТОРЕНИЙ', '#fbbf24'];
+  function drawBackground(then) {
+    if (opts.bgPhoto) {
+      var img = new Image();
+      img.onload = function(){ drawImageCover(ctx, img, W, H); then(); };
+      img.onerror = then;
+      img.src = opts.bgPhoto;
+    } else {
+      var grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#0a0a12'); grad.addColorStop(1, '#14141f');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(34,197,94,0.07)';
+      ctx.beginPath(); ctx.arc(W-40, 40, 280, 0, Math.PI*2); ctx.fill();
+      then();
+    }
   }
-  var stats = [
-    [String(Math.round(sum.durMs/60000)), 'МИНУТ', '#ffffff'],
-    midStat,
-    [String(sum.sets), 'ПОДХОДОВ', '#38bdf8']
-  ];
-  stats.forEach(function(s, i){
-    var sx = PAD + i*(sw+gap);
-    ctx.fillStyle = 'rgba(255,255,255,0.045)';
-    crRoundRect(ctx, sx, sy0, sw, sh, 18); ctx.fill();
-    ctx.fillStyle = s[2];
-    ctx.font = '800 44px -apple-system, sans-serif';
-    ctx.fillText(s[0], sx+22, sy0+70);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = '700 14px -apple-system, sans-serif';
-    ctx.fillText(s[1], sx+22, sy0+102);
-  });
 
-  var cursorY = sy0 + sh + 50;
+  drawBackground(function(){
+    if (opts.bgPhoto) {
+      // dark gradient over the photo so white text stays legible top to bottom
+      var overlay = ctx.createLinearGradient(0, 0, 0, H);
+      overlay.addColorStop(0, 'rgba(0,0,0,0.6)');
+      overlay.addColorStop(0.3, 'rgba(0,0,0,0.35)');
+      overlay.addColorStop(1, 'rgba(0,0,0,0.75)');
+      ctx.fillStyle = overlay; ctx.fillRect(0, 0, W, H);
+    }
 
-  // exercise breakdown — every exercise, no truncation (canvas is sized to fit them all)
-  if (sum.exercises && sum.exercises.length) {
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.font = '700 18px -apple-system, sans-serif';
-    ctx.fillText('УПРАЖНЕНИЯ', PAD, cursorY);
-    cursorY += 38;
-    sum.exercises.forEach(function(e){
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '600 25px -apple-system, sans-serif';
-      ctx.fillText(fitText(ctx, e.name, W-PAD*2-320), PAD, cursorY);
+    // header: wordmark + location badge
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath(); ctx.arc(PAD+6, 90, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 26px -apple-system, sans-serif';
+    ctx.fillText('GYM LOG', PAD+24, 98);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = '600 22px -apple-system, sans-serif';
+    ctx.fillText(sum.loc==='pool' ? '🌊 БАССЕЙН' : '🏋️ ЗАЛ', W-PAD, 98);
+    ctx.textAlign = 'left';
+
+    // title + date + optional workout note
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 48px -apple-system, sans-serif';
+    ctx.fillText(fitText(ctx, sum.name||'Тренировка', W-PAD*2), PAD, 176);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '500 23px -apple-system, sans-serif';
+    ctx.fillText(dateLabel(todayStr()), PAD, 212);
+
+    if (sum.note) {
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = 'italic 500 21px -apple-system, sans-serif';
+      ctx.fillText(fitText(ctx, '"'+sum.note+'"', W-PAD*2), PAD, 212+30);
+    }
+
+    // stat tiles
+    var gap = 18, sw = (W - PAD*2 - gap*2)/3;
+    var midStat = [String(fmtVol(Math.round(sum.vol))), 'КГ ОБЪЁМ', '#fbbf24'];
+    if (sum.vol <= 0) {
+      if (sum.totalSwimM > 0) midStat = [String(sum.totalSwimM), 'М В БАССЕЙНЕ', '#38bdf8'];
+      else if (sum.totalCardioKm > 0) midStat = [nf(sum.totalCardioKm), 'КМ КАРДИО', '#38bdf8'];
+      else if (sum.totalBwReps > 0) midStat = [String(sum.totalBwReps), 'ПОВТОРЕНИЙ', '#fbbf24'];
+    }
+    var stats = [
+      [String(Math.round(sum.durMs/60000)), 'МИНУТ', '#ffffff'],
+      midStat,
+      [String(sum.sets), 'ПОДХОДОВ', '#38bdf8']
+    ];
+    var tileBg = opts.bgPhoto ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.045)';
+    stats.forEach(function(s, i){
+      var sx = PAD + i*(sw+gap);
+      ctx.fillStyle = tileBg;
+      crRoundRect(ctx, sx, sy0, sw, sh, 18); ctx.fill();
+      ctx.fillStyle = s[2];
+      ctx.font = '800 44px -apple-system, sans-serif';
+      ctx.fillText(s[0], sx+22, sy0+70);
       ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.font = '600 23px -apple-system, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(e.text, W-PAD, cursorY);
-      ctx.textAlign = 'left';
-      cursorY += 44;
+      ctx.font = '700 14px -apple-system, sans-serif';
+      ctx.fillText(s[1], sx+22, sy0+102);
     });
-  }
 
-  // PRs, highlighted — all of them
-  if (sum.prs && sum.prs.length) {
-    cursorY += 14;
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = '800 24px -apple-system, sans-serif';
-    ctx.fillText('🔥 НОВЫЕ РЕКОРДЫ', PAD, cursorY);
-    cursorY += 34;
-    sum.prs.forEach(function(p){
-      ctx.fillStyle = 'rgba(251,191,36,0.09)';
-      crRoundRect(ctx, PAD, cursorY-30, W-PAD*2, 44, 12); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '600 23px -apple-system, sans-serif';
-      ctx.fillText(fitText(ctx, p.name, W-PAD*2-260), PAD+18, cursorY);
+    var cursorY = sy0 + sh + 50;
+
+    // exercise breakdown — every exercise, with gear/note sub-lines, no truncation
+    if (sum.exercises && sum.exercises.length) {
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '700 18px -apple-system, sans-serif';
+      ctx.fillText('УПРАЖНЕНИЯ', PAD, cursorY);
+      cursorY += 38;
+      sum.exercises.forEach(function(e){
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 25px -apple-system, sans-serif';
+        ctx.fillText(fitText(ctx, e.name, W-PAD*2-320), PAD, cursorY);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '600 23px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(e.text, W-PAD, cursorY);
+        ctx.textAlign = 'left';
+        cursorY += 44;
+        (e.sub||[]).forEach(function(line){
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.font = '500 18px -apple-system, sans-serif';
+          ctx.fillText(fitText(ctx, line, W-PAD*2), PAD, cursorY-8);
+          cursorY += 26;
+        });
+      });
+    }
+
+    // PRs, highlighted — all of them
+    if (sum.prs && sum.prs.length) {
+      cursorY += 14;
       ctx.fillStyle = '#fbbf24';
-      ctx.font = '700 24px -apple-system, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-18, cursorY);
-      ctx.textAlign = 'left';
-      cursorY += 50;
-    });
-  }
+      ctx.font = '800 24px -apple-system, sans-serif';
+      ctx.fillText('🔥 НОВЫЕ РЕКОРДЫ', PAD, cursorY);
+      cursorY += 34;
+      sum.prs.forEach(function(p){
+        ctx.fillStyle = 'rgba(251,191,36,0.13)';
+        crRoundRect(ctx, PAD, cursorY-30, W-PAD*2, 44, 12); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 23px -apple-system, sans-serif';
+        ctx.fillText(fitText(ctx, p.name, W-PAD*2-260), PAD+18, cursorY);
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = '700 24px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(nf(p.w)+' кг × '+p.r, W-PAD-18, cursorY);
+        ctx.textAlign = 'left';
+        cursorY += 50;
+      });
+    }
 
-  ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  ctx.font = '500 19px -apple-system, sans-serif';
-  ctx.fillText('gymlog', PAD, H-40);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '500 19px -apple-system, sans-serif';
+    ctx.fillText('gymlog', PAD, H-40);
 
-  shareCanvasImg(canvas, 'workout.png', 'Моя тренировка');
+    cb(canvas);
+  });
+}
+function shareWorkoutCardImg(sum) {
+  renderShareCard(sum, {format:'square', bgPhoto:null}, function(canvas){
+    shareCanvasImg(canvas, 'workout.png', 'Моя тренировка');
+  });
 }
 function shareCanvasImg(canvas, filename, shareTitle) {
   canvas.toBlob(function(blob){

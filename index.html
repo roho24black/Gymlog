@@ -3471,6 +3471,7 @@ function renderWorkout() {
       '<div class="sec-title" style="margin-bottom:14px">Тренировка</div>';
 
     h += todayPlanReminderHtml();
+    h += programTodayHtml();
     h += inactivityBannerHtml();
     h += renderRecoveryCard();
     var rcvActive = ST.recovery && Date.now() < getRecoveryEnd();

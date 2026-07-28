@@ -1859,6 +1859,54 @@ function showUpdateBanner() {
     '<button onclick="document.getElementById(\'update-banner\').remove()" style="background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:4px;line-height:1">✕</button>';
   document.body.appendChild(t);
 }
+// ═══════════════════════ "ЧТО НОВОГО" ═══════════════════════
+// Bump APP_VERSION and add an entry to the top of CHANGELOG whenever a batch of
+// user-facing changes ships. Shows only the newest entry once per version bump — a
+// brand-new install (no history yet) never sees it, so it doesn't read as clutter on
+// first open.
+var APP_VERSION = '2026.07.29';
+var CHANGELOG = [
+  {version:'2026.07.29', items:[
+    'Экран не гаснет во время тренировки',
+    'Уведомление об окончании отдыха, даже если приложение свёрнуто',
+    '«Применить ко всем оставшимся подходам» при смене веса/повторов',
+    '🏆 Зал славы — все личные рекорды на одном экране',
+    'Импорт бэкапа больше не использует системный диалог подтверждения',
+    'Итог месяца/года — карточка-саммари в стиле Wrapped',
+    'Многонедельные циклы тренировок с авто-подсказкой дня',
+    'Push себе на телефон с саммари сразу после тренировки',
+    'Этот самый экран «Что нового»'
+  ]}
+];
+function checkWhatsNew() {
+  if (!ST.cfg) ST.cfg = {};
+  var seen = ST.cfg.lastSeenVersion;
+  var hasHistory = Object.keys(ST.w).length > 0 || (ST.templates||[]).length > 0;
+  ST.cfg.lastSeenVersion = APP_VERSION;
+  saveST();
+  if (seen === APP_VERSION) return;
+  if (!hasHistory) return;
+  showWhatsNewModal(CHANGELOG[0]);
+}
+function showWhatsNewModal(entry) {
+  if (!entry) return;
+  var ov = document.createElement('div');
+  ov.id = 'whatsnew-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9700;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.innerHTML =
+    '<div style="background:var(--card);border-radius:18px;max-width:340px;width:100%;padding:22px;box-sizing:border-box;border:1px solid var(--brd2)">' +
+      '<div style="font-size:17px;font-weight:800;color:var(--txt);margin-bottom:4px">🎉 Что нового</div>' +
+      '<div style="font-size:11px;color:var(--mut);margin-bottom:14px">'+esc(entry.version)+'</div>' +
+      '<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">' +
+      entry.items.map(function(t){
+        return '<div style="display:flex;gap:8px;font-size:13.5px;color:var(--txt);line-height:1.4"><span style="color:var(--acc);flex-shrink:0">✓</span><span>'+esc(t)+'</span></div>';
+      }).join('') +
+      '</div>' +
+      '<button onclick="document.getElementById(\'whatsnew-ov\').remove()" style="width:100%;height:46px;border-radius:12px;background:var(--acc);color:var(--acc-txt);font-size:15px;font-weight:800;border:none;font-family:inherit;cursor:pointer">Отлично</button>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
 function fireConfetti() {
   var colors = ['#22c55e','#fbbf24','#38bdf8','#f43f5e','#a78bfa'];
   var n = 26;

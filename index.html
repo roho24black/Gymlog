@@ -746,18 +746,18 @@ var EX_VARIANTS = {
 function isStyleDrill(name) { return !!EX_VARIANTS[name]; }
 // Swim equipment — independent of style, attachable to any swim exercise (ex.gear: string[]).
 var SWIM_GEAR = [
-  {key:'board',        label:'Доска',           icon:'🏄'},
-  {key:'buoy',          label:'Колобашка',       icon:'🟠'},
-  {key:'paddles_big',   label:'Лопатки бол.',    icon:'🖐️'},
-  {key:'paddles_small', label:'Лопатки мал.',    icon:'✋'},
-  {key:'paddles_8',     label:'Лопатки-8',       icon:'🎱'},
-  {key:'fins',          label:'Ласты',           icon:'🦶'},
-  {key:'snorkel',       label:'Трубка',          icon:'🤿'}
+  {key:'board',         label:'Доска'},
+  {key:'buoy',           label:'Колобашка'},
+  {key:'paddles_big',    label:'Лопатки бол.'},
+  {key:'paddles_small',  label:'Лопатки мал.'},
+  {key:'paddles_8',      label:'Лопатки-8'},
+  {key:'fins',           label:'Ласты'},
+  {key:'snorkel',        label:'Трубка'}
 ];
 function gearInfo(key) { return SWIM_GEAR.filter(function(g){ return g.key===key; })[0] || null; }
-function gearIconsText(ex) {
+function gearLabelsText(ex) {
   if (!ex.gear || !ex.gear.length) return '';
-  return ex.gear.map(function(k){ var g = gearInfo(k); return g ? g.icon : ''; }).join('');
+  return ex.gear.map(function(k){ var g = gearInfo(k); return g ? g.label : ''; }).filter(Boolean).join(', ');
 }
 function gearChips(ex, ei) {
   if (!isSwim(ex.name)) return '';
@@ -766,7 +766,7 @@ function gearChips(ex, ei) {
     '<span style="font-size:11px;color:var(--mut);align-self:center;margin-right:2px">Инвентарь:</span>' +
     SWIM_GEAR.map(function(g){
       var on = cur.indexOf(g.key) !== -1;
-      return '<button onclick="toggleExGear('+ei+',\''+g.key+'\')" style="padding:6px 10px;border-radius:100px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?'var(--blu)':'var(--brd2)')+';background:'+(on?'rgba(56,189,248,0.12)':'none')+';color:'+(on?'var(--blu)':'var(--sub)')+'">'+g.icon+' '+g.label+'</button>';
+      return '<button onclick="toggleExGear('+ei+',\''+g.key+'\')" style="padding:6px 10px;border-radius:100px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;border:1px solid '+(on?'var(--blu)':'var(--brd2)')+';background:'+(on?'rgba(56,189,248,0.12)':'none')+';color:'+(on?'var(--blu)':'var(--sub)')+'">'+g.label+'</button>';
     }).join('') +
   '</div>';
 }

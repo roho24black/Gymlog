@@ -2919,7 +2919,7 @@ function shareWorkoutCardImg(sum) {
 // sum is captured once when the sheet opens (the sheet is a full-screen modal, so the
 // underlying workout can't change while it's up) — this keeps every gallery preview and
 // the final shared image pixel-identical, real WYSIWYG instead of a guess.
-var CARD_SUM = null, CARD_TEMPLATE = 'classic', CARD_FORMAT = 'square', CARD_BG_PHOTO = null;
+var CARD_SUM = null, CARD_TEMPLATE = 'classic', CARD_FORMAT = 'square', CARD_BG_PHOTO = null, CARD_BG_PRESET = 'dark';
 function openShareCardSheet(getSumFn) {
   var sum = getSumFn ? getSumFn() : null;
   if (!sum) return;
@@ -2927,6 +2927,7 @@ function openShareCardSheet(getSumFn) {
   CARD_TEMPLATE = 'classic';
   CARD_FORMAT = 'square';
   CARD_BG_PHOTO = null;
+  CARD_BG_PRESET = 'dark';
   var ov = document.createElement('div');
   ov.id = 'card-opts-ov';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9700;display:flex;align-items:flex-end;justify-content:center';
@@ -2940,7 +2941,7 @@ function openShareCardSheet(getSumFn) {
         '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Формат</div>' +
         '<div id="card-fmt-chips" style="margin-bottom:16px"></div>' +
         '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Шаблон</div>' +
-        '<div id="card-gallery" style="display:flex;gap:8px;margin-bottom:16px"></div>' +
+        '<div id="card-gallery" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">' +
         '<div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Фон</div>' +
         '<div id="card-bg-chips" style="margin-bottom:16px"></div>' +
       '</div>' +

@@ -2237,7 +2237,7 @@ function buildWorkoutSummary(wkt) {
   // endTime isn't set yet on an in-progress workout (card can now be shared mid-session) —
   // fall back to elapsed-so-far instead of showing 0 minutes.
   var durMs = wkt.startTime ? ((wkt.endTime || Date.now()) - wkt.startTime) : 0;
-  return {sets:sets, vol:vol, prs:prs, durMs:durMs, name:wkt.name||'Тренировка', loc:wkt.loc, exercises:exercises,
+  return {sets:sets, vol:vol, prs:prs, durMs:durMs, name:wkt.name||'Тренировка', loc:wkt.loc, exercises:exercises, note:wkt.note||'',
           totalCardioKm:totalCardioKm, totalSwimM:totalSwimM, totalBwReps:totalBwReps};
 }
 // Most recent other finished workout with the same name — used to show a vs-last-time

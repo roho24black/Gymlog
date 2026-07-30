@@ -3585,6 +3585,25 @@ function shareCircuitCardImg() {
   shareCanvasImg(canvas, 'circuit.png', 'Мой круг');
 }
 
+// iOS can fully unload a backgrounded PWA's JS context (not just pause it) — on
+// relaunch, ACTIVE_WKT/WKT_START/WKT_TIMER_ID all reset to null even though the
+// workout itself is still sitting in ST.w with a startTime and no endTime yet. From
+// the user's side that reads as "the timer stopped counting" and the whole active
+// session appears to have vanished. Only today's workout auto-resumes — an old
+// unfinished one from a previous day is left alone (already visible in Calendar).
+function resumeActiveWorkoutIfAny() {
+  var ds = todayStr();
+  var day = ST.w[ds];
+  if (!day || !day.workouts) return;
+  var wkt = day.workouts.filter(function(w){ return !w.planned && w.startTime && !w.endTime; })[0];
+  if (!wkt) return;
+  ACTIVE_WKT = {date: ds, wid: wkt.id};
+  WKT_START = wkt.startTime;
+  CUR_DATE = ds;
+  if (WKT_TIMER_ID) clearInterval(WKT_TIMER_ID);
+  WKT_TIMER_ID = setInterval(tickWktTimer, 1000);
+  acquireWakeLock();
+}
 function tickWktTimer() {
   if (!WKT_START) return;
   var el = document.getElementById('wkt-elapsed');

@@ -6755,6 +6755,7 @@ function renderStaticChart(el, name, pd) {
 
 // ═══════════════════════ INIT ═══════════════════════
 loadST();
+resumeActiveWorkoutIfAny();
 renderTopbar();
 renderWorkout();
 if (ST.recovery && Date.now() < getRecoveryEnd()) startRecoveryTimer();

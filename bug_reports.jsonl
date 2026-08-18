@@ -1,3 +1,4 @@
 {"time": 1785341016, "title": "GymLog: new bug report", "message": "tab=progress | active=no | screen=328x710 | ua=Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHT\n\nВо время тренировки при выходе из приложения таймер не считает"}
 {"time": 1785341045, "title": "GymLog: new bug report", "message": "tab=progress | active=no | screen=328x710 | ua=Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHT\n\nЕщё в сообщении о баге сразу обработано написано, пусть будет в реальном времени"}
 {"time": 1785399297, "title": "GymLog: new bug report", "message": "tab=progress | active=no | screen=390x844 | ua=test\n[ТЕСТ] Проверка bug_listener.py — можно удалить"}
+{"time": 1787058422, "title": "GymLog: new bug report", "message": "tab=progress | active=yes | screen=328x710 | ua=Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHT\n\nПри выходе из приложения, таймер загрузки сбрасывается"}

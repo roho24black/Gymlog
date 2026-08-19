@@ -6,7 +6,9 @@
 // the mocking boilerplate each session.
 
 const fs = require('fs');
-const HTML_PATH = '/Users/romanask/Library/Mobile Documents/com~apple~CloudDocs/GYM/gym planner.html';
+// GYM_HTML_PATH lets this same harness run against a different checkout (e.g. the
+// cloud bug-fix routine's clone of source/gym-planner.html) without touching the file.
+const HTML_PATH = process.env.GYM_HTML_PATH || '/Users/romanask/Library/Mobile Documents/com~apple~CloudDocs/GYM/gym planner.html';
 
 const html = fs.readFileSync(HTML_PATH, 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];

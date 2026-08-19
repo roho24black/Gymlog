@@ -1762,6 +1762,44 @@ await check('training cycles: build via the day-picker, activate, surface the sc
   saveST();
 });
 
+await check('resumeActiveWorkoutIfAny reconstructs ACTIVE_WKT/WKT_START/timer for an unfinished workout from today after a simulated iOS reload, and leaves finished/planned ones alone', function () {
+  var ds = todayStr();
+  var startedAt = Date.now() - 120000;
+  ST.w[ds] = { workouts: [
+    { id: 888001, name: 'Незакрытая', loc: 'gym', startTime: startedAt, endTime: null, exercises: [] }
+  ] };
+  saveST();
+  // Simulate a fresh reload: the in-memory pointers are gone even though the data survives
+  // in ST (already persisted via saveST after every set), exactly what iOS does when it
+  // fully unloads a backgrounded PWA's JS context.
+  ACTIVE_WKT = null; WKT_START = null;
+  if (WKT_TIMER_ID) { clearInterval(WKT_TIMER_ID); WKT_TIMER_ID = null; }
+
+  resumeActiveWorkoutIfAny();
+
+  if (!ACTIVE_WKT || ACTIVE_WKT.wid !== 888001) throw new Error('should reattach ACTIVE_WKT to the unfinished workout');
+  if (WKT_START !== startedAt) throw new Error('should restore the original start time, not reset the clock');
+  if (!WKT_TIMER_ID) throw new Error('should restart the ticking interval');
+
+  cancelWorkout();
+
+  ST.w[ds] = { workouts: [
+    { id: 888002, name: 'Закрытая', loc: 'gym', startTime: startedAt, endTime: Date.now(), exercises: [] }
+  ] };
+  saveST();
+  resumeActiveWorkoutIfAny();
+  if (ACTIVE_WKT) throw new Error('a workout that already has an endTime should not be resumed');
+
+  ST.w[ds] = { workouts: [
+    { id: 888003, name: 'План', loc: 'gym', planned: true, startTime: null, endTime: null, exercises: [] }
+  ] };
+  saveST();
+  resumeActiveWorkoutIfAny();
+  if (ACTIVE_WKT) throw new Error('a planned-but-not-started workout should not be resumed');
+
+  delete ST.w[ds]; saveST();
+});
+
 await check('legacy pre-feature data loads without crashing (missing customEx/bw/recentEx/warmup/note)', function () {
   var legacy = { w: {}, cfg: {}, wr: {}, wrMax: {} };
   var ds = dateAdd(today, -100);
